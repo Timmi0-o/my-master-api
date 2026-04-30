@@ -1,0 +1,19 @@
+---
+description: Глобальный baseline для DDD/Clean Architecture и границ Prisma
+alwaysApply: true
+---
+
+# Global Backend Baseline
+
+- Всегда следовать Clean Architecture + DDD + feature-based modules + use-case layer.
+- Не допускать утечки инфраструктуры в домен и use-cases.
+- Prisma использовать только через инфраструктурные адаптеры и мапперы.
+- Не использовать типы `@prisma/client` вне `infrastructure`.
+- Предпочитать явные, типобезопасные и тестируемые решения без костылей.
+
+## Required References
+
+- Применять правила из:
+  - `.cursor/rules/architecture-ddd-clean.mdc`
+  - `.cursor/rules/prisma-boundary-and-types.mdc`
+  - `.cursor/rules/engineering-quality-backend.mdc`

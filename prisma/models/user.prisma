@@ -1,0 +1,43 @@
+model User {
+  id           String    @id @default(uuid())
+  email        String    @map("email")
+  phone        String?   @map("phone")
+  username     String    @map("username")
+  role         Role      @default(USER) @map("role")
+  status       Status    @default(PENDING) @map("status")
+  passwordHash String    @map("password_hash")
+  name         String    @map("name")
+  surname      String    @map("surname")
+  patronymic   String?   @map("patronymic")
+  language     Language  @default(RU) @map("language")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+
+  @@unique([email])
+  @@unique([phone])
+  @@unique([username])
+  @@index([email, phone, username])
+  @@map("Users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+  BLOCKED
+}
+
+enum Language {
+  RU
+}
+

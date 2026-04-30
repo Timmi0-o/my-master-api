@@ -1,0 +1,24 @@
+---
+description: Граница Prisma и запрет утечки Prisma-типов в домен
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Prisma Boundary
+
+- Prisma разрешен только в `infrastructure/persistence` (репозитории, data mappers).
+- Типы из `@prisma/client` не экспортировать и не использовать в `domain`/`application`/`presentation`.
+- Для домена и use-cases использовать только собственные типы: `Entity`, `ValueObject`, `RepositoryResult`, `DTO`.
+- Каждый Prisma-адаптер обязан иметь явный mapper: `PrismaModel -> DomainEntity` и `DomainEntity -> PrismaData`.
+
+## Антикоррупционный слой
+
+- Контракт репозитория описывается в `application` или `domain` как интерфейс (порт).
+- Реализация на Prisma подменяема без изменения use-cases.
+- Если Prisma-схема меняется, изменения локализуются в `infrastructure` и mappers.
+
+## Ошибки и edge-cases
+
+- Не прокидывать наружу сырые Prisma-ошибки (`P20xx`) — маппить в прикладные/доменные ошибки.
+- Для `not found`, unique conflict, FK conflict использовать явные типизированные ошибки проекта.
+- Nullability из БД обрабатывать в mapper-слое, не размазывать optional-логику по use-case.

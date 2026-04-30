@@ -1,0 +1,27 @@
+---
+description: Clean Architecture и DDD для backend-модулей
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Clean Architecture + DDD
+
+- Строить код feature-based: `src/modules/<feature>/...`, а не по тех-слоям всего приложения.
+- В каждом feature обязательные зоны: `domain`, `application` (use-cases), `infrastructure`, `presentation`.
+- `domain` не зависит ни от Nest, ни от Prisma, ни от внешних SDK.
+- `application` оркестрирует доменную логику через порты (интерфейсы), не знает реализацию адаптеров.
+- `infrastructure` реализует порты и содержит доступ к БД/внешним сервисам.
+- `presentation` (controllers/DTO) только маппит HTTP -> use-case и обратно.
+
+## Зависимости слоев
+
+- Разрешено: `presentation -> application -> domain`.
+- Разрешено: `infrastructure -> domain | application(ports)`.
+- Запрещено: `domain -> application|infrastructure|presentation`.
+- Запрещено: прямой вызов Prisma из `application` и `domain`.
+
+## Use-case правила
+
+- Один use-case = одна бизнес-операция с явным `Input` и `Output`.
+- Use-case возвращает прикладной результат, а не HTTP-ответ и не ORM-сущность.
+- Бизнес-валидации и инварианты держать в `domain`, а не в контроллерах.
