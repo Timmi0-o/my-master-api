@@ -92,7 +92,16 @@ export class UserRepository
     options: Record<string, unknown>,
   ): Promise<IUserListRow[] | null> {
     const rows = await this.fetchManyRows(options);
-    return rows.map((r) => this.mapRowToListItem(r as User));
+    return rows.map<IUserListRow>((r) =>
+      this.mapRowToListItem(this.toRecordRow(r)),
+    );
+  }
+
+  private toRecordRow(row: unknown): Record<string, unknown> {
+    if (typeof row !== 'object' || row === null) {
+      throw new TypeError('Expected object row from persistence');
+    }
+    return row as Record<string, unknown>;
   }
 
   private async runFindManyWithRequiredIdsForPublicList(
@@ -118,30 +127,56 @@ export class UserRepository
     );
   }
 
-  private mapRowToListItem(row: User): IUserListRow {
-    const out: IUserListRow = { id: row.id };
-    if ('email' in row && row.email !== undefined) out.email = row.email;
-    if ('phone' in row && row.phone !== undefined) out.phone = row.phone;
-    if ('username' in row && row.username !== undefined)
-      out.username = row.username;
-    if ('role' in row && row.role !== undefined)
-      out.role = this.toDomainRole(row.role);
-    if ('status' in row && row.status !== undefined)
-      out.status = this.toDomainStatus(row.status);
-    if ('language' in row && row.language !== undefined)
-      out.language = this.toDomainLanguage(row.language);
-    if ('name' in row && row.name !== undefined) out.name = row.name;
-    if ('surname' in row && row.surname !== undefined)
-      out.surname = row.surname;
-    if ('patronymic' in row && row.patronymic !== undefined)
-      out.patronymic = row.patronymic;
-    if ('createdAt' in row && row.createdAt !== undefined)
-      out.createdAt = row.createdAt;
-    if ('updatedAt' in row && row.updatedAt !== undefined)
-      out.updatedAt = row.updatedAt;
-    if ('deletedAt' in row && row.deletedAt !== undefined)
-      out.deletedAt = row.deletedAt;
-    return out;
+  private mapRowToListItem(row: Record<string, unknown>): IUserListRow {
+    const rawId = row['id'];
+    if (typeof rawId !== 'string') {
+      throw new TypeError('User list row must have string id');
+    }
+
+    const email = row['email'];
+    const phone = row['phone'];
+    const username = row['username'];
+    const role = row['role'];
+    const status = row['status'];
+    const language = row['language'];
+    const name = row['name'];
+    const surname = row['surname'];
+    const patronymic = row['patronymic'];
+    const createdAt = row['createdAt'];
+    const updatedAt = row['updatedAt'];
+    const deletedAt = row['deletedAt'];
+
+    return {
+      id: rawId,
+      ...(typeof email === 'string' ? { email } : {}),
+      ...(phone === null
+        ? { phone: null }
+        : typeof phone === 'string'
+          ? { phone }
+          : {}),
+      ...(typeof username === 'string' ? { username } : {}),
+      ...(role !== undefined ? { role: this.toDomainRole(role as Role) } : {}),
+      ...(status !== undefined
+        ? { status: this.toDomainStatus(status as Status) }
+        : {}),
+      ...(language !== undefined
+        ? { language: this.toDomainLanguage(language as Language) }
+        : {}),
+      ...(typeof name === 'string' ? { name } : {}),
+      ...(typeof surname === 'string' ? { surname } : {}),
+      ...(patronymic === null
+        ? { patronymic: null }
+        : typeof patronymic === 'string'
+          ? { patronymic }
+          : {}),
+      ...(createdAt instanceof Date ? { createdAt } : {}),
+      ...(updatedAt instanceof Date ? { updatedAt } : {}),
+      ...(deletedAt === null
+        ? { deletedAt: null }
+        : deletedAt instanceof Date
+          ? { deletedAt }
+          : {}),
+    };
   }
 
   private toDomainEntity(user: User): IUserEntity {

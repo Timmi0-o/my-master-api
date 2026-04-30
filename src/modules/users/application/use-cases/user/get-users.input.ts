@@ -1,5 +1,5 @@
-import type { IUserFiltersPreset } from '../../presets/user-filters-preset.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
+import type { IUserFiltersPreset } from '../../presets/user-filters-preset.types';
 
 export const USER_LIST_ORDER_FIELDS = [
   'id',
@@ -21,5 +21,4 @@ export interface IGetUsersInput {
   orderDir?: 'asc' | 'desc';
   filter?: IUserFiltersPreset;
   requiredIds?: string[];
-  isStaffUser: boolean;
 }

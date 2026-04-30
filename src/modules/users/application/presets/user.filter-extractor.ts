@@ -23,7 +23,10 @@ export class UserFilterExtractor {
     }
 
     if (preset.email?.value?.length) {
-      const f = FilterPresetMapperCommon.mapStringArrayFilter('email', preset.email);
+      const f = FilterPresetMapperCommon.mapStringArrayFilter(
+        'email',
+        preset.email,
+      );
       if (Object.keys(f).length > 0) parts.push(f);
     }
 
@@ -36,12 +39,18 @@ export class UserFilterExtractor {
     }
 
     if (preset.role?.value?.length) {
-      const f = FilterPresetMapperCommon.mapStringArrayFilter('role', preset.role);
+      const f = FilterPresetMapperCommon.mapStringArrayFilter(
+        'role',
+        preset.role,
+      );
       if (Object.keys(f).length > 0) parts.push(f);
     }
 
     if (preset.status?.value?.length) {
-      const f = FilterPresetMapperCommon.mapStringArrayFilter('status', preset.status);
+      const f = FilterPresetMapperCommon.mapStringArrayFilter(
+        'status',
+        preset.status,
+      );
       if (Object.keys(f).length > 0) parts.push(f);
     }
 

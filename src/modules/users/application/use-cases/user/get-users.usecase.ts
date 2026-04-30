@@ -11,6 +11,7 @@ import {
 import type { IUserListRow } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 
+import { IMetadata } from 'src/modules/shared/domain/i-metadata';
 import {
   getUserPresetConfig,
   UserFilterExtractor,
@@ -24,22 +25,23 @@ export class GetUsersUseCase {
 
   async execute(
     input: IGetUsersInput,
+    metadata: IMetadata,
   ): Promise<IBuildGetManyResponseResult<IUserListRow>> {
     const preset: TPresetType = input.preset ?? 'SHORT';
     const presetConfig = getUserPresetConfig(preset);
 
     const select = omitDisallowedSelectFieldsForNonStaff(
       presetConfig.select,
-      input.isStaffUser,
+      metadata.isStaffUser,
     );
 
     const sanitizedFilter = this.sanitizeFilterForStaff(
       input.filter,
-      input.isStaffUser,
+      metadata.isStaffUser,
     );
 
     const filterWhere = UserFilterExtractor.extract(sanitizedFilter);
-    const visibilityWhere = input.isStaffUser
+    const visibilityWhere = metadata.isStaffUser
       ? ({} as Record<string, unknown>)
       : { deletedAt: null };
 
@@ -58,7 +60,7 @@ export class GetUsersUseCase {
         page: input.page,
         orderBy,
       },
-      isStaffUser: input.isStaffUser,
+      isStaffUser: metadata.isStaffUser,
       presetSelect: select,
       where: dbWhere,
       requiredIds: input.requiredIds,
