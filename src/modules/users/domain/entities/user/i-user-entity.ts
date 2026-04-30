@@ -18,6 +18,12 @@ export interface IUserEntity {
   deletedAt?: Date | null;
 }
 
+/** Публичное представление пользователя без чувствительных полей (списки, API). */
+export type IUserPublic = Omit<IUserEntity, 'passwordHash'>;
+
+/** Строка списка: всегда есть id, остальные поля зависят от пресета выборки. */
+export type IUserListRow = Partial<Omit<IUserPublic, 'id'>> & Pick<IUserPublic, 'id'>;
+
 export type ICreateUserInput = Omit<
   IUserEntity,
   'id' | 'createdAt' | 'updatedAt' | 'deletedAt'

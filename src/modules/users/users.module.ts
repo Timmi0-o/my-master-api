@@ -7,11 +7,13 @@ import {
   UserRepository,
 } from './infrastructure/repositories/user.repository';
 import { UsersController } from './presentation/controllers/users.controller';
+import { UserValidator } from 'src/validators/users/user.validator';
 
 @Module({
   imports: [PrismaModule],
   controllers: [UsersController],
   providers: [
+    UserValidator,
     {
       provide: USER_REPOSITORY,
       useClass: UserRepository,
