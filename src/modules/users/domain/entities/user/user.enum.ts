@@ -1,16 +1,16 @@
-export enum UserRole {
+export enum EUserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
 
-export enum UserStatus {
+export enum EUserStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
   PENDING = 'PENDING',
   BLOCKED = 'BLOCKED',
 }
 
-export enum UserLanguage {
+export enum EUserLanguage {
   RU = 'RU',
 }
