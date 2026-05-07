@@ -19,10 +19,7 @@ export interface IUserEntity {
 }
 
 /** Публичное представление пользователя без чувствительных полей (списки, API). */
-export type IUserPublic = Omit<IUserEntity, 'passwordHash'>;
-
-/** Строка списка: всегда есть id, остальные поля зависят от пресета выборки. */
-export type IUserListRow = Partial<Omit<IUserPublic, 'id'>> & Pick<IUserPublic, 'id'>;
+export type IUserPublicEntity = Omit<IUserEntity, 'passwordHash'>;
 
 export type ICreateUserInput = Omit<
   IUserEntity,

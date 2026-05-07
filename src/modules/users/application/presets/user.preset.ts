@@ -1,9 +1,9 @@
-import type { IUserPublic } from '../../domain/entities/user/i-user-entity';
 import type { PresetConfig } from 'src/modules/shared/application/presets/common/preset-base.types';
-import { createPresetGetter } from 'src/modules/shared/application/presets/common/presets.helpers';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
+import { createPresetGetter } from 'src/modules/shared/application/presets/common/presets.helpers';
+import type { IUserPublicEntity } from '../../domain/entities/user/i-user-entity';
 
-export type IUserPresetConfig = PresetConfig<IUserPublic>;
+export type IUserPresetConfig = PresetConfig<IUserPublicEntity>;
 
 export const USER_PRESETS: Record<TPresetType, IUserPresetConfig> = {
   MINIMAL: {

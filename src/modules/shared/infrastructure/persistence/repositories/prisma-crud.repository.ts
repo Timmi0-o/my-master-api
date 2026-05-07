@@ -28,7 +28,7 @@ export type PrismaCrudWriteOptions = {
 };
 
 /**
- * Базовый CRUD для Prisma-delegate (по мотивам finance-service, без внешних пакетов общих типов).
+ * Базовый CRUD для Prisma-delegate
  */
 export abstract class PrismaCrudRepository<
   TEntity extends { id: string },

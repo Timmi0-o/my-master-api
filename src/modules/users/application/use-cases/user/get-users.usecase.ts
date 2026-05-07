@@ -8,10 +8,10 @@ import {
   omitDisallowedSelectFieldsForNonStaff,
   toDbWhere,
 } from 'src/modules/shared/application/presets/common/query-filter.helper';
-import type { IUserListRow } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 
 import { IMetadata } from 'src/modules/shared/domain/i-metadata';
+import { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import {
   getUserPresetConfig,
   UserFilterExtractor,
@@ -26,7 +26,7 @@ export class GetUsersUseCase {
   async execute(
     input: IGetUsersInput,
     metadata: IMetadata,
-  ): Promise<IBuildGetManyResponseResult<IUserListRow>> {
+  ): Promise<IBuildGetManyResponseResult<IUserPublicEntity>> {
     const preset: TPresetType = input.preset ?? 'SHORT';
     const presetConfig = getUserPresetConfig(preset);
 
@@ -41,11 +41,13 @@ export class GetUsersUseCase {
     );
 
     const filterWhere = UserFilterExtractor.extract(sanitizedFilter);
+
     const visibilityWhere = metadata.isStaffUser
       ? ({} as Record<string, unknown>)
       : { deletedAt: null };
 
     const scopedWhere = this.mergeWhereParts([filterWhere, visibilityWhere]);
+
     const dbWhere = toDbWhere(scopedWhere);
 
     const orderField = input.orderField ?? 'id';
@@ -85,6 +87,7 @@ export class GetUsersUseCase {
     isStaffUser: boolean,
   ): IUserFiltersPreset | undefined {
     if (!filter || isStaffUser) return filter;
+
     if (filter.deletedAt === undefined) return filter;
     const next: IUserFiltersPreset = { ...filter };
     delete next.deletedAt;
@@ -95,6 +98,7 @@ export class GetUsersUseCase {
     parts: Record<string, unknown>[],
   ): Record<string, unknown> {
     const nonEmpty = parts.filter((p) => Object.keys(p).length > 0);
+
     if (nonEmpty.length === 0) return {};
     if (nonEmpty.length === 1) return nonEmpty[0];
     return { AND: nonEmpty };

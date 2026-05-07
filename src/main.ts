@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {
@@ -21,13 +21,23 @@ async function bootstrap() {
     }),
   );
 
+  app.enableVersioning({
+    type: VersioningType.URI,
+    prefix: 'v',
+  });
+
   app.useGlobalInterceptors(
     new LoggingInterceptor(logger),
     new ResponseInterceptor(),
   );
 
-  await app.listen(process.env.APP_PORT ?? 6666, () => {
-    Logger.log(`Server is running on port ${process.env.APP_PORT ?? 6666}`);
+  const PORT = Number(process.env.APP_PORT);
+  const defaultPort = 8567;
+
+  await app.listen(PORT || defaultPort, () => {
+    Logger.log(
+      `Server is running on PORT ${PORT || `fallback to ${defaultPort}`}`,
+    );
   });
 }
 

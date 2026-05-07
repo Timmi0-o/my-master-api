@@ -28,12 +28,14 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: development
-      PORT: 3000
+      APP_PORT: ${APP_PORT}
       DATABASE_URL: postgresql://app:app@postgres:5432/my_master_api?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       CHOKIDAR_USEPOLLING: 'true'
       WATCHPACK_POLLING: 'true'
     ports:
-      - '${APP_PORT:-6666}:6666'
+      - '${APP_PORT}:${APP_PORT}'
     volumes:
       - .:/app
       - /app/node_modules

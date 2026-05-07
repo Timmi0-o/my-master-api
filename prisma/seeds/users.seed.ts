@@ -1,7 +1,10 @@
-import type { PrismaClient, Role, Status, Language } from '@prisma/client';
+import type { Language, PrismaClient, Role, Status } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import type { SeedRunner } from './index';
 
 const USERS_COUNT = 30;
+const SEED_PASSWORD = 'password';
+const SEED_BCRYPT_ROUNDS = 10;
 
 const buildRole = (index: number): Role => {
   if (index === 1) return 'SUPER_ADMIN';
@@ -15,7 +18,7 @@ const buildStatus = (index: number): Status => {
   return 'ACTIVE';
 };
 
-const buildUserData = (index: number) => {
+const buildUserData = (index: number, passwordHash: string) => {
   const padded = String(index).padStart(2, '0');
 
   return {
@@ -24,7 +27,7 @@ const buildUserData = (index: number) => {
     username: `user_${padded}`,
     role: buildRole(index),
     status: buildStatus(index),
-    passwordHash: `seed_password_hash_${padded}`,
+    passwordHash,
     name: `Name${padded}`,
     surname: `Surname${padded}`,
     patronymic: index % 2 === 0 ? `Patronymic${padded}` : null,
@@ -35,8 +38,10 @@ const buildUserData = (index: number) => {
 export const usersSeed: SeedRunner = async (
   prisma: PrismaClient,
 ): Promise<void> => {
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, SEED_BCRYPT_ROUNDS);
+
   for (let index = 1; index <= USERS_COUNT; index += 1) {
-    const userData = buildUserData(index);
+    const userData = buildUserData(index, passwordHash);
 
     await prisma.user.upsert({
       where: { email: userData.email },
