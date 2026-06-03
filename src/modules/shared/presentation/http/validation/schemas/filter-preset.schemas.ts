@@ -8,6 +8,7 @@ import {
 } from 'src/constants';
 import type {
   IDateRangeArrayFilter,
+  INumberRangeArrayFilter,
   IStringArrayFilter,
   ITextSearchFilterPreset,
 } from 'src/modules/shared/application/presets/common/filter-preset.types';
@@ -114,6 +115,30 @@ export const dateRangeArrayFilterSchema: JSONSchemaType<IDateRangeArrayFilter> =
             lte: { type: 'string', format: 'date-time', nullable: true },
             gt: { type: 'string', format: 'date-time', nullable: true },
             gte: { type: 'string', format: 'date-time', nullable: true },
+          },
+          required: [],
+          additionalProperties: false,
+        },
+        minItems: 1,
+      },
+    },
+    required: ['value'],
+    additionalProperties: false,
+  };
+
+export const numberRangeArrayFilterSchema: JSONSchemaType<INumberRangeArrayFilter> =
+  {
+    type: 'object',
+    properties: {
+      value: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            lt: { type: 'number', nullable: true },
+            lte: { type: 'number', nullable: true },
+            gt: { type: 'number', nullable: true },
+            gte: { type: 'number', nullable: true },
           },
           required: [],
           additionalProperties: false,

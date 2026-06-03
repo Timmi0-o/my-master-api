@@ -1,0 +1,23 @@
+meta {
+  name: get many
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/v1/master-profiles
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  preset: SHORT
+  page: 1
+  limit: 20
+  orderField: createdAt
+  orderDir: desc
+}

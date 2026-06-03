@@ -1,0 +1,36 @@
+meta {
+  name: create
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/v1/master-services
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "masterProfileId": "{{masterProfileId}}",
+    "name": "Замена масла",
+    "description": "Полная замена моторного масла и фильтра",
+    "price": 2500
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  const id = data?.result?.data?.id;
+  if (id) {
+    bru.setEnvVar("masterServiceId", id);
+  }
+}

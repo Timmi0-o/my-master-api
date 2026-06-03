@@ -1,0 +1,19 @@
+meta {
+  name: get one by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/v1/master-profiles/{{masterProfileId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  preset: SHORT
+}

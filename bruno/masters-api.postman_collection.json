@@ -1,0 +1,330 @@
+{
+  "info": {
+    "name": "my master api - masters",
+    "description": "Auth + Master Profiles + Master Services. Импорт: Bruno → Import Collection → Postman.\n\nSeed: user01@example.com / password\nПосле Login переменные accessToken, masterProfileId, masterServiceId заполняются автоматически.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8567" },
+    { "key": "accessToken", "value": "" },
+    { "key": "masterProfileId", "value": "" },
+    { "key": "masterServiceId", "value": "" },
+    { "key": "seedEmail", "value": "user01@example.com" },
+    { "key": "seedPassword", "value": "password" }
+  ],
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res?.result?.data?.tokens?.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('accessToken', token);",
+                  "  console.log('accessToken saved');",
+                  "}",
+                  "pm.test('Login OK', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{seedEmail}}\",\n  \"password\": \"{{seedPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/login"
+          }
+        },
+        {
+          "name": "get one",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "master profiles",
+      "item": [
+        {
+          "name": "get many",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/master-profiles?preset=SHORT&page=1&limit=20&orderField=createdAt&orderDir=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "master-profiles"],
+              "query": [
+                { "key": "preset", "value": "SHORT" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "orderField", "value": "createdAt" },
+                { "key": "orderDir", "value": "desc" },
+                {
+                  "key": "filter",
+                  "value": "{\"search\":{\"value\":\"мастер\",\"mode\":\"PARTIAL\"}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "get many with filter",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/master-profiles?preset=SHORT&page=1&limit=20&filter={\"rating\":{\"value\":[{\"gte\":0,\"lte\":5}]}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "master-profiles"],
+              "query": [
+                { "key": "preset", "value": "SHORT" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                {
+                  "key": "filter",
+                  "value": "{\"rating\":{\"value\":[{\"gte\":0,\"lte\":5}]}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "get one by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/master-profiles/{{masterProfileId}}?preset=SHORT"
+          }
+        },
+        {
+          "name": "create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res?.result?.data?.id;",
+                  "if (id) {",
+                  "  pm.collectionVariables.set('masterProfileId', id);",
+                  "  console.log('masterProfileId saved:', id);",
+                  "}",
+                  "pm.test('Created', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Иван Мастер\",\n  \"description\": \"Ремонт и обслуживание\",\n  \"rating\": 4.8\n}"
+            },
+            "url": "{{baseUrl}}/v1/master-profiles"
+          }
+        },
+        {
+          "name": "create by staff",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Профиль от админа\",\n  \"description\": \"Создан staff\",\n  \"rating\": 5,\n  \"userId\": \"REPLACE_WITH_USER_UUID\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/master-profiles"
+          }
+        },
+        {
+          "name": "update",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Иван Мастер (обновлён)\",\n  \"rating\": 4.9\n}"
+            },
+            "url": "{{baseUrl}}/v1/master-profiles/{{masterProfileId}}"
+          }
+        },
+        {
+          "name": "delete soft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/master-profiles/{{masterProfileId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "master services",
+      "item": [
+        {
+          "name": "get many",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/master-services?preset=SHORT&page=1&limit=20&masterProfileId={{masterProfileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "master-services"],
+              "query": [
+                { "key": "preset", "value": "SHORT" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                {
+                  "key": "filter",
+                  "value": "{\"masterProfileId\":{\"value\":[\"{{masterProfileId}}\"]}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "get many by profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/master-services?preset=SHORT&page=1&limit=20&filter={\"masterProfileId\":{\"value\":[\"{{masterProfileId}}\"]}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "master-services"],
+              "query": [
+                { "key": "preset", "value": "SHORT" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                {
+                  "key": "filter",
+                  "value": "{\"masterProfileId\":{\"value\":[\"{{masterProfileId}}\"]}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "get one by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/master-services/{{masterServiceId}}?preset=SHORT"
+          }
+        },
+        {
+          "name": "create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res?.result?.data?.id;",
+                  "if (id) {",
+                  "  pm.collectionVariables.set('masterServiceId', id);",
+                  "  console.log('masterServiceId saved:', id);",
+                  "}",
+                  "pm.test('Created', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"masterProfileId\": \"{{masterProfileId}}\",\n  \"name\": \"Замена масла\",\n  \"description\": \"Полная замена моторного масла и фильтра\",\n  \"price\": 2500\n}"
+            },
+            "url": "{{baseUrl}}/v1/master-services"
+          }
+        },
+        {
+          "name": "update",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Замена масла (премиум)\",\n  \"price\": 3200\n}"
+            },
+            "url": "{{baseUrl}}/v1/master-services/{{masterServiceId}}"
+          }
+        },
+        {
+          "name": "delete soft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/master-services/{{masterServiceId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

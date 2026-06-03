@@ -1,0 +1,15 @@
+meta {
+  name: get one
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/v1/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

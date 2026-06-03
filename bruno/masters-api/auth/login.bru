@@ -1,0 +1,30 @@
+meta {
+  name: login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/v1/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{seedEmail}}",
+    "password": "{{seedPassword}}"
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  const token = data?.result?.data?.tokens?.accessToken;
+  if (token) {
+    bru.setEnvVar("accessToken", token);
+  }
+}

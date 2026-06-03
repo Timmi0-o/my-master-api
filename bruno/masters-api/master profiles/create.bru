@@ -1,0 +1,35 @@
+meta {
+  name: create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/v1/master-profiles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "displayName": "Иван Мастер",
+    "description": "Ремонт и обслуживание",
+    "rating": 4.8
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  const id = data?.result?.data?.id;
+  if (id) {
+    bru.setEnvVar("masterProfileId", id);
+  }
+}

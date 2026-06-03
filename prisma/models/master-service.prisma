@@ -1,0 +1,16 @@
+model MasterService {
+  id          String @id @default(uuid())
+  name        String @map("name")
+  description String @map("description")
+  price       Float  @map("price")
+
+  masterProfileId String @map("master_profile_id")
+
+  masterProfile MasterProfile @relation(fields: [masterProfileId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("MasterServices")
+}

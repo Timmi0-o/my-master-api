@@ -1,0 +1,28 @@
+meta {
+  name: create by staff
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/v1/master-profiles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "displayName": "Профиль от админа",
+    "description": "Создан staff",
+    "rating": 5,
+    "userId": "REPLACE_WITH_USER_UUID"
+  }
+}

@@ -1,5 +1,6 @@
 import type {
   IDateRangeArrayFilter,
+  INumberRangeArrayFilter,
   IStringArrayFilter,
 } from './filter-preset.types';
 
@@ -114,6 +115,31 @@ export class FilterPresetMapperCommon {
           const d = this.parseISODate(range.lt);
           if (d) prismaRange.lt = d;
         }
+        return Object.keys(prismaRange).length > 0
+          ? { [fieldName]: prismaRange }
+          : null;
+      })
+      .filter(Boolean);
+
+    if (conditions.length === 0) return {};
+    if (conditions.length === 1)
+      return conditions[0] as Record<string, unknown>;
+    return { OR: conditions };
+  }
+
+  static buildMultiNumberRangeFilter(
+    fieldName: string,
+    filter: INumberRangeArrayFilter,
+  ): Record<string, unknown> {
+    if (!filter.value?.length) return {};
+
+    const conditions = filter.value
+      .map((range) => {
+        const prismaRange: Record<string, number> = {};
+        if (range.gte != null) prismaRange.gte = range.gte;
+        if (range.gt != null) prismaRange.gt = range.gt;
+        if (range.lte != null) prismaRange.lte = range.lte;
+        if (range.lt != null) prismaRange.lt = range.lt;
         return Object.keys(prismaRange).length > 0
           ? { [fieldName]: prismaRange }
           : null;
