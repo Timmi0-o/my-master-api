@@ -113,7 +113,7 @@ Use-case получает готовый `FindManyParams` и вызывает т
 
 ## HTTP list response
 
-Response mapper возвращает `{ data: items, meta }`. Пустой список → `NotFoundException` (как у users/masters).
+Response mapper возвращает `{ data: items, meta }`. Пустой list → `{ data: [], meta }` (200), через `buildPaginatedListResponse`.
 
 Controller не собирает Prisma args и не знает про presets напрямую — только validator + mappers + use-case.
 

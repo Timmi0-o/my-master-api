@@ -11,23 +11,23 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/modules/auth/presentation/decorators/current-user.decorator';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
-import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
-import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CreateMasterProfileUseCase } from 'src/modules/masters/application/use-cases/master-profile/create-master-profile.use-case';
 import { DeleteMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/delete-master-profile-by-id.use-case';
 import { GetMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profile-by-id.use-case';
 import { GetMasterProfilesUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profiles.use-case';
 import { UpdateMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/update-master-profile-by-id.use-case';
+import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
+import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
+import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
+import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
+import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
-import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
 import { MasterProfileValidator } from '../validation/master-profile.validator';
 
@@ -49,9 +49,8 @@ export class MasterProfilesController {
     @Query() query: IRawQuery,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.masterProfileValidator.validateGetMasterProfilesQuery(
-      query,
-    );
+    const payload =
+      this.masterProfileValidator.validateGetMasterProfilesQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getMasterProfilesUseCase.execute(params);
     return mapGetMasterProfilesHttpResponse(output, payload);
@@ -68,7 +67,8 @@ export class MasterProfilesController {
       throw new UnauthorizedException('User is not authenticated');
     }
     const { id } = this.masterProfileValidator.validateIdParam(params);
-    const queryPayload = this.masterProfileValidator.validateGetByIdQuery(query);
+    const queryPayload =
+      this.masterProfileValidator.validateGetByIdQuery(query);
     const input = payloadToGetMasterProfileByIdInput(
       id,
       queryPayload,
