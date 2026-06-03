@@ -3,18 +3,22 @@ import type {
   FindManyParams,
   FindOneParams,
   ReadResult,
+  WhereFilter,
 } from 'src/modules/shared/domain/query';
 import { resolveSlice } from 'src/modules/shared/domain/query';
 import type { IReadRepository } from 'src/modules/shared/domain/repositories';
+import type { ILogger } from 'src/modules/shared/domain/logging/logger.token';
 import {
   FindManyWithRequiredIdsHelper,
   type FindManyOptions,
 } from '../../helpers/find-many-with-required-ids.helper';
 import { buildOrderBy } from './builders/order-by.builder';
 import { buildSelection } from './builders/selection.builder';
+import { buildWhere } from './builders/where.builder';
+import type { ReadOptionsValidationConfig } from './config/read-validation.config';
 import type { RelationConfig } from './config/relation.config';
 import type { PrismaReadDelegate } from './prisma-delegate.types';
-import { resolvePrismaWhere } from './resolve-prisma-where.util';
+import { validateReadOptions } from './validators';
 
 export abstract class PrismaReadRepository<
   TEntity extends object,
@@ -22,6 +26,20 @@ export abstract class PrismaReadRepository<
   TRelations extends object = Record<never, never>,
   TPrismaRow extends object = object,
 > implements IReadRepository<TEntity, TId, TRelations> {
+  /**
+   * Не инжектить logger через constructor базового класса:
+   * Nest наследует param metadata родителя и подставляет LOGGER_TOKEN
+   * в первый параметр дочернего конструктора (prismaService).
+   */
+  protected readonly logger: ILogger = {
+    debug: () => undefined,
+    log: () => undefined,
+    warn: () => undefined,
+    error: () => undefined,
+    configuration: () => undefined,
+  };
+
+  protected abstract readonly validationConfig: ReadOptionsValidationConfig;
   protected abstract readonly relationConfig: Record<string, RelationConfig>;
 
   protected abstract getDelegate(): PrismaReadDelegate;
@@ -38,10 +56,18 @@ export abstract class PrismaReadRepository<
     );
   }
 
+  protected resolveListWhere(
+    where?: FindManyParams<TEntity, TRelations>['where'],
+  ): Record<string, unknown> | undefined {
+    return buildWhere(where as WhereFilter<TEntity, TRelations> | undefined);
+  }
+
   async findOne(
     id: TId,
     params?: FindOneParams<TEntity, TRelations>,
   ): Promise<ReadResult<TEntity, TRelations> | null> {
+    validateReadOptions(params?.selectOptions, this.validationConfig);
+
     const args = {
       where: this.toPrismaWhereUnique(id),
       ...this.resolveSelectArgs(params?.selectOptions),
@@ -55,13 +81,15 @@ export abstract class PrismaReadRepository<
   async findMany(
     params?: FindManyParams<TEntity, TRelations>,
   ): Promise<ReadResult<TEntity, TRelations>[]> {
+    validateReadOptions(params?.selectOptions, this.validationConfig);
+
     if (params?.requiredIds?.length) {
       return this.findManyWithRequiredIds(params);
     }
 
     const slice = resolveSlice(params?.slice);
     const args = {
-      where: resolvePrismaWhere(params?.where),
+      where: this.resolveListWhere(params?.where),
       orderBy: buildOrderBy(params?.orderBy),
       skip: slice.offset,
       take: slice.limit,
@@ -75,7 +103,7 @@ export abstract class PrismaReadRepository<
 
   async count(params?: CountParams<TEntity, TRelations>): Promise<number> {
     return this.getDelegate().count({
-      where: resolvePrismaWhere(params?.where),
+      where: this.resolveListWhere(params?.where),
     });
   }
 
@@ -84,12 +112,13 @@ export abstract class PrismaReadRepository<
   ): Promise<ReadResult<TEntity, TRelations>[]> {
     const slice = resolveSlice(params?.slice);
     const requiredIds = params.requiredIds ?? [];
+    const baseWhere = this.resolveListWhere(params.where) ?? {};
 
     const findManyBound = async (
       opts: FindManyOptions,
     ): Promise<(ReadResult<TEntity, TRelations> & { id: string })[] | null> => {
       const args = {
-        where: resolvePrismaWhere({ ...params.where, ...opts.where }),
+        where: { ...baseWhere, ...opts.where },
         orderBy: buildOrderBy(params.orderBy),
         skip: opts.skip,
         take: opts.take,
@@ -108,7 +137,7 @@ export abstract class PrismaReadRepository<
     const result = await FindManyWithRequiredIdsHelper.findManyWithRequiredIds(
       findManyBound,
       {
-        where: resolvePrismaWhere(params.where) ?? {},
+        where: baseWhere,
         requiredIds,
         limit: slice.limit,
         offset: slice.offset,

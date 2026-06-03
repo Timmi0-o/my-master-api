@@ -1,20 +1,75 @@
-import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
-import { presetConfigToSelectOptions } from 'src/modules/shared/application/presets/common/preset-to-select-options.mapper';
+import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
 import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
+import { MASTER_SERVICE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-service/master-service-select-fields';
 import type { SelectOptions } from 'src/modules/shared/domain/query';
-import { getMasterServicePresetConfig } from 'src/modules/masters/application/presets';
+import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
+import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-export function masterServicePresetToSelectOptions(
+type MasterServiceSelectOptions = SelectOptions<
+  IMasterServicePublicEntity,
+  IMasterServiceRelations
+>;
+
+const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> = {
+  MINIMAL: {
+    select: ['id', 'masterProfileId', 'name', 'price'],
+  },
+  SHORT: {
+    select: [
+      'id',
+      'masterProfileId',
+      'name',
+      'description',
+      'price',
+      'createdAt',
+      'updatedAt',
+    ],
+  },
+  BASE: {
+    select: [
+      'id',
+      'masterProfileId',
+      'name',
+      'description',
+      'price',
+      'createdAt',
+      'updatedAt',
+      'deletedAt',
+    ],
+    include: {
+      masterProfile: {
+        select: [
+          'id',
+          'userId',
+          'displayName',
+          'description',
+          'rating',
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+        ] as const,
+      },
+    },
+  },
+};
+
+export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
 ): SelectOptions<IMasterServicePublicEntity, IMasterServiceRelations> {
-  const presetConfig = getMasterServicePresetConfig(preset ?? 'SHORT');
+  const config = MASTER_SERVICE_PRESETS[preset ?? 'SHORT'];
+  const select = omitDisallowedSelectFieldsForNonStaff(
+    config.select,
+    isStaffUser,
+  );
 
-  return presetConfigToSelectOptions<
-    IMasterServicePublicEntity,
-    IMasterServiceRelations
-  >(presetConfig, isStaffUser);
+  return {
+    select: select as MasterServiceSelectOptions['select'],
+    include: config.include,
+  };
 }
+
+export { MASTER_SERVICE_SELECT_FIELDS };

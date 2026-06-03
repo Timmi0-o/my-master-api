@@ -1,7 +1,7 @@
 import type { IGetMasterProfileByIdApplicationInput } from 'src/modules/masters/application/dtos/master-profile/get-master-profile-by-id.input';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import type { IGetByIdQueryPayload } from '../../validation/schemas/get-by-id-query.types';
-import { masterProfilePresetToSelectOptions } from './preset-to-select-options.mapper';
+import { presetToSelectOptions } from './preset-to-select-options.mapper';
 import { toMasterActor } from '../shared/to-master-actor';
 
 export function payloadToGetMasterProfileByIdInput(
@@ -14,10 +14,7 @@ export function payloadToGetMasterProfileByIdInput(
     id,
     actor: toMasterActor(sessionUser, isStaffUser),
     params: {
-      selectOptions: masterProfilePresetToSelectOptions(
-        query.preset,
-        isStaffUser,
-      ),
+      selectOptions: presetToSelectOptions(query.preset, isStaffUser),
     },
   };
 }

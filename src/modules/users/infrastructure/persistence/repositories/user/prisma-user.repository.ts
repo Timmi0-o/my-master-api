@@ -17,7 +17,7 @@ import {
   type UserEntityRow,
   type UserRow,
 } from '../../row-mappers/user';
-import { USER_RELATIONS } from './user.relations';
+import { USER_RELATIONS, USER_VALIDATION_CONFIG } from './user.relations';
 
 @Injectable()
 export class PrismaUserRepository
@@ -29,6 +29,7 @@ export class PrismaUserRepository
   >
   implements IUserRepository
 {
+  protected readonly validationConfig = USER_VALIDATION_CONFIG;
   protected readonly relationConfig = USER_RELATIONS;
 
   constructor(private readonly prismaService: PrismaService) {

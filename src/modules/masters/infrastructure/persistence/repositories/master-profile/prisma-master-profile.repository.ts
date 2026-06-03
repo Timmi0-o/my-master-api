@@ -14,7 +14,10 @@ import {
   mapMasterProfileRow,
   type MasterProfileRow,
 } from '../../row-mappers/master-profile';
-import { MASTER_PROFILE_RELATIONS } from './master-profile.relations';
+import {
+  MASTER_PROFILE_RELATIONS,
+  MASTER_PROFILE_VALIDATION_CONFIG,
+} from './master-profile.relations';
 
 @Injectable()
 export class PrismaMasterProfileRepository
@@ -26,6 +29,7 @@ export class PrismaMasterProfileRepository
   >
   implements IMasterProfileRepository
 {
+  protected readonly validationConfig = MASTER_PROFILE_VALIDATION_CONFIG;
   protected readonly relationConfig = MASTER_PROFILE_RELATIONS;
 
   constructor(private readonly prismaService: PrismaService) {

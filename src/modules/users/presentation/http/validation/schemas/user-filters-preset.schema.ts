@@ -1,4 +1,4 @@
-import type { IUserFiltersPreset } from 'src/modules/users/application/presets/user-filters-preset.types';
+import type { IUserFiltersPreset } from '../types/user-filters-preset.types';
 import {
   EUserLanguage,
   EUserRole,

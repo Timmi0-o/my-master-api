@@ -1,5 +1,5 @@
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
-import type { IUserFiltersPreset } from 'src/modules/users/application/presets/user-filters-preset.types';
+import type { IUserFiltersPreset } from '../types/user-filters-preset.types';
 
 export const USER_LIST_ORDER_FIELDS = [
   'id',

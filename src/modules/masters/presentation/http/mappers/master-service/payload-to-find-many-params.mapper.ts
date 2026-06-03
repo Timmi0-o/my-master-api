@@ -8,7 +8,7 @@ import type {
 } from 'src/modules/masters/domain/entities/master-service';
 import type { IGetMasterServicesQueryPayload } from '../../validation/schemas/get-master-services-query.types';
 import { extractMasterServiceFilter } from './extract-master-service-filter';
-import { masterServicePresetToSelectOptions } from './preset-to-select-options.mapper';
+import { presetToSelectOptions } from './preset-to-select-options.mapper';
 
 export function payloadToFindManyParams(
   payload: IGetMasterServicesQueryPayload,
@@ -24,18 +24,15 @@ export function payloadToFindManyParams(
 
   return {
     where: {
-      ...(metadata.isStaffUser ? {} : { deletedAt: null }),
-      ...(Object.keys(filterWhere).length > 0 ? filterWhere : {}),
+      ...(metadata.isStaffUser ? {} : { deletedAt: { isNull: true } }),
+      ...(filterWhere ?? {}),
     },
     slice: mapPaginationToSlice({
       page: payload.page,
       limit: payload.limit,
     }),
     orderBy: mapOrderBy<IMasterServicePublicEntity>({ [orderField]: orderDir }),
-    selectOptions: masterServicePresetToSelectOptions(
-      payload.preset,
-      metadata.isStaffUser,
-    ),
+    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
     requiredIds: payload.requiredIds,
   };
 }

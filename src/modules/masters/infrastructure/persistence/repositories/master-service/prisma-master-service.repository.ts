@@ -14,7 +14,10 @@ import {
   mapMasterServiceRow,
   type MasterServiceRow,
 } from '../../row-mappers/master-service';
-import { MASTER_SERVICE_RELATIONS } from './master-service.relations';
+import {
+  MASTER_SERVICE_RELATIONS,
+  MASTER_SERVICE_VALIDATION_CONFIG,
+} from './master-service.relations';
 
 @Injectable()
 export class PrismaMasterServiceRepository
@@ -26,6 +29,7 @@ export class PrismaMasterServiceRepository
   >
   implements IMasterServiceRepository
 {
+  protected readonly validationConfig = MASTER_SERVICE_VALIDATION_CONFIG;
   protected readonly relationConfig = MASTER_SERVICE_RELATIONS;
 
   constructor(private readonly prismaService: PrismaService) {

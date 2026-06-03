@@ -18,8 +18,8 @@ export function payloadToFindManyParams(
 
   return {
     where: {
-      ...(metadata.isStaffUser ? {} : { deletedAt: null }),
-      ...(Object.keys(filterWhere).length > 0 ? filterWhere : {}),
+      ...(metadata.isStaffUser ? {} : { deletedAt: { isNull: true } }),
+      ...(filterWhere ?? {}),
     },
     slice: mapPaginationToSlice({
       page: payload.page,

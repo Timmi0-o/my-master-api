@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { IMasterServiceFiltersPreset } from 'src/modules/masters/application/presets/master-service-filters-preset.types';
+import type { IMasterServiceFiltersPreset } from '../types/master-service-filters-preset.types';
 import {
   dateRangeArrayFilterSchema,
   filterStringArraySchema,

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpException,
   NotFoundException,
@@ -21,6 +22,8 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
     case 'MASTER_PROFILE_FORBIDDEN':
     case 'MASTER_SERVICE_FORBIDDEN':
       return new ForbiddenException(error.message);
+    case 'INVALID_QUERY':
+      return new BadRequestException(error.message);
     default:
       return new UnprocessableEntityException(error.message);
   }

@@ -1,5 +1,5 @@
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
-import type { IMasterProfileFiltersPreset } from 'src/modules/masters/application/presets/master-profile-filters-preset.types';
+import type { IMasterProfileFiltersPreset } from '../types/master-profile-filters-preset.types';
 
 export const MASTER_PROFILE_LIST_ORDER_FIELDS = [
   'id',

@@ -1,5 +1,5 @@
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
-import type { IMasterServiceFiltersPreset } from 'src/modules/masters/application/presets/master-service-filters-preset.types';
+import type { IMasterServiceFiltersPreset } from '../types/master-service-filters-preset.types';
 
 export const MASTER_SERVICE_LIST_ORDER_FIELDS = [
   'id',
