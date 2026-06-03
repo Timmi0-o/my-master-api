@@ -1,0 +1,16 @@
+model UserProfile {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  displayName String @map("display_name")
+  rating      Float  @map("rating")
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([userId, deletedAt])
+  @@map("UserProfiles")
+}

@@ -1,4 +1,3 @@
-import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
   mapMultiDateRangeFilter,
@@ -6,6 +5,7 @@ import {
   mapStringArrayFilter,
 } from 'src/modules/shared/presentation/http/mappers/filter';
 import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import type { IUserFiltersPreset } from '../../validation/types/user-filters-preset.types';
 
 export function extractUserFilter(
@@ -30,7 +30,7 @@ export function extractUserFilter(
   }
 
   const pushString = (
-    field: keyof IUserPublicEntity & string,
+    field: keyof IUserPublicEntity,
     value: IUserFiltersPreset['id'],
   ): void => {
     if (!value) return;
@@ -46,7 +46,7 @@ export function extractUserFilter(
   pushString('language', sanitized.language);
 
   const pushDate = (
-    field: keyof IUserPublicEntity & string,
+    field: keyof IUserPublicEntity,
     value: IUserFiltersPreset['createdAt'],
   ): void => {
     if (!value) return;

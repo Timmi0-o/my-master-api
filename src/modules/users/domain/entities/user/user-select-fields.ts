@@ -14,4 +14,4 @@ export const USER_SELECT_FIELDS = [
   'createdAt',
   'updatedAt',
   'deletedAt',
-] as const satisfies readonly (keyof IUserPublicEntity & string)[];
+] as const satisfies readonly (keyof IUserPublicEntity)[];

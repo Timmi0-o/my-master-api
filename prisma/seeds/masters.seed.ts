@@ -26,20 +26,20 @@ export const mastersSeed: SeedRunner = async (
   prisma: PrismaClient,
 ): Promise<void> => {
   const users = await pickSeedUsers(prisma);
+  const entriesToSeed = MASTERS_CATALOG.slice(0, users.length);
 
-  let profileIndex = 0;
+  if (entriesToSeed.length < MASTERS_CATALOG.length) {
+    console.warn(
+      `masters seed: catalog has ${MASTERS_CATALOG.length} entries, but only ${users.length} users — seeding ${entriesToSeed.length} profiles (1 profile per user)`,
+    );
+  }
 
-  for (const entry of MASTERS_CATALOG) {
-    const user = users[profileIndex % users.length];
-    profileIndex += 1;
-
+  for (const [index, entry] of entriesToSeed.entries()) {
+    const user = users[index];
     const deletedAt = entry.softDeleted ? new Date() : null;
 
-    const existingProfile = await prisma.masterProfile.findFirst({
-      where: {
-        userId: user.id,
-        displayName: entry.displayName,
-      },
+    const existingProfile = await prisma.masterProfile.findUnique({
+      where: { userId: user.id },
     });
 
     const profile =
@@ -58,6 +58,7 @@ export const mastersSeed: SeedRunner = async (
       await prisma.masterProfile.update({
         where: { id: existingProfile.id },
         data: {
+          displayName: entry.displayName,
           description: entry.description,
           rating: entry.rating,
           deletedAt,
@@ -105,6 +106,6 @@ export const mastersSeed: SeedRunner = async (
   const serviceCount = await prisma.masterService.count();
 
   console.log(
-    `masters seed: ${profileCount} profiles, ${serviceCount} services (${MASTERS_CATALOG.length} catalog entries)`,
+    `masters seed: ${profileCount} profiles, ${serviceCount} services (${entriesToSeed.length} catalog entries)`,
   );
 };

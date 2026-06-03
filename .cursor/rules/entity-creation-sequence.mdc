@@ -1,0 +1,218 @@
+---
+description: Порядок создания новой сущности — от Prisma до controller и use-case
+globs: prisma/**/*,src/**/*
+alwaysApply: false
+---
+
+# Создание сущности: порядок слоёв
+
+Следовать **снизу вверх по зависимостям**: схема БД → контракт домена → адаптер → прикладной слой → HTTP.
+
+Сквозной поток запросов и контракт ответа — `../../.cursor/rules/project-data-flow.mdc`.  
+Пресеты, `FindManyParams`, row-mappers — `query-layer-and-presets.mdc`, `prisma-boundary-and-types.mdc`.
+
+## Схема
+
+```mermaid
+flowchart TB
+  P[1. Prisma model + migration]
+  D[2. Domain: entities, errors, I*Repository]
+  I[3. Infrastructure: row-mappers, relations, Prisma*Repository]
+  A[4. Application: dtos, helpers, use-cases]
+  H[5. Presentation: validation, mappers, response, controller]
+  N[6. Nest *Module + AppModule]
+  P --> D --> I --> A --> H --> N
+```
+
+## 1. Prisma (схема БД)
+
+| Шаг | Где | Что |
+|-----|-----|-----|
+| 1.1 | `prisma/models/<entity>.prisma` | `model`, `@map`, FK, `createdAt`/`updatedAt`, при soft-delete — `deletedAt` |
+| 1.2 | Связанные `*.prisma` | Обратные `@relation`, если нужны include в read |
+| 1.3 | `prisma migrate dev` | Миграция; не править схему без миграции |
+| 1.4 | `prisma/seeds/` (опционально) | Seed для локальной разработки |
+
+Правила: snake_case в `@map`, `@@map` для таблицы; типы `@prisma/client` **не** уходят за пределы `infrastructure`.
+
+## 2. Feature-модуль и домен
+
+Выбрать или создать `src/modules/<feature>/` (feature-based, не слой всего приложения).
+
+### 2.1 Сущности
+
+`domain/entities/<entity>/`:
+
+| Файл | Назначение |
+|------|------------|
+| `i-<entity>-entity.ts` | `I*Entity` (полная), `I*PublicEntity`, `ICreate*Input`, `IUpdate*Input` |
+| `i-<entity>-relations.ts` | Типы вложений для `ReadResult` (если есть relations в list/get-by-id) |
+| `<entity>-select-fields.ts` | Константа полей для preset/select validation |
+| `index.ts` | Re-export типов |
+
+Если есть «секретные» поля (например `passwordHash`) — отдельная full entity vs public; иначе `PublicEntity` может совпадать с полной.
+
+### 2.2 Доменные ошибки
+
+`domain/errors/<entity>-not-found.error.ts`, `*-forbidden.error.ts` и т.д. — до use-case, которые их бросают.
+
+### 2.3 Порт репозитория
+
+`domain/repositories/<entity>/`:
+
+```typescript
+// i-<entity>.repository.ts
+export type I<Entity>Repository = IReadRepository<
+  IPublicEntity,
+  Id,
+  IRelations
+> & {
+  findEntityById(id): Promise<IEntity | null>;
+  create(input: ICreate*Input): Promise<IEntity>;
+  update(id, input: IUpdate*Input): Promise<IEntity>;
+  softDeleteById(id): Promise<boolean>;
+};
+```
+
+- `domain/repositories/<entity>/<entity>.repository.tokens.ts` — `Symbol` для DI.
+- Один репозиторий на агрегат: read (`findOne`/`findMany`/`count`) + write в **одном** интерфейсе.
+- Не использовать `PrismaCrudRepository`.
+
+Auth-only сущности без list/preset — плоский Prisma-репозиторий без `IReadRepository` (см. session/refresh).
+
+## 3. Infrastructure (реализация порта)
+
+Порядок внутри слоя:
+
+| # | Путь | Назначение |
+|---|------|------------|
+| 3.1 | `infrastructure/persistence/row-mappers/<entity>/<entity>.row.types.ts` | Форма строки Prisma без импорта `@prisma/client` в domain |
+| 3.2 | `.../map-<entity>-row.ts` | `mapXxxRow(row) → Entity & Partial<Relations>` |
+| 3.3 | `.../index.ts` | Re-export |
+| 3.4 | `repositories/<entity>/<entity>.relations.ts` | `*_VALIDATION_CONFIG` (`allowedSelectFields`, `includeGraph`) — если есть list/get с preset |
+| 3.5 | `repositories/<entity>/prisma-<entity>.repository.ts` | `extends PrismaReadRepository`, `relationConfig`, `mapRow` → `mapXxxRow`, write-методы |
+
+Prisma-ошибки (`P20xx`) мапить в доменные/прикладные ошибки, не пробрасывать наружу.
+
+## 4. Application
+
+| # | Путь | Назначение |
+|---|------|------------|
+| 4.1 | `application/dtos/<entity>/*.input.ts` | `I*ApplicationInput` на операцию (с `actor` для mutate/get-by-id) |
+| 4.2 | `application/helpers/` | Общие проверки доступа (`assert*Access`) — при необходимости |
+| 4.3 | `application/use-cases/<entity>/` | Один файл = одна операция: `execute(input) → Output` |
+
+Типичный набор use-case:
+
+- `get-<entities>.use-case.ts` — list, вход `FindManyParams`
+- `get-<entity>-by-id.use-case.ts` — `actor` + id + select из preset
+- `create-<entity>.use-case.ts`
+- `update-<entity>-by-id.use-case.ts`
+- `delete-<entity>-by-id.use-case.ts` (soft delete)
+
+Правила:
+
+- Без `*Command` — только `I*ApplicationInput`.
+- Use-case не знает HTTP, Nest, Prisma; только порт `I*Repository` и доменные ошибки.
+- List: visibility (`deletedAt: null` для non-staff) — в **presentation** mapper, не в use-case.
+
+## 5. Presentation (HTTP)
+
+Для **каждого** endpoint — цепочка: `Validator` → `payload-to-*` → `useCase.execute` → response mapper.
+
+### 5.1 Валидация
+
+`presentation/http/validation/`:
+
+| Файл | Назначение |
+|------|------------|
+| `<entity>.validator.ts` | Методы `validateGet*Query`, `validateIdParam`, `validateCreate*Payload`, … |
+| `schemas/*.schema.ts` | AJV-схемы |
+| `schemas/*.types.ts` | TS-типы payload |
+| `schemas/*-filters-preset.schema.ts` | Фильтры list (если есть) |
+
+Mutate: `create-*-payload.schema.ts`, не `*-body.schema.ts`.
+
+### 5.2 Mappers (query / mutate)
+
+`presentation/http/mappers/<entity>/`:
+
+| Операция | Файлы |
+|----------|--------|
+| GET list | `extract-<entity>-filter.ts`, `preset-to-select-options.mapper.ts`, `payload-to-find-many-params.mapper.ts` |
+| GET by id | `payload-to-get-<entity>-by-id-input.ts` |
+| POST/PATCH/DELETE | `payload-to-create-*-input.ts`, `payload-to-update-*-input.ts`, `payload-to-delete-*-input.ts` |
+
+Shared: `mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.
+
+### 5.3 Response
+
+`presentation/http/response/map-get-<entities>-response.ts` — `{ data, meta }` для list; single — `{ data: item }` в controller или отдельный mapper.
+
+### 5.4 Controller
+
+`presentation/http/controllers/<entities>.controller.ts`:
+
+- `@Controller({ path: '<kebab-plural>', version: '1' })`
+- `@UseFilters(DomainExceptionFilter)`
+- Guards по необходимости (`JwtAuthGuard`)
+- Не собирать Prisma args и не знать про presets напрямую — только validator + mappers + use-case
+
+## 6. Сборка Nest-модуля
+
+`src/modules/<feature>/<feature>.module.ts`:
+
+1. `controllers: [...]`
+2. `providers`: `*Validator`, `JwtAuthGuard` (если нужен), `{ provide: TOKEN, useClass: Prisma*Repository }`, use-cases через `useFactory` + `inject: [TOKEN, ...]`
+3. `exports: [REPOSITORY_TOKEN]` — если другой модуль инжектит репозиторий
+
+Новый feature → `imports` в `src/app.module.ts`.
+
+## 7. После API (вне backend, но в монорепо)
+
+| Шаг | Где |
+|-----|-----|
+| Bruno | `bruno/masters-api/<entity>/` — запросы на каждый endpoint |
+| RN | `my-master-react-native/actions/<entity>/` — Zod models, `actions.ts`, hook; list с relations → `preset: 'BASE'` |
+
+## Чеклист по файлам (полный CRUD + list)
+
+```text
+prisma/models/<entity>.prisma
+prisma/migrations/...
+
+src/modules/<feature>/
+  domain/entities/<entity>/          # entity, relations, select-fields, index
+  domain/errors/
+  domain/repositories/<entity>/    # i-*.repository.ts, *.repository.tokens.ts
+  infrastructure/persistence/row-mappers/<entity>/
+  infrastructure/persistence/repositories/<entity>/  # relations, prisma-*.repository.ts
+  application/dtos/<entity>/
+  application/use-cases/<entity>/    # get many, get by id, create, update, delete
+  application/helpers/               # при необходимости
+  presentation/http/validation/    # validator + schemas
+  presentation/http/mappers/<entity>/
+  presentation/http/response/
+  presentation/http/controllers/
+  <feature>.module.ts
+```
+
+## Упрощённые варианты
+
+| Сценарий | Пропустить |
+|----------|------------|
+| Только create/read без list | `extract-*-filter`, `payload-to-find-many-params`, `get-*-many` use-case, list response mapper |
+| Нет relations в ответе | `i-*-relations.ts`, `include` в preset, `relationConfig` (минимальный `select` only) |
+| Auth token/session | Нет `IReadRepository`; нет preset/query layer |
+
+## Запрещено
+
+- Начинать с controller или use-case до порта репозитория и Prisma-адаптера.
+- Импортировать `@prisma/client` в domain/application/presentation.
+- Два репозитория (read/write) на один агрегат.
+- Маппинг Prisma row внутри use-case или controller.
+- Склеивать на клиенте несколько list-endpoint’ов в одну «сущность с вложениями» — один GET с `preset=BASE`.
+
+## Эталон в коде
+
+`src/modules/masters/` — `master-profile`, `master-service` (полный цикл list + CRUD + relations + soft delete).

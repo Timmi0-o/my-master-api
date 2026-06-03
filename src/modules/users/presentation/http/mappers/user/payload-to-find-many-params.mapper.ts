@@ -1,5 +1,5 @@
-import type { FindManyParams } from 'src/modules/shared/domain/query';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
+import type { FindManyParams } from 'src/modules/shared/domain/query';
 import { mapOrderBy } from 'src/modules/shared/presentation/http/query/map-order-by';
 import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
 import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
@@ -14,7 +14,7 @@ export function payloadToFindManyParams(
   const filterWhere = extractUserFilter(payload.filter, metadata.isStaffUser);
 
   const orderField = payload.orderField ?? 'id';
-  const orderDir = payload.orderDir ?? 'asc';
+  const orderDir = payload.orderDir ?? 'desc';
 
   return {
     where: {

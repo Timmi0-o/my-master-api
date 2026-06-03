@@ -9,4 +9,4 @@ export const MASTER_SERVICE_SELECT_FIELDS = [
   'createdAt',
   'updatedAt',
   'deletedAt',
-] as const satisfies readonly (keyof IMasterServicePublicEntity & string)[];
+] as const satisfies readonly (keyof IMasterServicePublicEntity)[];

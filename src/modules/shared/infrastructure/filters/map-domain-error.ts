@@ -12,6 +12,7 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
   switch (error.code) {
     case 'USER_NOT_FOUND':
     case 'MEMBER_NOT_FOUND':
+    case 'USER_PROFILE_NOT_FOUND':
     case 'MASTER_PROFILE_NOT_FOUND':
     case 'MASTER_SERVICE_NOT_FOUND':
       return new NotFoundException(error.message);
@@ -19,6 +20,7 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
     case 'REFRESH_TOKEN_INVALID':
       return new UnauthorizedException(error.message);
     case 'USER_NOT_ACTIVE':
+    case 'USER_PROFILE_FORBIDDEN':
     case 'MASTER_PROFILE_FORBIDDEN':
     case 'MASTER_SERVICE_FORBIDDEN':
       return new ForbiddenException(error.message);

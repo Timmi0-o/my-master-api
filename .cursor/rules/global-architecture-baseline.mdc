@@ -15,6 +15,7 @@ alwaysApply: true
 
 - Применять правила из:
   - `../../.cursor/rules/project-data-flow.mdc` (сквозной поток данных монорепо)
+  - `.cursor/rules/entity-creation-sequence.mdc` (порядок создания сущности)
   - `.cursor/rules/architecture-ddd-clean.mdc`
   - `.cursor/rules/query-layer-and-presets.mdc`
   - `.cursor/rules/prisma-boundary-and-types.mdc`
