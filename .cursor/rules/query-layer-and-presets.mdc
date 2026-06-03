@@ -1,0 +1,134 @@
+---
+description: Пресеты, SelectOptions, Prisma selection и репозитории чтения
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Query layer: presets → Prisma → domain
+
+## Именование (важно)
+
+- `IReadRepository` / `PrismaReadRepository` — **не** CQRS и не отдельный read-репозиторий.
+- Это порт **запросов списка/одной записи**: `findOne`, `findMany`, `count` с `ReadResult<Entity, Relations>`.
+- Write (`create`, `update`, `softDeleteById`, `findEntityById`) — в том же `I*Repository` и том же `Prisma*Repository`.
+
+## Один репозиторий на сущность
+
+```text
+PrismaMasterProfileRepository
+  extends PrismaReadRepository<PublicEntity, id, Relations, PrismaRow>
+  implements IMasterProfileRepository
+  + findEntityById / create / update / softDeleteById
+```
+
+Auth-модули (session, refresh) — плоский Prisma без базы, если нет list/preset.
+
+Не использовать `PrismaCrudRepository`.
+
+## Пресеты (`application/presets/*.preset.ts`)
+
+```typescript
+BASE: {
+  select: ['id', 'displayName', ...],
+  include: {
+    services: { select: ['id', 'name', 'price', ...] },
+  },
+}
+```
+
+- `select` — поля корневой public entity.
+- `include` — вложенные relations; для relation с полями — `{ select: string[] }`, для глубокой вложенности — `{ include: { ... } }` (без `select` на том же уровне, если нужен только nested include).
+- Для relation в row-mapper использовать **полный** набор полей entity relation (иначе обязательные поля домена станут `undefined`).
+
+## preset → selectOptions
+
+Файл `presentation/http/mappers/*-preset-to-select-options.mapper.ts`:
+
+- Берёт `get*PresetConfig(preset ?? 'SHORT')`.
+- Возвращает `SelectOptions<T, R>`: **`select` + `include`** (типизированный `QueryInclude`).
+- Staff/non-staff: обрезка полей через `omitDisallowedSelectFieldsForNonStaff`.
+
+Не вводить параллельные поля вроде `presetInclude` — только `include` в `SelectOptions`.
+
+## Query → FindManyParams
+
+`presentation/http/mappers/<entity>/payload-to-find-many-params.mapper.ts`:
+
+1. `FilterExtractor.extract(sanitizedFilter)`
+2. visibility (`deletedAt: null` для non-staff)
+3. `slice` из `page`/`limit`
+4. `orderBy` из `orderField`/`orderDir`
+5. `selectOptions` из preset mapper
+6. опционально `requiredIds`
+
+`shared/presentation/http/query/` — только `map-order-by`, `map-pagination-to-slice` (как `rpc/query`).
+
+List mapper на сущность:
+- `extract-<entity>-filter.ts` — filter payload → where (staff: без `deletedAt` в filter)
+- `payload-to-find-many-params.mapper.ts` — export `payloadToFindManyParams`, `where: { ...(non-staff ? { deletedAt: null } : {}), ...filterWhere }`
+
+Именование: `preset-to-select-options.mapper.ts`, `payload-to-*-input.ts`.
+
+Use-case получает готовый `FindManyParams` и вызывает только порт репозитория.
+
+## Prisma selection (обязательный паттерн)
+
+Три builder’а в `shared/infrastructure/.../builders/`:
+
+| Builder | Назначение |
+|---------|------------|
+| `buildSelect` | scalar fields → `{ select: { id: true } }` |
+| `buildInclude` | nested include + `relationConfig` (prismaName, nested) |
+| `buildSelection` | объединяет select и include |
+
+**Правило Prisma:** на одном уровне нельзя одновременно отдавать top-level `select` и `include`. Если есть оба — relations вкладываются **внутрь** `select`:
+
+```typescript
+// buildSelection при hasSelect && hasInclude:
+{ select: { ...scalarFields, relationKey: { select: { ... } } } }
+```
+
+`PrismaReadRepository.resolveSelectArgs` вызывает только `buildSelection(select, include, relationConfig)`.
+
+Каждый репозиторий с relations объявляет `protected readonly relationConfig: Record<string, RelationConfig>`.
+
+Удалять/не добавлять `select-with-relations.builder` и `presetInclude` — это упрощённый обход, не стандарт проекта.
+
+## Row-mappers (`infrastructure/persistence/row-mappers/<entity>/`)
+
+Обязательный слой рядом с `repositories/` (не в domain, не в repository-файле).
+
+Структура как у organization-member:
+
+- `map-<entity>-row.ts` — одна функция `mapXxxRow(row) -> Entity & Partial<Relations>`
+- `<entity>.row.types.ts` — явная форма строки Prisma (без импорта `@prisma/client`)
+- `index.ts` — re-export
+
+Правила:
+
+- Репозиторий в `protected mapRow` только делегирует в `mapXxxRow`; write-методы тоже через тот же mapper.
+- Вложенные relations мапятся внутри `mapXxxRow` (отдельные `*RelationRow` типы без обратных include, чтобы не было циклов).
+- Не плодить `mapEntityRow` / `mapPublicRow` — одна точка полей (`mapUserBase` / `mapXxxRow`).
+- Исключение: сущности с `passwordHash` — `mapUserEntityRow` тонко расширяет `mapUserRow`.
+
+## HTTP list response
+
+Response mapper возвращает `{ data: items, meta }`. Пустой список → `NotFoundException` (как у users/masters).
+
+Controller не собирает Prisma args и не знает про presets напрямую — только validator + mappers + use-case.
+
+## Валидация HTTP
+
+- `*.schema.ts` — AJV
+- `*.types.ts` — TypeScript типы payload
+- Mutate: `create-*-payload.schema.ts`, не `*-body.schema.ts`
+
+## Новая сущность с list + relations (чеклист)
+
+1. Domain: `PublicEntity`, `Relations`, `I*Repository extends IReadRepository & write`
+2. Presets MINIMAL/SHORT/BASE + filter extractor
+3. `preset-to-select-options` + `payload-to-find-many-params` + `extract-*-filter`
+4. Use-cases get many / get by id / CRUD
+5. `Prisma*Repository` + `relationConfig` + row-mappers
+6. Controller, validator, response mapper, Bruno request
+7. RN: `actions/<entity>/actions.ts` + Zod models + hook; для UI с relations — `preset: 'BASE'`

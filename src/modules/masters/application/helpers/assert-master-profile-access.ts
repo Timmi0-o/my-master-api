@@ -1,14 +1,13 @@
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { IMasterActorInput } from '../dtos/common/i-master-actor.input';
 import type { IMasterProfileEntity } from '../../domain/entities/master-profile';
 import { MasterProfileForbiddenError } from '../../domain/errors/master-profile-forbidden.error';
 
 export function assertMasterProfileAccess(
   profile: IMasterProfileEntity,
-  sessionUser: ISessionUser,
-  isStaffUser: boolean,
+  actor: IMasterActorInput,
 ): void {
-  if (isStaffUser) return;
-  if (profile.userId !== sessionUser.id) {
+  if (actor.isStaffUser) return;
+  if (profile.userId !== actor.userId) {
     throw new MasterProfileForbiddenError(profile.id);
   }
 }

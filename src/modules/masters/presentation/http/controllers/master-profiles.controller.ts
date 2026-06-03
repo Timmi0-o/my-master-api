@@ -23,8 +23,11 @@ import { DeleteMasterProfileByIdUseCase } from 'src/modules/masters/application/
 import { GetMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profile-by-id.use-case';
 import { GetMasterProfilesUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profiles.use-case';
 import { UpdateMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/update-master-profile-by-id.use-case';
-import { masterProfilePresetToSelectOptions } from '../mappers/master-profile-preset-to-select-options.mapper';
-import { masterProfileQueryToFindManyParams } from '../mappers/master-profile-query-to-find-many-params.mapper';
+import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
+import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
+import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
+import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
+import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
 import { MasterProfileValidator } from '../validation/master-profile.validator';
 
@@ -49,7 +52,7 @@ export class MasterProfilesController {
     const payload = this.masterProfileValidator.validateGetMasterProfilesQuery(
       query,
     );
-    const params = masterProfileQueryToFindManyParams(payload, metadata);
+    const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getMasterProfilesUseCase.execute(params);
     return mapGetMasterProfilesHttpResponse(output, payload);
   }
@@ -58,20 +61,21 @@ export class MasterProfilesController {
   async getMasterProfileById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
+    @CurrentUser() user: ISessionUser | null,
     @GetMetadata() metadata: IGetMetadata,
   ) {
+    if (!user) {
+      throw new UnauthorizedException('User is not authenticated');
+    }
     const { id } = this.masterProfileValidator.validateIdParam(params);
     const queryPayload = this.masterProfileValidator.validateGetByIdQuery(query);
-    const item = await this.getMasterProfileByIdUseCase.execute(
+    const input = payloadToGetMasterProfileByIdInput(
       id,
+      queryPayload,
+      user,
       metadata.isStaffUser,
-      {
-        selectOptions: masterProfilePresetToSelectOptions(
-          queryPayload.preset,
-          metadata.isStaffUser,
-        ),
-      },
     );
+    const item = await this.getMasterProfileByIdUseCase.execute(input);
     return { data: item };
   }
 
@@ -85,11 +89,12 @@ export class MasterProfilesController {
       throw new UnauthorizedException('User is not authenticated');
     }
     const payload = this.masterProfileValidator.validateCreatePayload(body);
-    const data = await this.createMasterProfileUseCase.execute(
+    const input = payloadToCreateMasterProfileInput(
       payload,
       user,
       metadata.isStaffUser,
     );
+    const data = await this.createMasterProfileUseCase.execute(input);
     return { data };
   }
 
@@ -105,12 +110,13 @@ export class MasterProfilesController {
     }
     const { id } = this.masterProfileValidator.validateIdParam(params);
     const payload = this.masterProfileValidator.validateUpdatePayload(body);
-    const data = await this.updateMasterProfileByIdUseCase.execute(
+    const input = payloadToUpdateMasterProfileInput(
       id,
       payload,
       user,
       metadata.isStaffUser,
     );
+    const data = await this.updateMasterProfileByIdUseCase.execute(input);
     return { data };
   }
 
@@ -124,11 +130,12 @@ export class MasterProfilesController {
       throw new UnauthorizedException('User is not authenticated');
     }
     const { id } = this.masterProfileValidator.validateIdParam(params);
-    await this.deleteMasterProfileByIdUseCase.execute(
+    const input = payloadToDeleteMasterProfileInput(
       id,
       user,
       metadata.isStaffUser,
     );
+    await this.deleteMasterProfileByIdUseCase.execute(input);
     return { data: { success: true } };
   }
 }

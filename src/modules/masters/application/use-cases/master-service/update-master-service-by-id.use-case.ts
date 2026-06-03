@@ -1,8 +1,5 @@
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import type {
-  IMasterServiceEntity,
-  IUpdateMasterServiceInput,
-} from 'src/modules/masters/domain/entities/master-service';
+import type { IUpdateMasterServiceApplicationInput } from 'src/modules/masters/application/dtos/master-service/update-master-service.input';
+import type { IMasterServiceEntity } from 'src/modules/masters/domain/entities/master-service';
 import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/errors/master-service-not-found.error';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
@@ -16,14 +13,13 @@ export class UpdateMasterServiceByIdUseCase {
   ) {}
 
   async execute(
-    id: string,
-    input: IUpdateMasterServiceInput,
-    sessionUser: ISessionUser,
-    isStaffUser: boolean,
+    input: IUpdateMasterServiceApplicationInput,
   ): Promise<IMasterServiceEntity> {
-    const existing = await this.masterServiceRepository.findEntityById(id);
+    const existing = await this.masterServiceRepository.findEntityById(
+      input.id,
+    );
     if (!existing) {
-      throw new MasterServiceNotFoundError(id);
+      throw new MasterServiceNotFoundError(input.id);
     }
 
     const profile = await this.masterProfileRepository.findEntityById(
@@ -33,8 +29,8 @@ export class UpdateMasterServiceByIdUseCase {
       throw new MasterProfileNotFoundError(existing.masterProfileId);
     }
 
-    assertMasterProfileAccess(profile, sessionUser, isStaffUser);
+    assertMasterProfileAccess(profile, input.actor);
 
-    return this.masterServiceRepository.update(id, input);
+    return this.masterServiceRepository.update(input.id, input.patch);
   }
 }

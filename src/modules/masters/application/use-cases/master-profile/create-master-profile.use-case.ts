@@ -1,16 +1,9 @@
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { ICreateMasterProfileApplicationInput } from 'src/modules/masters/application/dtos/master-profile/create-master-profile.input';
 import type {
   ICreateMasterProfileInput,
   IMasterProfileEntity,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-
-export type CreateMasterProfileCommand = {
-  displayName: string;
-  description: string;
-  rating: number;
-  userId?: string;
-};
 
 export class CreateMasterProfileUseCase {
   constructor(
@@ -18,20 +11,20 @@ export class CreateMasterProfileUseCase {
   ) {}
 
   async execute(
-    command: CreateMasterProfileCommand,
-    sessionUser: ISessionUser,
-    isStaffUser: boolean,
+    input: ICreateMasterProfileApplicationInput,
   ): Promise<IMasterProfileEntity> {
     const userId =
-      isStaffUser && command.userId ? command.userId : sessionUser.id;
+      input.actor.isStaffUser && input.userId
+        ? input.userId
+        : input.actor.userId;
 
-    const input: ICreateMasterProfileInput = {
+    const createInput: ICreateMasterProfileInput = {
       userId,
-      displayName: command.displayName,
-      description: command.description,
-      rating: command.rating,
+      displayName: input.displayName,
+      description: input.description,
+      rating: input.rating,
     };
 
-    return this.masterProfileRepository.create(input);
+    return this.masterProfileRepository.create(createInput);
   }
 }

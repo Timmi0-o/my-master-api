@@ -3,13 +3,14 @@ import type {
   ICreateMasterServiceInput,
   IMasterServiceEntity,
   IMasterServicePublicEntity,
+  IMasterServiceRelations,
   IUpdateMasterServiceInput,
 } from '../../entities/master-service';
 
 export type IMasterServiceRepository = IReadRepository<
   IMasterServicePublicEntity,
   string,
-  Record<never, never>
+  IMasterServiceRelations
 > & {
   findEntityById(id: string): Promise<IMasterServiceEntity | null>;
   create(input: ICreateMasterServiceInput): Promise<IMasterServiceEntity>;

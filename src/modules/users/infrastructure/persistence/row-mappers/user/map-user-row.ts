@@ -1,63 +1,34 @@
-import type { Language, Role, Status, User } from '@prisma/client';
-import {
-  EUserLanguage,
-  EUserRole,
-  EUserStatus,
-  type IUserEntity,
-  type IUserPublicEntity,
+import type {
+  IUserEntity,
+  IUserPublicEntity,
 } from 'src/modules/users/domain/entities/user';
-import type { UserPrismaRow } from './user.row.types';
+import type { UserEntityRow, UserRow } from './user.row.types';
 
-function toDomainRole(role: Role): EUserRole {
-  return role as EUserRole;
-}
-
-function toDomainStatus(status: Status): EUserStatus {
-  return status as EUserStatus;
-}
-
-function toDomainLanguage(language: Language): EUserLanguage {
-  return language as EUserLanguage;
-}
-
-export function mapUserEntityRow(row: User | UserPrismaRow): IUserEntity {
+function mapUserBase(row: UserRow): IUserPublicEntity {
   return {
     id: row.id,
     email: row.email,
-    phone: row.phone ?? null,
+    phone: row.phone,
     username: row.username,
-    role: toDomainRole(row.role),
-    status: toDomainStatus(row.status),
-    language: toDomainLanguage(row.language),
+    role: row.role,
+    status: row.status,
+    language: row.language,
     name: row.name,
     surname: row.surname,
-    patronymic: row.patronymic ?? null,
-    passwordHash:
-      'passwordHash' in row && typeof row.passwordHash === 'string'
-        ? row.passwordHash
-        : (() => {
-            throw new TypeError('User row must include passwordHash');
-          })(),
+    patronymic: row.patronymic,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    deletedAt: row.deletedAt ?? null,
+    deletedAt: row.deletedAt,
   };
 }
 
-export function mapUserPublicRow(row: UserPrismaRow): IUserPublicEntity {
+export function mapUserRow(row: UserRow): IUserPublicEntity {
+  return mapUserBase(row);
+}
+
+export function mapUserEntityRow(row: UserEntityRow): IUserEntity {
   return {
-    id: row.id,
-    email: row.email,
-    phone: row.phone ?? null,
-    username: row.username,
-    role: toDomainRole(row.role),
-    status: toDomainStatus(row.status),
-    language: toDomainLanguage(row.language),
-    name: row.name,
-    surname: row.surname,
-    patronymic: row.patronymic ?? null,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    deletedAt: row.deletedAt ?? null,
+    ...mapUserBase(row),
+    passwordHash: row.passwordHash,
   };
 }

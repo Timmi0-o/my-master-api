@@ -14,6 +14,8 @@ alwaysApply: true
 ## Required References
 
 - Применять правила из:
+  - `../../.cursor/rules/project-data-flow.mdc` (сквозной поток данных монорепо)
   - `.cursor/rules/architecture-ddd-clean.mdc`
+  - `.cursor/rules/query-layer-and-presets.mdc`
   - `.cursor/rules/prisma-boundary-and-types.mdc`
   - `.cursor/rules/engineering-quality-backend.mdc`

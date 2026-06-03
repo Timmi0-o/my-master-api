@@ -1,14 +1,14 @@
-import type { MasterService } from '@prisma/client';
 import type {
   IMasterServiceEntity,
   IMasterServicePublicEntity,
+  IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
-import type { MasterServicePrismaRow } from './master-service.row.types';
+import type { MasterServiceRow } from './master-service.row.types';
 
-export function mapMasterServiceEntityRow(
-  row: MasterService | MasterServicePrismaRow,
-): IMasterServiceEntity {
-  return {
+export function mapMasterServiceRow(
+  row: MasterServiceRow,
+): IMasterServicePublicEntity & Partial<IMasterServiceRelations> {
+  const entity: IMasterServiceEntity & Partial<IMasterServiceRelations> = {
     id: row.id,
     name: row.name,
     description: row.description,
@@ -18,10 +18,19 @@ export function mapMasterServiceEntityRow(
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt ?? null,
   };
-}
 
-export function mapMasterServicePublicRow(
-  row: MasterServicePrismaRow,
-): IMasterServicePublicEntity {
-  return mapMasterServiceEntityRow(row);
+  if (row.masterProfile != null) {
+    entity.masterProfile = {
+      id: row.masterProfile.id,
+      userId: row.masterProfile.userId,
+      displayName: row.masterProfile.displayName,
+      description: row.masterProfile.description,
+      rating: row.masterProfile.rating,
+      createdAt: row.masterProfile.createdAt,
+      updatedAt: row.masterProfile.updatedAt,
+      deletedAt: row.masterProfile.deletedAt ?? null,
+    };
+  }
+
+  return entity;
 }

@@ -1,5 +1,8 @@
 import type { FindManyParams } from 'src/modules/shared/domain/query';
-import type { IMasterServicePublicEntity } from 'src/modules/masters/domain/entities/master-service';
+import type {
+  IMasterServicePublicEntity,
+  IMasterServiceRelations,
+} from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
 import type { GetMasterServicesOutput } from '../../dtos/master-service/get-master-services.output';
 
@@ -9,7 +12,7 @@ export class GetMasterServicesUseCase {
   ) {}
 
   async execute(
-    params: FindManyParams<IMasterServicePublicEntity, Record<never, never>>,
+    params: FindManyParams<IMasterServicePublicEntity, IMasterServiceRelations>,
   ): Promise<GetMasterServicesOutput> {
     const [items, total] = await Promise.all([
       this.masterServiceRepository.findMany(params),

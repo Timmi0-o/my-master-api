@@ -4,7 +4,18 @@ export function toDbWhere(
   return Object.keys(where).length > 0 ? where : undefined;
 }
 
-const SELECT_FIELDS_DISALLOWED_FOR_NON_STAFF = ['deletedAt'] as const;
+const FIELDS_DISALLOWED_FOR_NON_STAFF = ['deletedAt'] as const;
+
+export function stripDeletedAtFilterForNonStaff<
+  T extends { deletedAt?: unknown },
+>(filter: T | undefined, isStaffUser: boolean): T | undefined {
+  if (!filter || isStaffUser || filter.deletedAt === undefined) {
+    return filter;
+  }
+
+  const { deletedAt: _deletedAt, ...rest } = filter;
+  return Object.keys(rest).length > 0 ? (rest as T) : undefined;
+}
 
 export function omitDisallowedSelectFieldsForNonStaff(
   presetSelect: string[] | undefined,
@@ -18,6 +29,6 @@ export function omitDisallowedSelectFieldsForNonStaff(
     return presetSelect;
   }
 
-  const disallowed = new Set<string>(SELECT_FIELDS_DISALLOWED_FOR_NON_STAFF);
+  const disallowed = new Set<string>(FIELDS_DISALLOWED_FOR_NON_STAFF);
   return presetSelect.filter((field) => !disallowed.has(field));
 }

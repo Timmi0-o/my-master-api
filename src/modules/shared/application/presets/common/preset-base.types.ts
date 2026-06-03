@@ -11,4 +11,5 @@ export type NestedIncludeWithRelations<T> = NestedIncludeBase & {
 
 export type PresetConfig<TEntity, TInclude = undefined> = {
   select?: (keyof TEntity)[];
-} & (TInclude extends undefined ? object : { include?: TInclude });
+  include?: TInclude;
+};

@@ -1,29 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import type { MasterService } from '@prisma/client';
 import type {
   ICreateMasterServiceInput,
   IMasterServiceEntity,
   IMasterServicePublicEntity,
+  IMasterServiceRelations,
   IUpdateMasterServiceInput,
 } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
-import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import type { ReadResult } from 'src/modules/shared/domain/query';
 import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
-  mapMasterServiceEntityRow,
-  mapMasterServicePublicRow,
-} from '../../row-mappers/master-service/map-master-service-row';
+  mapMasterServiceRow,
+  type MasterServiceRow,
+} from '../../row-mappers/master-service';
+import { MASTER_SERVICE_RELATIONS } from './master-service.relations';
 
 @Injectable()
 export class PrismaMasterServiceRepository
   extends PrismaReadRepository<
     IMasterServicePublicEntity,
     string,
-    Record<never, never>,
-    MasterService
+    IMasterServiceRelations,
+    MasterServiceRow
   >
   implements IMasterServiceRepository
 {
+  protected readonly relationConfig = MASTER_SERVICE_RELATIONS;
+
   constructor(private readonly prismaService: PrismaService) {
     super();
   }
@@ -32,8 +36,10 @@ export class PrismaMasterServiceRepository
     return this.prismaService.masterService;
   }
 
-  protected mapRow(row: MasterService): IMasterServicePublicEntity {
-    return mapMasterServicePublicRow(row);
+  protected mapRow(
+    row: MasterServiceRow,
+  ): ReadResult<IMasterServicePublicEntity, IMasterServiceRelations> {
+    return mapMasterServiceRow(row);
   }
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
@@ -44,12 +50,14 @@ export class PrismaMasterServiceRepository
     const row = await this.prismaService.masterService.findUnique({
       where: { id },
     });
-    return row ? mapMasterServiceEntityRow(row) : null;
+    return row ? mapMasterServiceRow(row as MasterServiceRow) : null;
   }
 
-  async create(input: ICreateMasterServiceInput): Promise<IMasterServiceEntity> {
+  async create(
+    input: ICreateMasterServiceInput,
+  ): Promise<IMasterServiceEntity> {
     const row = await this.prismaService.masterService.create({ data: input });
-    return mapMasterServiceEntityRow(row);
+    return mapMasterServiceRow(row as MasterServiceRow);
   }
 
   async update(
@@ -60,7 +68,7 @@ export class PrismaMasterServiceRepository
       where: { id },
       data: input,
     });
-    return mapMasterServiceEntityRow(row);
+    return mapMasterServiceRow(row as MasterServiceRow);
   }
 
   async softDeleteById(id: string): Promise<boolean> {

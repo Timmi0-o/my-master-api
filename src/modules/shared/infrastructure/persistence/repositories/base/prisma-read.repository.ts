@@ -11,7 +11,8 @@ import {
   type FindManyOptions,
 } from '../../helpers/find-many-with-required-ids.helper';
 import { buildOrderBy } from './builders/order-by.builder';
-import { buildSelect } from './builders/select.builder';
+import { buildSelection } from './builders/selection.builder';
+import type { RelationConfig } from './config/relation.config';
 import type { PrismaReadDelegate } from './prisma-delegate.types';
 import { resolvePrismaWhere } from './resolve-prisma-where.util';
 
@@ -20,11 +21,22 @@ export abstract class PrismaReadRepository<
   TId,
   TRelations extends object = Record<never, never>,
   TPrismaRow extends object = object,
-> implements IReadRepository<TEntity, TId, TRelations>
-{
+> implements IReadRepository<TEntity, TId, TRelations> {
+  protected abstract readonly relationConfig: Record<string, RelationConfig>;
+
   protected abstract getDelegate(): PrismaReadDelegate;
   protected abstract mapRow(row: TPrismaRow): ReadResult<TEntity, TRelations>;
   protected abstract toPrismaWhereUnique(id: TId): Record<string, unknown>;
+
+  protected resolveSelectArgs(
+    selectOptions?: FindOneParams<TEntity, TRelations>['selectOptions'],
+  ): Record<string, unknown> {
+    return buildSelection(
+      selectOptions?.select,
+      selectOptions?.include,
+      this.relationConfig,
+    );
+  }
 
   async findOne(
     id: TId,
@@ -32,7 +44,7 @@ export abstract class PrismaReadRepository<
   ): Promise<ReadResult<TEntity, TRelations> | null> {
     const args = {
       where: this.toPrismaWhereUnique(id),
-      ...buildSelect(params?.selectOptions?.select),
+      ...this.resolveSelectArgs(params?.selectOptions),
     };
 
     const row = await this.getDelegate().findUnique(args);
@@ -53,7 +65,7 @@ export abstract class PrismaReadRepository<
       orderBy: buildOrderBy(params?.orderBy),
       skip: slice.offset,
       take: slice.limit,
-      ...buildSelect(params?.selectOptions?.select),
+      ...this.resolveSelectArgs(params?.selectOptions),
     };
 
     const rows = await this.getDelegate().findMany(args);
@@ -61,9 +73,7 @@ export abstract class PrismaReadRepository<
     return rows.map((row) => this.mapRow(row as TPrismaRow));
   }
 
-  async count(
-    params?: CountParams<TEntity, TRelations>,
-  ): Promise<number> {
+  async count(params?: CountParams<TEntity, TRelations>): Promise<number> {
     return this.getDelegate().count({
       where: resolvePrismaWhere(params?.where),
     });
@@ -83,7 +93,7 @@ export abstract class PrismaReadRepository<
         orderBy: buildOrderBy(params.orderBy),
         skip: opts.skip,
         take: opts.take,
-        ...buildSelect(params.selectOptions?.select),
+        ...this.resolveSelectArgs(params.selectOptions),
       };
 
       const rows = await this.getDelegate().findMany(args);

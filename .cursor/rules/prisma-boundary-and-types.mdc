@@ -9,7 +9,7 @@ alwaysApply: false
 - Prisma разрешен только в `infrastructure/persistence` (репозитории, data mappers).
 - Типы из `@prisma/client` не экспортировать и не использовать в `domain`/`application`/`presentation`.
 - Для домена и use-cases использовать только собственные типы: `Entity`, `ValueObject`, `RepositoryResult`, `DTO`.
-- Каждый Prisma-адаптер обязан иметь явный mapper: `PrismaModel -> DomainEntity` и `DomainEntity -> PrismaData`.
+- Каждый Prisma-адаптер обязан иметь row-mapper в `persistence/row-mappers/<entity>/` (`mapXxxRow`), не размазывать маппинг по repository.
 
 ## Антикоррупционный слой
 

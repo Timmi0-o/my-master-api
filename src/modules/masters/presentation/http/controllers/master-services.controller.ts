@@ -23,8 +23,11 @@ import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
-import { masterServicePresetToSelectOptions } from '../mappers/master-service-preset-to-select-options.mapper';
-import { masterServiceQueryToFindManyParams } from '../mappers/master-service-query-to-find-many-params.mapper';
+import { payloadToCreateMasterServiceInput } from '../mappers/master-service/payload-to-create-master-service-input';
+import { payloadToDeleteMasterServiceInput } from '../mappers/master-service/payload-to-delete-master-service-input';
+import { payloadToGetMasterServiceByIdInput } from '../mappers/master-service/payload-to-get-master-service-by-id-input';
+import { payloadToUpdateMasterServiceInput } from '../mappers/master-service/payload-to-update-master-service-input';
+import { payloadToFindManyParams } from '../mappers/master-service/payload-to-find-many-params.mapper';
 import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-services-response';
 import { MasterServiceValidator } from '../validation/master-service.validator';
 
@@ -48,7 +51,7 @@ export class MasterServicesController {
   ) {
     const payload =
       this.masterServiceValidator.validateGetMasterServicesQuery(query);
-    const params = masterServiceQueryToFindManyParams(payload, metadata);
+    const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getMasterServicesUseCase.execute(params);
     return mapGetMasterServicesHttpResponse(output, payload);
   }
@@ -57,21 +60,22 @@ export class MasterServicesController {
   async getMasterServiceById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
+    @CurrentUser() user: ISessionUser | null,
     @GetMetadata() metadata: IGetMetadata,
   ) {
+    if (!user) {
+      throw new UnauthorizedException('User is not authenticated');
+    }
     const { id } = this.masterServiceValidator.validateIdParam(params);
     const queryPayload =
       this.masterServiceValidator.validateGetByIdQuery(query);
-    const item = await this.getMasterServiceByIdUseCase.execute(
+    const input = payloadToGetMasterServiceByIdInput(
       id,
+      queryPayload,
+      user,
       metadata.isStaffUser,
-      {
-        selectOptions: masterServicePresetToSelectOptions(
-          queryPayload.preset,
-          metadata.isStaffUser,
-        ),
-      },
     );
+    const item = await this.getMasterServiceByIdUseCase.execute(input);
     return { data: item };
   }
 
@@ -85,11 +89,12 @@ export class MasterServicesController {
       throw new UnauthorizedException('User is not authenticated');
     }
     const payload = this.masterServiceValidator.validateCreatePayload(body);
-    const data = await this.createMasterServiceUseCase.execute(
+    const input = payloadToCreateMasterServiceInput(
       payload,
       user,
       metadata.isStaffUser,
     );
+    const data = await this.createMasterServiceUseCase.execute(input);
     return { data };
   }
 
@@ -105,12 +110,13 @@ export class MasterServicesController {
     }
     const { id } = this.masterServiceValidator.validateIdParam(params);
     const payload = this.masterServiceValidator.validateUpdatePayload(body);
-    const data = await this.updateMasterServiceByIdUseCase.execute(
+    const input = payloadToUpdateMasterServiceInput(
       id,
       payload,
       user,
       metadata.isStaffUser,
     );
+    const data = await this.updateMasterServiceByIdUseCase.execute(input);
     return { data };
   }
 
@@ -124,11 +130,12 @@ export class MasterServicesController {
       throw new UnauthorizedException('User is not authenticated');
     }
     const { id } = this.masterServiceValidator.validateIdParam(params);
-    await this.deleteMasterServiceByIdUseCase.execute(
+    const input = payloadToDeleteMasterServiceInput(
       id,
       user,
       metadata.isStaffUser,
     );
+    await this.deleteMasterServiceByIdUseCase.execute(input);
     return { data: { success: true } };
   }
 }

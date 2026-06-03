@@ -25,3 +25,8 @@ alwaysApply: false
 - Один use-case = одна бизнес-операция с явным `Input` и `Output`.
 - Use-case возвращает прикладной результат, а не HTTP-ответ и не ORM-сущность.
 - Бизнес-валидации и инварианты держать в `domain`, а не в контроллерах.
+- **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/<entity>/`.
+- HTTP: validator → `payload-to-*-input.ts` в `presentation/http/mappers/<entity>/` → `useCase.execute(input)`.
+- Mutate/get-by-id: `actor: { userId, isStaffUser }` внутри application input.
+- List: `payload-to-find-many-params.mapper.ts` → `FindManyParams` (без actor, visibility в mapper).
+- Shared: `mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.

@@ -1,4 +1,4 @@
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { ICreateMasterServiceApplicationInput } from 'src/modules/masters/application/dtos/master-service/create-master-service.input';
 import type {
   ICreateMasterServiceInput,
   IMasterServiceEntity,
@@ -8,13 +8,6 @@ import type { IMasterProfileRepository } from 'src/modules/masters/domain/reposi
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
 import { assertMasterProfileAccess } from '../../helpers/assert-master-profile-access';
 
-export type CreateMasterServiceCommand = {
-  masterProfileId: string;
-  name: string;
-  description: string;
-  price: number;
-};
-
 export class CreateMasterServiceUseCase {
   constructor(
     private readonly masterServiceRepository: IMasterServiceRepository,
@@ -22,26 +15,24 @@ export class CreateMasterServiceUseCase {
   ) {}
 
   async execute(
-    command: CreateMasterServiceCommand,
-    sessionUser: ISessionUser,
-    isStaffUser: boolean,
+    input: ICreateMasterServiceApplicationInput,
   ): Promise<IMasterServiceEntity> {
     const profile = await this.masterProfileRepository.findEntityById(
-      command.masterProfileId,
+      input.masterProfileId,
     );
     if (!profile) {
-      throw new MasterProfileNotFoundError(command.masterProfileId);
+      throw new MasterProfileNotFoundError(input.masterProfileId);
     }
 
-    assertMasterProfileAccess(profile, sessionUser, isStaffUser);
+    assertMasterProfileAccess(profile, input.actor);
 
-    const input: ICreateMasterServiceInput = {
-      masterProfileId: command.masterProfileId,
-      name: command.name,
-      description: command.description,
-      price: command.price,
+    const createInput: ICreateMasterServiceInput = {
+      masterProfileId: input.masterProfileId,
+      name: input.name,
+      description: input.description,
+      price: input.price,
     };
 
-    return this.masterServiceRepository.create(input);
+    return this.masterServiceRepository.create(createInput);
   }
 }

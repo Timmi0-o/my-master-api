@@ -3,13 +3,14 @@ import type {
   ICreateMasterProfileInput,
   IMasterProfileEntity,
   IMasterProfilePublicEntity,
+  IMasterProfileRelations,
   IUpdateMasterProfileInput,
 } from '../../entities/master-profile';
 
 export type IMasterProfileRepository = IReadRepository<
   IMasterProfilePublicEntity,
   string,
-  Record<never, never>
+  IMasterProfileRelations
 > & {
   findEntityById(id: string): Promise<IMasterProfileEntity | null>;
   create(input: ICreateMasterProfileInput): Promise<IMasterProfileEntity>;

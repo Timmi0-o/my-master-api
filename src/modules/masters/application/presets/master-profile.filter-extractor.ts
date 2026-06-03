@@ -2,7 +2,9 @@ import { FilterPresetMapperCommon } from 'src/modules/shared/application/presets
 import type { IMasterProfileFiltersPreset } from './master-profile-filters-preset.types';
 
 export class MasterProfileFilterExtractor {
-  static extract(preset?: IMasterProfileFiltersPreset): Record<string, unknown> {
+  static extract(
+    preset?: IMasterProfileFiltersPreset,
+  ): Record<string, unknown> {
     if (!preset) return {};
 
     const parts: Record<string, unknown>[] = [];

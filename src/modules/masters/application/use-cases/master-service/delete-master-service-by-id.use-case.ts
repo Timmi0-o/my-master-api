@@ -1,4 +1,4 @@
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { IDeleteMasterServiceApplicationInput } from 'src/modules/masters/application/dtos/master-service/delete-master-service.input';
 import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/errors/master-service-not-found.error';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
@@ -11,14 +11,12 @@ export class DeleteMasterServiceByIdUseCase {
     private readonly masterProfileRepository: IMasterProfileRepository,
   ) {}
 
-  async execute(
-    id: string,
-    sessionUser: ISessionUser,
-    isStaffUser: boolean,
-  ): Promise<boolean> {
-    const existing = await this.masterServiceRepository.findEntityById(id);
+  async execute(input: IDeleteMasterServiceApplicationInput): Promise<boolean> {
+    const existing = await this.masterServiceRepository.findEntityById(
+      input.id,
+    );
     if (!existing) {
-      throw new MasterServiceNotFoundError(id);
+      throw new MasterServiceNotFoundError(input.id);
     }
 
     const profile = await this.masterProfileRepository.findEntityById(
@@ -28,8 +26,8 @@ export class DeleteMasterServiceByIdUseCase {
       throw new MasterProfileNotFoundError(existing.masterProfileId);
     }
 
-    assertMasterProfileAccess(profile, sessionUser, isStaffUser);
+    assertMasterProfileAccess(profile, input.actor);
 
-    return this.masterServiceRepository.softDeleteById(id);
+    return this.masterServiceRepository.softDeleteById(input.id);
   }
 }

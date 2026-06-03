@@ -1,4 +1,4 @@
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { IUpdateMasterProfileApplicationInput } from 'src/modules/masters/application/dtos/master-profile/update-master-profile.input';
 import type {
   IMasterProfileEntity,
   IUpdateMasterProfileInput,
@@ -13,23 +13,22 @@ export class UpdateMasterProfileByIdUseCase {
   ) {}
 
   async execute(
-    id: string,
-    input: IUpdateMasterProfileInput,
-    sessionUser: ISessionUser,
-    isStaffUser: boolean,
+    input: IUpdateMasterProfileApplicationInput,
   ): Promise<IMasterProfileEntity> {
-    const existing = await this.masterProfileRepository.findEntityById(id);
+    const existing = await this.masterProfileRepository.findEntityById(
+      input.id,
+    );
     if (!existing) {
-      throw new MasterProfileNotFoundError(id);
+      throw new MasterProfileNotFoundError(input.id);
     }
 
-    assertMasterProfileAccess(existing, sessionUser, isStaffUser);
+    assertMasterProfileAccess(existing, input.actor);
 
-    const data: IUpdateMasterProfileInput = { ...input };
-    if (!isStaffUser) {
+    const data: IUpdateMasterProfileInput = { ...input.patch };
+    if (!input.actor.isStaffUser) {
       delete data.userId;
     }
 
-    return this.masterProfileRepository.update(id, data);
+    return this.masterProfileRepository.update(input.id, data);
   }
 }

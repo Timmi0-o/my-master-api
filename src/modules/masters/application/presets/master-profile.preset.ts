@@ -2,8 +2,18 @@ import type { PresetConfig } from 'src/modules/shared/application/presets/common
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { createPresetGetter } from 'src/modules/shared/application/presets/common/presets.helpers';
 import type { IMasterProfilePublicEntity } from '../../domain/entities/master-profile';
+import type { IMasterServicePublicEntity } from '../../domain/entities/master-service';
 
-export type IMasterProfilePresetConfig = PresetConfig<IMasterProfilePublicEntity>;
+export type IMasterProfilePresetInclude = {
+  services: {
+    select: Array<keyof IMasterServicePublicEntity & string>;
+  };
+};
+
+export type IMasterProfilePresetConfig = PresetConfig<
+  IMasterProfilePublicEntity,
+  IMasterProfilePresetInclude
+>;
 
 export const MASTER_PROFILE_PRESETS: Record<
   TPresetType,
@@ -34,6 +44,19 @@ export const MASTER_PROFILE_PRESETS: Record<
       'updatedAt',
       'deletedAt',
     ],
+    include: {
+      services: {
+        select: [
+          'id',
+          'name',
+          'description',
+          'price',
+          'masterProfileId',
+          'createdAt',
+          'updatedAt',
+        ],
+      },
+    },
   },
 };
 

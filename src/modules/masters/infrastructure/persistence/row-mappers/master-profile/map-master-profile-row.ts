@@ -1,14 +1,31 @@
-import type { MasterProfile } from '@prisma/client';
 import type {
   IMasterProfileEntity,
   IMasterProfilePublicEntity,
+  IMasterProfileRelations,
 } from 'src/modules/masters/domain/entities/master-profile';
-import type { MasterProfilePrismaRow } from './master-profile.row.types';
+import type { IMasterServicePublicEntity } from 'src/modules/masters/domain/entities/master-service';
+import type { MasterServiceRelationRow } from '../master-service/master-service.row.types';
+import type { MasterProfileRow } from './master-profile.row.types';
 
-export function mapMasterProfileEntityRow(
-  row: MasterProfile | MasterProfilePrismaRow,
-): IMasterProfileEntity {
+function mapMasterServiceRelationRow(
+  row: MasterServiceRelationRow,
+): IMasterServicePublicEntity {
   return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    price: row.price,
+    masterProfileId: row.masterProfileId,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    deletedAt: null,
+  };
+}
+
+export function mapMasterProfileRow(
+  row: MasterProfileRow,
+): IMasterProfilePublicEntity & Partial<IMasterProfileRelations> {
+  const entity: IMasterProfileEntity & Partial<IMasterProfileRelations> = {
     id: row.id,
     userId: row.userId,
     displayName: row.displayName,
@@ -18,10 +35,10 @@ export function mapMasterProfileEntityRow(
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt ?? null,
   };
-}
 
-export function mapMasterProfilePublicRow(
-  row: MasterProfilePrismaRow,
-): IMasterProfilePublicEntity {
-  return mapMasterProfileEntityRow(row);
+  if (row.services?.length) {
+    entity.services = row.services.map(mapMasterServiceRelationRow);
+  }
+
+  return entity;
 }

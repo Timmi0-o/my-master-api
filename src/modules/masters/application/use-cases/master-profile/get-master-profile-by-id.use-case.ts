@@ -1,7 +1,7 @@
+import type { IGetMasterProfileByIdApplicationInput } from 'src/modules/masters/application/dtos/master-profile/get-master-profile-by-id.input';
 import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
 import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import type { FindOneParams } from 'src/modules/shared/domain/query';
 
 export class GetMasterProfileByIdUseCase {
   constructor(
@@ -9,19 +9,21 @@ export class GetMasterProfileByIdUseCase {
   ) {}
 
   async execute(
-    id: string,
-    isStaffUser: boolean,
-    params?: FindOneParams<IMasterProfilePublicEntity, Record<never, never>>,
+    input: IGetMasterProfileByIdApplicationInput,
   ): Promise<IMasterProfilePublicEntity> {
-    const entity = await this.masterProfileRepository.findEntityById(id);
+    const entity = await this.masterProfileRepository.findEntityById(input.id);
 
-    if (!entity || (!isStaffUser && entity.deletedAt != null)) {
-      throw new MasterProfileNotFoundError(id);
+    if (!entity || (!input.actor.isStaffUser && entity.deletedAt != null)) {
+      throw new MasterProfileNotFoundError(input.id);
     }
 
-    const item = await this.masterProfileRepository.findOne(id, params);
+    const item = await this.masterProfileRepository.findOne(
+      input.id,
+      input.params,
+    );
+
     if (!item) {
-      throw new MasterProfileNotFoundError(id);
+      throw new MasterProfileNotFoundError(input.id);
     }
     return item;
   }

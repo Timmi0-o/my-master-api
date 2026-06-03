@@ -60,7 +60,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
-export function buildWhere<T>(filter?: WhereFilter<T>): Record<string, unknown> | undefined {
+export function buildWhere<T>(
+  filter?: WhereFilter<T>,
+): Record<string, unknown> | undefined {
   if (!filter) {
     return undefined;
   }
@@ -78,7 +80,9 @@ export function buildWhere<T>(filter?: WhereFilter<T>): Record<string, unknown> 
   if (filter.and?.length) {
     const clauses = filter.and
       .map((clause) => buildWhere(clause))
-      .filter((clause): clause is Record<string, unknown> => clause !== undefined);
+      .filter(
+        (clause): clause is Record<string, unknown> => clause !== undefined,
+      );
 
     if (clauses.length) {
       result.AND = clauses;
@@ -88,7 +92,9 @@ export function buildWhere<T>(filter?: WhereFilter<T>): Record<string, unknown> 
   if (filter.or?.length) {
     const clauses = filter.or
       .map((clause) => buildWhere(clause))
-      .filter((clause): clause is Record<string, unknown> => clause !== undefined);
+      .filter(
+        (clause): clause is Record<string, unknown> => clause !== undefined,
+      );
 
     if (clauses.length) {
       result.OR = clauses;

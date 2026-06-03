@@ -1,18 +1,20 @@
-import type { Language, Role, Status } from '@prisma/client';
+import type { EUserLanguage, EUserRole, EUserStatus } from 'src/modules/users/domain/entities/user/user.enum';
 
-export type UserPrismaRow = {
+export type UserRow = {
   id: string;
   email: string;
-  phone?: string | null;
+  phone: string | null;
   username: string;
-  role: Role;
-  status: Status;
-  language: Language;
+  role: EUserRole;
+  status: EUserStatus;
+  language: EUserLanguage;
   name: string;
   surname: string;
-  patronymic?: string | null;
+  patronymic: string | null;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date | null;
+  deletedAt: Date | null;
   passwordHash?: string;
 };
+
+export type UserEntityRow = UserRow & { passwordHash: string };

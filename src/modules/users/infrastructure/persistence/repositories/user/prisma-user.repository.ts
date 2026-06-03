@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { User } from '@prisma/client';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { ReadResult } from 'src/modules/shared/domain/query';
 import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
 import {
@@ -13,8 +13,11 @@ import {
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import {
   mapUserEntityRow,
-  mapUserPublicRow,
-} from '../../row-mappers/user/map-user-row';
+  mapUserRow,
+  type UserEntityRow,
+  type UserRow,
+} from '../../row-mappers/user';
+import { USER_RELATIONS } from './user.relations';
 
 @Injectable()
 export class PrismaUserRepository
@@ -22,10 +25,12 @@ export class PrismaUserRepository
     IUserPublicEntity,
     string,
     Record<never, never>,
-    User
+    UserRow
   >
   implements IUserRepository
 {
+  protected readonly relationConfig = USER_RELATIONS;
+
   constructor(private readonly prismaService: PrismaService) {
     super();
   }
@@ -34,8 +39,8 @@ export class PrismaUserRepository
     return this.prismaService.user;
   }
 
-  protected mapRow(row: User): IUserPublicEntity {
-    return mapUserPublicRow(row);
+  protected mapRow(row: UserRow): ReadResult<IUserPublicEntity, Record<never, never>> {
+    return mapUserRow(row);
   }
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
@@ -44,12 +49,12 @@ export class PrismaUserRepository
 
   async findEntityById(userId: string): Promise<IUserEntity | null> {
     const row = await this.prismaService.user.findUnique({ where: { id: userId } });
-    return row ? mapUserEntityRow(row) : null;
+    return row ? mapUserEntityRow(row as UserEntityRow) : null;
   }
 
   async findByEmail(email: string): Promise<IUserEntity | null> {
     const row = await this.prismaService.user.findUnique({ where: { email } });
-    return row ? mapUserEntityRow(row) : null;
+    return row ? mapUserEntityRow(row as UserEntityRow) : null;
   }
 
   async findByEmailOrUsername(identifier: string): Promise<IUserEntity | null> {
@@ -58,7 +63,7 @@ export class PrismaUserRepository
         OR: [{ email: identifier }, { username: identifier }],
       },
     });
-    return row ? mapUserEntityRow(row) : null;
+    return row ? mapUserEntityRow(row as UserEntityRow) : null;
   }
 
   async findSessionUserById(userId: string): Promise<ISessionUser | null> {
@@ -86,7 +91,7 @@ export class PrismaUserRepository
 
   async create(user: ICreateUserInput): Promise<IUserEntity> {
     const row = await this.prismaService.user.create({ data: user });
-    return mapUserEntityRow(row);
+    return mapUserEntityRow(row as UserEntityRow);
   }
 
   async softDeleteById(userId: string): Promise<boolean> {

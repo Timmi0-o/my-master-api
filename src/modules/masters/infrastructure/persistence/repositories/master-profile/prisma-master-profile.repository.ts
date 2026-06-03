@@ -1,29 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import type { MasterProfile } from '@prisma/client';
 import type {
   ICreateMasterProfileInput,
   IMasterProfileEntity,
   IMasterProfilePublicEntity,
+  IMasterProfileRelations,
   IUpdateMasterProfileInput,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import type { ReadResult } from 'src/modules/shared/domain/query';
 import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
-  mapMasterProfileEntityRow,
-  mapMasterProfilePublicRow,
-} from '../../row-mappers/master-profile/map-master-profile-row';
+  mapMasterProfileRow,
+  type MasterProfileRow,
+} from '../../row-mappers/master-profile';
+import { MASTER_PROFILE_RELATIONS } from './master-profile.relations';
 
 @Injectable()
 export class PrismaMasterProfileRepository
   extends PrismaReadRepository<
     IMasterProfilePublicEntity,
     string,
-    Record<never, never>,
-    MasterProfile
+    IMasterProfileRelations,
+    MasterProfileRow
   >
   implements IMasterProfileRepository
 {
+  protected readonly relationConfig = MASTER_PROFILE_RELATIONS;
+
   constructor(private readonly prismaService: PrismaService) {
     super();
   }
@@ -32,8 +36,10 @@ export class PrismaMasterProfileRepository
     return this.prismaService.masterProfile;
   }
 
-  protected mapRow(row: MasterProfile): IMasterProfilePublicEntity {
-    return mapMasterProfilePublicRow(row);
+  protected mapRow(
+    row: MasterProfileRow,
+  ): ReadResult<IMasterProfilePublicEntity, IMasterProfileRelations> {
+    return mapMasterProfileRow(row);
   }
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
@@ -44,12 +50,14 @@ export class PrismaMasterProfileRepository
     const row = await this.prismaService.masterProfile.findUnique({
       where: { id },
     });
-    return row ? mapMasterProfileEntityRow(row) : null;
+    return row ? mapMasterProfileRow(row as MasterProfileRow) : null;
   }
 
-  async create(input: ICreateMasterProfileInput): Promise<IMasterProfileEntity> {
+  async create(
+    input: ICreateMasterProfileInput,
+  ): Promise<IMasterProfileEntity> {
     const row = await this.prismaService.masterProfile.create({ data: input });
-    return mapMasterProfileEntityRow(row);
+    return mapMasterProfileRow(row as MasterProfileRow);
   }
 
   async update(
@@ -60,7 +68,7 @@ export class PrismaMasterProfileRepository
       where: { id },
       data: input,
     });
-    return mapMasterProfileEntityRow(row);
+    return mapMasterProfileRow(row as MasterProfileRow);
   }
 
   async softDeleteById(id: string): Promise<boolean> {

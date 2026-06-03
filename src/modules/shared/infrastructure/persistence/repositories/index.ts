@@ -1,1 +1,2 @@
-export * from './prisma-crud.repository';
+export * from './base/builders';
+export * from './base/config/relation.config';
