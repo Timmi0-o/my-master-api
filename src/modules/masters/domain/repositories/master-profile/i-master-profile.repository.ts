@@ -13,6 +13,7 @@ export type IMasterProfileRepository = IReadRepository<
   IMasterProfileRelations
 > & {
   findEntityById(id: string): Promise<IMasterProfileEntity | null>;
+  findEntityByUserId(userId: string): Promise<IMasterProfileEntity | null>;
   create(input: ICreateMasterProfileInput): Promise<IMasterProfileEntity>;
   update(
     id: string,

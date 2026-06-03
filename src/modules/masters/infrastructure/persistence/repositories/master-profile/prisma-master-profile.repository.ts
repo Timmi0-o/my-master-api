@@ -57,6 +57,15 @@ export class PrismaMasterProfileRepository
     return row ? mapMasterProfileRow(row as MasterProfileRow) : null;
   }
 
+  async findEntityByUserId(
+    userId: string,
+  ): Promise<IMasterProfileEntity | null> {
+    const row = await this.prismaService.masterProfile.findUnique({
+      where: { userId },
+    });
+    return row ? mapMasterProfileRow(row as MasterProfileRow) : null;
+  }
+
   async create(
     input: ICreateMasterProfileInput,
   ): Promise<IMasterProfileEntity> {

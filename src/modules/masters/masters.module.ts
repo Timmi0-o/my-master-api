@@ -4,6 +4,7 @@ import { CreateMasterProfileUseCase } from './application/use-cases/master-profi
 import { DeleteMasterProfileByIdUseCase } from './application/use-cases/master-profile/delete-master-profile-by-id.use-case';
 import { GetMasterProfileByIdUseCase } from './application/use-cases/master-profile/get-master-profile-by-id.use-case';
 import { GetMasterProfilesUseCase } from './application/use-cases/master-profile/get-master-profiles.use-case';
+import { GetMyMasterProfileUseCase } from './application/use-cases/master-profile/get-my-master-profile.use-case';
 import { UpdateMasterProfileByIdUseCase } from './application/use-cases/master-profile/update-master-profile-by-id.use-case';
 import { CreateMasterServiceUseCase } from './application/use-cases/master-service/create-master-service.use-case';
 import { DeleteMasterServiceByIdUseCase } from './application/use-cases/master-service/delete-master-service-by-id.use-case';
@@ -45,6 +46,12 @@ import { MasterServiceValidator } from './presentation/http/validation/master-se
       provide: GetMasterProfileByIdUseCase,
       useFactory: (repo: IMasterProfileRepository) =>
         new GetMasterProfileByIdUseCase(repo),
+      inject: [MASTER_PROFILE_REPOSITORY_TOKEN],
+    },
+    {
+      provide: GetMyMasterProfileUseCase,
+      useFactory: (repo: IMasterProfileRepository) =>
+        new GetMyMasterProfileUseCase(repo),
       inject: [MASTER_PROFILE_REPOSITORY_TOKEN],
     },
     {

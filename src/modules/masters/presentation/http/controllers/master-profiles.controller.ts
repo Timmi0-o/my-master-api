@@ -17,6 +17,7 @@ import { CreateMasterProfileUseCase } from 'src/modules/masters/application/use-
 import { DeleteMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/delete-master-profile-by-id.use-case';
 import { GetMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profile-by-id.use-case';
 import { GetMasterProfilesUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profiles.use-case';
+import { GetMyMasterProfileUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-my-master-profile.use-case';
 import { UpdateMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/update-master-profile-by-id.use-case';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
@@ -27,6 +28,7 @@ import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/pay
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
 import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
+import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
 import { MasterProfileValidator } from '../validation/master-profile.validator';
@@ -38,6 +40,7 @@ export class MasterProfilesController {
   constructor(
     private readonly getMasterProfilesUseCase: GetMasterProfilesUseCase,
     private readonly getMasterProfileByIdUseCase: GetMasterProfileByIdUseCase,
+    private readonly getMyMasterProfileUseCase: GetMyMasterProfileUseCase,
     private readonly createMasterProfileUseCase: CreateMasterProfileUseCase,
     private readonly updateMasterProfileByIdUseCase: UpdateMasterProfileByIdUseCase,
     private readonly deleteMasterProfileByIdUseCase: DeleteMasterProfileByIdUseCase,
@@ -54,6 +57,26 @@ export class MasterProfilesController {
     const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getMasterProfilesUseCase.execute(params);
     return mapGetMasterProfilesHttpResponse(output, payload);
+  }
+
+  @Get('me')
+  async getMyMasterProfile(
+    @Query() query: IRawQuery,
+    @CurrentUser() user: ISessionUser | null,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException('User is not authenticated');
+    }
+    const queryPayload =
+      this.masterProfileValidator.validateGetByIdQuery(query);
+    const input = payloadToGetMyMasterProfileInput(
+      queryPayload,
+      user,
+      metadata.isStaffUser,
+    );
+    const item = await this.getMyMasterProfileUseCase.execute(input);
+    return { data: item };
   }
 
   @Get(':id')
