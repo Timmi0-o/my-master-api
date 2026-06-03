@@ -17,6 +17,7 @@ import { CreateUserProfileUseCase } from 'src/modules/users/application/use-case
 import { DeleteUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/delete-user-profile-by-id.use-case';
 import { GetUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/get-user-profile-by-id.use-case';
 import { GetUserProfilesUseCase } from 'src/modules/users/application/use-cases/user-profile/get-user-profiles.use-case';
+import { GetMyUserProfileUseCase } from 'src/modules/users/application/use-cases/user-profile/get-my-user-profile.use-case';
 import { UpdateUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/update-user-profile-by-id.use-case';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
@@ -27,6 +28,7 @@ import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload
 import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
 import { payloadToFindManyParams } from '../mappers/user-profile/payload-to-find-many-params.mapper';
 import { payloadToGetUserProfileByIdInput } from '../mappers/user-profile/payload-to-get-user-profile-by-id-input';
+import { payloadToGetMyUserProfileInput } from '../mappers/user-profile/payload-to-get-my-user-profile-input';
 import { payloadToUpdateUserProfileInput } from '../mappers/user-profile/payload-to-update-user-profile-input';
 import { mapGetUserProfilesHttpResponse } from '../response/map-get-user-profiles-response';
 import { UserProfileValidator } from '../validation/user-profile.validator';
@@ -38,6 +40,7 @@ export class UserProfilesController {
   constructor(
     private readonly getUserProfilesUseCase: GetUserProfilesUseCase,
     private readonly getUserProfileByIdUseCase: GetUserProfileByIdUseCase,
+    private readonly getMyUserProfileUseCase: GetMyUserProfileUseCase,
     private readonly createUserProfileUseCase: CreateUserProfileUseCase,
     private readonly updateUserProfileByIdUseCase: UpdateUserProfileByIdUseCase,
     private readonly deleteUserProfileByIdUseCase: DeleteUserProfileByIdUseCase,
@@ -54,6 +57,25 @@ export class UserProfilesController {
     const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getUserProfilesUseCase.execute(params);
     return mapGetUserProfilesHttpResponse(output, payload);
+  }
+
+  @Get('me')
+  async getMyUserProfile(
+    @Query() query: IRawQuery,
+    @CurrentUser() user: ISessionUser | null,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException('User is not authenticated');
+    }
+    const queryPayload = this.userProfileValidator.validateGetByIdQuery(query);
+    const input = payloadToGetMyUserProfileInput(
+      queryPayload,
+      user,
+      metadata.isStaffUser,
+    );
+    const item = await this.getMyUserProfileUseCase.execute(input);
+    return { data: item };
   }
 
   @Get(':id')

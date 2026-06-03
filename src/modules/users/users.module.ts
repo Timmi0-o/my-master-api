@@ -4,6 +4,7 @@ import { CreateUserProfileUseCase } from './application/use-cases/user-profile/c
 import { DeleteUserProfileByIdUseCase } from './application/use-cases/user-profile/delete-user-profile-by-id.use-case';
 import { GetUserProfileByIdUseCase } from './application/use-cases/user-profile/get-user-profile-by-id.use-case';
 import { GetUserProfilesUseCase } from './application/use-cases/user-profile/get-user-profiles.use-case';
+import { GetMyUserProfileUseCase } from './application/use-cases/user-profile/get-my-user-profile.use-case';
 import { UpdateUserProfileByIdUseCase } from './application/use-cases/user-profile/update-user-profile-by-id.use-case';
 import { GetUsersUseCase } from './application/use-cases/user/get-users.use-case';
 import type { IUserProfileRepository } from './domain/repositories/user-profile/i-user-profile.repository';
@@ -47,6 +48,12 @@ import { UserValidator } from './presentation/http/validation/user.validator';
       provide: GetUserProfileByIdUseCase,
       useFactory: (repo: IUserProfileRepository) =>
         new GetUserProfileByIdUseCase(repo),
+      inject: [USER_PROFILE_REPOSITORY_TOKEN],
+    },
+    {
+      provide: GetMyUserProfileUseCase,
+      useFactory: (repo: IUserProfileRepository) =>
+        new GetMyUserProfileUseCase(repo),
       inject: [USER_PROFILE_REPOSITORY_TOKEN],
     },
     {

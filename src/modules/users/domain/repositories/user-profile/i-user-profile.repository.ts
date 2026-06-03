@@ -12,6 +12,7 @@ export type IUserProfileRepository = IReadRepository<
   Record<never, never>
 > & {
   findEntityById(id: string): Promise<IUserProfileEntity | null>;
+  findEntityByUserId(userId: string): Promise<IUserProfileEntity | null>;
   create(input: ICreateUserProfileInput): Promise<IUserProfileEntity>;
   update(
     id: string,

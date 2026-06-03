@@ -55,6 +55,15 @@ export class PrismaUserProfileRepository
     return row ? mapUserProfileRow(row) : null;
   }
 
+  async findEntityByUserId(
+    userId: string,
+  ): Promise<IUserProfileEntity | null> {
+    const row = await this.prismaService.userProfile.findUnique({
+      where: { userId },
+    });
+    return row ? mapUserProfileRow(row) : null;
+  }
+
   async create(input: ICreateUserProfileInput): Promise<IUserProfileEntity> {
     const row = await this.prismaService.userProfile.create({ data: input });
     return mapUserProfileRow(row);
