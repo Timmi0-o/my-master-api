@@ -6,7 +6,7 @@ export interface IJwtAccessPayload {
 }
 
 export interface ILoginPayload {
-  identifier: string;
+  email: string;
   password: string;
 }
 

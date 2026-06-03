@@ -1,10 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { EUserStatus } from 'src/modules/users/domain/entities/user';
-import { USER_REPOSITORY } from 'src/modules/users/infrastructure/repositories/user.repository';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
-import { Inject } from '@nestjs/common';
+import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
 import type { IJwtAccessPayload } from '../../domain/auth.types';
 
 @Injectable()
@@ -13,7 +12,7 @@ export class JwtAccessStrategy extends PassportStrategy(
   'jwt-access',
 ) {
   constructor(
-    @Inject(USER_REPOSITORY)
+    @Inject(USER_REPOSITORY_TOKEN)
     private readonly userRepository: IUserRepository,
   ) {
     const secret = process.env.JWT_ACCESS_SECRET;

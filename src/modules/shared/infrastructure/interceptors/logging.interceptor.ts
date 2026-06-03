@@ -18,19 +18,10 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
-    const { method, url, query, params } = request;
-    const userAgent = request.get('user-agent') || '';
+    const { method, url } = request;
     const start = Date.now();
 
-    this.logger.debug(
-      `→ ${method} ${url}`,
-      JSON.stringify({
-        query,
-        params,
-        userAgent,
-      }),
-      'LoggingInterceptor',
-    );
+    this.logger.debug(`→ ${method} ${url}`, 'LoggingInterceptor');
 
     return next.handle().pipe(
       tap(() => {
@@ -39,10 +30,6 @@ export class LoggingInterceptor implements NestInterceptor {
 
         this.logger.debug(
           `← ${method} ${url} [${statusCode}] ${duration}ms`,
-          JSON.stringify({
-            statusCode,
-            duration,
-          }),
           'LoggingInterceptor',
         );
       }),
