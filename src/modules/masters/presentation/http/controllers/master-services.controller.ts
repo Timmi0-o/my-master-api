@@ -16,6 +16,7 @@ import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guar
 import { CreateMasterServiceUseCase } from 'src/modules/masters/application/use-cases/master-service/create-master-service.use-case';
 import { DeleteMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/delete-master-service-by-id.use-case';
 import { GetMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
+import { GetMasterServiceAvailableSlotsUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-services.use-case';
 import { UpdateMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
@@ -41,6 +42,7 @@ export class MasterServicesController {
     private readonly createMasterServiceUseCase: CreateMasterServiceUseCase,
     private readonly updateMasterServiceByIdUseCase: UpdateMasterServiceByIdUseCase,
     private readonly deleteMasterServiceByIdUseCase: DeleteMasterServiceByIdUseCase,
+    private readonly getMasterServiceAvailableSlotsUseCase: GetMasterServiceAvailableSlotsUseCase,
     private readonly masterServiceValidator: MasterServiceValidator,
   ) {}
 
@@ -54,6 +56,25 @@ export class MasterServicesController {
     const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getMasterServicesUseCase.execute(params);
     return mapGetMasterServicesHttpResponse(output, payload);
+  }
+
+  @Get(':id/available-slots')
+  async getMasterServiceAvailableSlots(
+    @Param() params: Record<string, unknown>,
+    @Query() query: IRawQuery,
+    @CurrentUser() user: ISessionUser | null,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException('User is not authenticated');
+    }
+    const { id } = this.masterServiceValidator.validateIdParam(params);
+    const queryPayload =
+      this.masterServiceValidator.validateGetAvailableSlotsQuery(query);
+    const data = await this.getMasterServiceAvailableSlotsUseCase.execute({
+      masterServiceId: id,
+      date: queryPayload.date,
+    });
+    return { data };
   }
 
   @Get(':id')

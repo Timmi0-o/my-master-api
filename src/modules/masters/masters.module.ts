@@ -1,4 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { APPOINTMENT_REPOSITORY_TOKEN } from '../appointments/domain/repositories/appointment/appointment.repository.tokens';
+import type { IAppointmentRepository } from '../appointments/domain/repositories/appointment/i-appointment.repository';
+import { AppointmentsModule } from '../appointments/appointments.module';
 import { JwtAuthGuard } from '../auth/presentation/guards/jwt-auth.guard';
 import { CreateMasterProfileUseCase } from './application/use-cases/master-profile/create-master-profile.use-case';
 import { DeleteMasterProfileByIdUseCase } from './application/use-cases/master-profile/delete-master-profile-by-id.use-case';
@@ -14,6 +17,7 @@ import { UpdateMasterScheduleExceptionByIdUseCase } from './application/use-case
 import { CreateMasterServiceUseCase } from './application/use-cases/master-service/create-master-service.use-case';
 import { DeleteMasterServiceByIdUseCase } from './application/use-cases/master-service/delete-master-service-by-id.use-case';
 import { GetMasterServiceByIdUseCase } from './application/use-cases/master-service/get-master-service-by-id.use-case';
+import { GetMasterServiceAvailableSlotsUseCase } from './application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServicesUseCase } from './application/use-cases/master-service/get-master-services.use-case';
 import { UpdateMasterServiceByIdUseCase } from './application/use-cases/master-service/update-master-service-by-id.use-case';
 import { CreateMasterWeeklyScheduleUseCase } from './application/use-cases/master-weekly-schedule/create-master-weekly-schedule.use-case';
@@ -43,6 +47,7 @@ import { MasterServiceValidator } from './presentation/http/validation/master-se
 import { MasterWeeklyScheduleValidator } from './presentation/http/validation/master-weekly-schedule.validator';
 
 @Module({
+  imports: [forwardRef(() => AppointmentsModule)],
   controllers: [
     MasterProfilesController,
     MasterServicesController,
@@ -118,6 +123,30 @@ import { MasterWeeklyScheduleValidator } from './presentation/http/validation/ma
       useFactory: (repo: IMasterServiceRepository) =>
         new GetMasterServiceByIdUseCase(repo),
       inject: [MASTER_SERVICE_REPOSITORY_TOKEN],
+    },
+    {
+      provide: GetMasterServiceAvailableSlotsUseCase,
+      useFactory: (
+        serviceRepo: IMasterServiceRepository,
+        profileRepo: IMasterProfileRepository,
+        weeklyRepo: IMasterWeeklyScheduleRepository,
+        exceptionRepo: IMasterScheduleExceptionRepository,
+        appointmentRepo: IAppointmentRepository,
+      ) =>
+        new GetMasterServiceAvailableSlotsUseCase(
+          serviceRepo,
+          profileRepo,
+          weeklyRepo,
+          exceptionRepo,
+          appointmentRepo,
+        ),
+      inject: [
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
+        MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: CreateMasterServiceUseCase,

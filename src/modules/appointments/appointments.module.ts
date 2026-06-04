@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/presentation/guards/jwt-auth.guard';
 import type { IMasterProfileRepository } from '../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../masters/domain/repositories/master-profile/master-profile.repository.tokens';
@@ -36,7 +36,7 @@ import { AppointmentChatValidator } from './presentation/http/validation/appoint
 import { AppointmentValidator } from './presentation/http/validation/appointment.validator';
 
 @Module({
-  imports: [MastersModule],
+  imports: [forwardRef(() => MastersModule)],
   controllers: [
     AppointmentsController,
     AppointmentChatsController,

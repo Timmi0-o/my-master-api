@@ -11,9 +11,14 @@ import { getByIdQuerySchema } from './schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from './schemas/get-by-id-query.types';
 import { idParamSchema } from './schemas/id-param.schema';
 import type { IIdParamPayload } from './schemas/id-param.types';
+import { getMasterServiceAvailableSlotsQuerySchema } from './schemas/get-master-service-available-slots-query.schema';
+import type { IGetMasterServiceAvailableSlotsQueryPayload } from './schemas/get-master-service-available-slots-query.types';
 
 const validateGetMasterServicesQuery = ajv.compile(getMasterServicesQuerySchema);
 const validateGetByIdQuery = ajv.compile(getByIdQuerySchema);
+const validateGetMasterServiceAvailableSlotsQuery = ajv.compile(
+  getMasterServiceAvailableSlotsQuerySchema,
+);
 const validateIdParam = ajv.compile(idParamSchema);
 const validateCreateMasterServicePayload = ajv.compile(
   createMasterServicePayloadSchema,
@@ -43,6 +48,18 @@ export class MasterServiceValidator extends BaseValidator {
       data: raw,
       errorMessage: 'Некорректные параметры запроса',
       logLabel: 'GetMasterServiceByIdQuery',
+      dataForSchema: raw,
+    });
+  }
+
+  validateGetAvailableSlotsQuery(
+    raw: Record<string, unknown>,
+  ): IGetMasterServiceAvailableSlotsQueryPayload {
+    return this.validateAndReturn<IGetMasterServiceAvailableSlotsQueryPayload>({
+      validate: validateGetMasterServiceAvailableSlotsQuery,
+      data: raw,
+      errorMessage: 'Некорректные параметры запроса свободных слотов',
+      logLabel: 'GetMasterServiceAvailableSlotsQuery',
       dataForSchema: raw,
     });
   }
