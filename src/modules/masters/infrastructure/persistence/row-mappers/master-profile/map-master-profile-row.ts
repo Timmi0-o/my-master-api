@@ -15,6 +15,7 @@ function mapMasterServiceRelationRow(
     name: row.name,
     description: row.description,
     price: row.price,
+    durationMinutes: row.durationMinutes,
     masterProfileId: row.masterProfileId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

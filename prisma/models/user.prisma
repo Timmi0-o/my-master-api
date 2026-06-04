@@ -23,8 +23,10 @@ model User {
   masterProfile MasterProfile?
   userProfile   UserProfile?
 
-  sessions      Session[]
-  refreshTokens RefreshToken[]
+  sessions            Session[]
+  refreshTokens       RefreshToken[]
+  clientAppointments       Appointment[]            @relation("ClientAppointments")
+  appointmentChatMessages  AppointmentChatMessage[] @relation("AppointmentChatMessages")
 
   @@unique([email])
   @@unique([phone])

@@ -5,5 +5,6 @@ export interface ICreateMasterServiceApplicationInput {
   name: string;
   description: string;
   price: number;
+  durationMinutes?: number;
   actor: IMasterActorInput;
 }

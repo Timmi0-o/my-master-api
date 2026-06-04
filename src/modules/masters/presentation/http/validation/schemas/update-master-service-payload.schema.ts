@@ -13,6 +13,12 @@ export const updateMasterServicePayloadSchema: JSONSchemaType<IUpdateMasterServi
         nullable: true,
       },
       price: { type: 'number', minimum: 0, nullable: true },
+      durationMinutes: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 1440,
+        nullable: true,
+      },
     },
     required: [],
     additionalProperties: false,

@@ -15,6 +15,9 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
     case 'USER_PROFILE_NOT_FOUND':
     case 'MASTER_PROFILE_NOT_FOUND':
     case 'MASTER_SERVICE_NOT_FOUND':
+    case 'APPOINTMENT_NOT_FOUND':
+    case 'APPOINTMENT_CHAT_NOT_FOUND':
+    case 'APPOINTMENT_CHAT_MESSAGE_NOT_FOUND':
       return new NotFoundException(error.message);
     case 'INVALID_CREDENTIALS':
     case 'REFRESH_TOKEN_INVALID':
@@ -23,6 +26,9 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
     case 'USER_PROFILE_FORBIDDEN':
     case 'MASTER_PROFILE_FORBIDDEN':
     case 'MASTER_SERVICE_FORBIDDEN':
+    case 'APPOINTMENT_FORBIDDEN':
+    case 'APPOINTMENT_CHAT_FORBIDDEN':
+    case 'APPOINTMENT_CHAT_MESSAGE_FORBIDDEN':
       return new ForbiddenException(error.message);
     case 'INVALID_QUERY':
       return new BadRequestException(error.message);

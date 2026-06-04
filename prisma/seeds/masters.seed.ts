@@ -2,6 +2,23 @@ import type { PrismaClient } from '@prisma/client';
 import type { SeedRunner } from './index';
 import { MASTERS_CATALOG } from './masters-catalog';
 
+const inferDurationMinutes = (serviceName: string): number => {
+  const match = serviceName.match(/(\d+)\s*мин/i);
+  if (match) {
+    return Number.parseInt(match[1], 10);
+  }
+  if (/мойка|прокол|розетк|засор/i.test(serviceName)) {
+    return 45;
+  }
+  if (/стрижк|маникюр|бород/i.test(serviceName)) {
+    return 60;
+  }
+  if (/окраш|щит|керамик|химчист/i.test(serviceName)) {
+    return 90;
+  }
+  return 60;
+};
+
 const pickSeedUsers = async (prisma: PrismaClient) => {
   const users = await prisma.user.findMany({
     where: {
@@ -84,6 +101,7 @@ export const mastersSeed: SeedRunner = async (
           data: {
             description: service.description,
             price: service.price,
+            durationMinutes: inferDurationMinutes(service.name),
             deletedAt: serviceDeletedAt,
           },
         });
@@ -96,6 +114,7 @@ export const mastersSeed: SeedRunner = async (
           name: service.name,
           description: service.description,
           price: service.price,
+          durationMinutes: inferDurationMinutes(service.name),
           deletedAt: serviceDeletedAt,
         },
       });

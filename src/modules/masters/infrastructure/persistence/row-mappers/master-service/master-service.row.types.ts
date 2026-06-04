@@ -14,6 +14,7 @@ export type MasterServiceRelationRow = {
   name: string;
   description: string;
   price: number;
+  durationMinutes: number;
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -24,6 +25,7 @@ export type MasterServiceRow = {
   name: string;
   description: string;
   price: number;
+  durationMinutes: number;
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;

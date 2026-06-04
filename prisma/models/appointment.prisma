@@ -1,0 +1,49 @@
+// Запись на услугу мастера клиентом
+model Appointment {
+  id String @id @default(uuid())
+
+  masterProfileId String @map("master_profile_id")
+  masterServiceId String @map("master_service_id")
+  clientUserId    String @map("client_user_id")
+
+  startsAt        DateTime @map("starts_at")
+  durationMinutes Int      @map("duration_minutes")
+
+  status AppointmentStatus @default(PENDING) @map("status")
+
+  totalPrice  Float  @map("total_price")
+  serviceName String @map("service_name")
+
+  cancelledAt  DateTime?               @map("cancelled_at")
+  cancelledBy  AppointmentCancelledBy? @map("cancelled_by")
+  cancelReason String?                 @map("cancel_reason")
+
+  masterProfile MasterProfile @relation(fields: [masterProfileId], references: [id])
+  masterService MasterService @relation(fields: [masterServiceId], references: [id])
+  clientUser    User          @relation("ClientAppointments", fields: [clientUserId], references: [id])
+  chat          AppointmentChat?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([masterProfileId, startsAt])
+  @@index([clientUserId, startsAt])
+  @@index([masterServiceId])
+  @@index([status])
+  @@map("Appointments")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum AppointmentCancelledBy {
+  CLIENT
+  MASTER
+  STAFF
+}

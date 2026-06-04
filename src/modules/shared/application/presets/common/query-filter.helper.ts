@@ -1,5 +1,15 @@
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 
+export function mergeWhereFilters<T, R extends object = Record<never, never>>(
+  base: WhereFilter<T, R> | undefined,
+  extra: WhereFilter<T, R>,
+): WhereFilter<T, R> {
+  if (!base) {
+    return extra;
+  }
+  return { and: [base, extra] } as WhereFilter<T, R>;
+}
+
 export function toDbWhere<T, R extends object = Record<never, never>>(
   where: WhereFilter<T, R> | undefined,
 ): Record<string, unknown> | undefined {

@@ -13,6 +13,7 @@ export function payloadToCreateMasterServiceInput(
     name: payload.name,
     description: payload.description,
     price: payload.price,
+    durationMinutes: payload.durationMinutes,
     actor: toMasterActor(sessionUser, isStaffUser),
   };
 }

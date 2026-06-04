@@ -31,6 +31,7 @@ export class CreateMasterServiceUseCase {
       name: input.name,
       description: input.description,
       price: input.price,
+      durationMinutes: input.durationMinutes ?? 60,
     };
 
     return this.masterServiceRepository.create(createInput);

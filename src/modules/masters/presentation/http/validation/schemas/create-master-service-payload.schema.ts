@@ -10,6 +10,7 @@ export const createMasterServicePayloadSchema: JSONSchemaType<ICreateMasterServi
       name: { type: 'string', minLength: 1, maxLength: 255 },
       description: { type: 'string', minLength: 1, maxLength: 5000 },
       price: { type: 'number', minimum: 0 },
+      durationMinutes: { type: 'integer', minimum: 1, maximum: 1440, nullable: true },
     },
     required: ['masterProfileId', 'name', 'description', 'price'],
     additionalProperties: false,

@@ -3,4 +3,5 @@ export interface ICreateMasterServicePayload {
   name: string;
   description: string;
   price: number;
+  durationMinutes?: number;
 }
