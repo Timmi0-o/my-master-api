@@ -14,6 +14,8 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
     case 'MEMBER_NOT_FOUND':
     case 'USER_PROFILE_NOT_FOUND':
     case 'MASTER_PROFILE_NOT_FOUND':
+    case 'MASTER_WEEKLY_SCHEDULE_NOT_FOUND':
+    case 'MASTER_SCHEDULE_EXCEPTION_NOT_FOUND':
     case 'MASTER_SERVICE_NOT_FOUND':
     case 'APPOINTMENT_NOT_FOUND':
     case 'APPOINTMENT_CHAT_NOT_FOUND':
@@ -25,6 +27,8 @@ export function mapDomainErrorToHttp(error: DomainError): HttpException {
     case 'USER_NOT_ACTIVE':
     case 'USER_PROFILE_FORBIDDEN':
     case 'MASTER_PROFILE_FORBIDDEN':
+    case 'MASTER_WEEKLY_SCHEDULE_FORBIDDEN':
+    case 'MASTER_SCHEDULE_EXCEPTION_FORBIDDEN':
     case 'MASTER_SERVICE_FORBIDDEN':
     case 'APPOINTMENT_FORBIDDEN':
     case 'APPOINTMENT_CHAT_FORBIDDEN':

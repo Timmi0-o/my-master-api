@@ -1,0 +1,31 @@
+// Повторяющийся интервал работы (несколько строк на один dayOfWeek — утро/вечер, перерыв на обед).
+model MasterWeeklySchedule {
+  id String @id @default(uuid())
+
+  masterProfileId String    @map("master_profile_id")
+  dayOfWeek       DayOfWeek @map("day_of_week")
+
+  // Локальное время мастера (timezone на MasterProfile), формат "HH:mm" 24h
+  startTime String @map("start_time")
+  endTime   String @map("end_time")
+
+  masterProfile MasterProfile @relation(fields: [masterProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([masterProfileId, dayOfWeek, startTime])
+  @@index([masterProfileId, dayOfWeek])
+  @@map("MasterWeeklySchedules")
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}

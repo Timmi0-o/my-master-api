@@ -1,0 +1,33 @@
+// Исключение из шаблона: выходной, отпуск, разовый особый день.
+// startsAt / endsAt — UTC; границы периода [startsAt, endsAt) для запросов пересечений.
+model MasterScheduleException {
+  id String @id @default(uuid())
+
+  masterProfileId String @map("master_profile_id")
+
+  startsAt DateTime @map("starts_at")
+  endsAt   DateTime @map("ends_at")
+
+  kind MasterScheduleExceptionKind @map("kind")
+
+  // Только при kind = CUSTOM_HOURS: локальное время в день исключения (если период = один календарный день)
+  customStartTime String? @map("custom_start_time")
+  customEndTime   String? @map("custom_end_time")
+
+  title String? @map("title")
+  note  String? @map("note")
+
+  masterProfile MasterProfile @relation(fields: [masterProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([masterProfileId, startsAt, endsAt])
+  @@map("MasterScheduleExceptions")
+}
+
+enum MasterScheduleExceptionKind {
+  CLOSED // полностью недоступен в периоде (выходной, отпуск)
+  CUSTOM_HOURS // в периоде работает только customStartTime–customEndTime (локально, обычно один день)
+}

@@ -6,9 +6,22 @@ model MasterProfile {
   description String @map("description")
   rating      Float  @map("rating")
 
-  services     MasterService[]
-  appointments Appointment[]
-  user         User            @relation(fields: [userId], references: [id])
+  // Расписание и приём записей
+  timezone      String              @default("Europe/Moscow") @map("timezone")
+  bookingStatus MasterBookingStatus @default(ACCEPTING) @map("booking_status")
+  pausedUntil   DateTime?           @map("paused_until")
+
+  // Правила бронирования (опционально подкрутить в UI мастера)
+  minNoticeMinutes                 Int @default(60) @map("min_notice_minutes")
+  maxBookingDaysAhead              Int @default(60) @map("max_booking_days_ahead")
+  slotStepMinutes                  Int @default(30) @map("slot_step_minutes")
+  bufferBetweenAppointmentsMinutes Int @default(0) @map("buffer_between_appointments_minutes")
+
+  services            MasterService[]
+  appointments        Appointment[]
+  weeklySchedules     MasterWeeklySchedule[]
+  scheduleExceptions  MasterScheduleException[]
+  user                User                      @relation(fields: [userId], references: [id])
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -16,4 +29,10 @@ model MasterProfile {
 
   @@index([userId, rating])
   @@map("MasterProfiles")
+}
+
+enum MasterBookingStatus {
+  ACCEPTING // принимает новые записи
+  PAUSED // временно не принимает (старые записи остаются)
+  CLOSED // не принимает новые (жёсткое закрытие профиля для брони)
 }
