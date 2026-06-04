@@ -33,10 +33,14 @@ export function mapAppointmentRow(
   };
 
   if (row.masterProfile != null) {
-    entity.masterProfile = mapMasterProfileRow(row.masterProfile as MasterProfileRow);
+    entity.masterProfile = mapMasterProfileRow(
+      row.masterProfile as MasterProfileRow,
+    );
   }
   if (row.masterService != null) {
-    entity.masterService = mapMasterServiceRow(row.masterService as MasterServiceRow);
+    entity.masterService = mapMasterServiceRow(
+      row.masterService as MasterServiceRow,
+    );
   }
   if (row.clientUser != null) {
     entity.clientUser = mapUserRow(row.clientUser as UserRow);
@@ -48,6 +52,19 @@ export function mapAppointmentRow(
       createdAt: row.chat.createdAt,
       updatedAt: row.chat.updatedAt,
       deletedAt: row.chat.deletedAt ?? null,
+      ...(row.chat.messages != null
+        ? {
+            messages: row.chat.messages.map((message) => ({
+              id: message.id,
+              chatId: message.chatId,
+              senderUserId: message.senderUserId,
+              body: message.body,
+              createdAt: message.createdAt,
+              updatedAt: message.updatedAt,
+              deletedAt: message.deletedAt ?? null,
+            })),
+          }
+        : {}),
     };
   }
 

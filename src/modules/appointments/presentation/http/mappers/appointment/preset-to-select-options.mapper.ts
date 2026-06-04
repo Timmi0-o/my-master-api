@@ -88,13 +88,19 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
         ] as (keyof IUserPublicEntity)[],
       },
       chat: {
-        select: [
-          'id',
-          'appointmentId',
-          'createdAt',
-          'updatedAt',
-          'deletedAt',
-        ] as (keyof IAppointmentChatPublicEntity)[],
+        include: {
+          messages: {
+            select: [
+              'id',
+              'chatId',
+              'senderUserId',
+              'body',
+              'createdAt',
+              'updatedAt',
+              'deletedAt',
+            ],
+          },
+        },
       },
     },
   },

@@ -9,6 +9,34 @@ import type { RelationConfig } from 'src/modules/shared/infrastructure/persisten
 export const APPOINTMENT_CHAT_RELATIONS: Record<string, RelationConfig> = {
   appointment: {
     allowedSelectFields: [...APPOINTMENT_SELECT_FIELDS],
+    nested: {
+      masterProfile: {
+        allowedSelectFields: [
+          'id',
+          'userId',
+          'displayName',
+          'description',
+          'rating',
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+        ],
+      },
+      clientUser: {
+        allowedSelectFields: [
+          'id',
+          'email',
+          'phone',
+          'username',
+          'name',
+          'surname',
+          'patronymic',
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+        ],
+      },
+    },
   },
   messages: {
     allowedSelectFields: [

@@ -1,10 +1,10 @@
 import { APPOINTMENT_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment/appointment-select-fields';
-import { USER_SELECT_FIELDS } from 'src/modules/users/domain/entities/user/user-select-fields';
 import {
   DEFAULT_MAX_INCLUDE_DEPTH,
   type ReadOptionsValidationConfig,
 } from 'src/modules/shared/infrastructure/persistence/repositories/base/config/read-validation.config';
 import type { RelationConfig } from 'src/modules/shared/infrastructure/persistence/repositories/base/config/relation.config';
+import { USER_SELECT_FIELDS } from 'src/modules/users/domain/entities/user/user-select-fields';
 
 export const APPOINTMENT_RELATIONS: Record<string, RelationConfig> = {
   masterProfile: {
@@ -36,7 +36,26 @@ export const APPOINTMENT_RELATIONS: Record<string, RelationConfig> = {
     allowedSelectFields: [...USER_SELECT_FIELDS],
   },
   chat: {
-    allowedSelectFields: ['id', 'appointmentId', 'createdAt', 'updatedAt', 'deletedAt'],
+    allowedSelectFields: [
+      'id',
+      'appointmentId',
+      'createdAt',
+      'updatedAt',
+      'deletedAt',
+    ],
+    nested: {
+      messages: {
+        allowedSelectFields: [
+          'id',
+          'chatId',
+          'senderUserId',
+          'body',
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+        ],
+      },
+    },
   },
 };
 

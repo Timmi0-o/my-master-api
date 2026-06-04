@@ -7,5 +7,5 @@ export type IAppointmentRelations = {
   masterProfile: IMasterProfilePublicEntity;
   masterService: IMasterServicePublicEntity;
   clientUser: IUserPublicEntity;
-  chat?: IAppointmentChatPublicEntity | null;
+  chat: IAppointmentChatPublicEntity;
 };
