@@ -11,6 +11,12 @@ const PATCHABLE_KEYS = [
   'description',
   'rating',
   'userId',
+  'timezone',
+  'bookingStatus',
+  'minNoticeMinutes',
+  'maxBookingDaysAhead',
+  'slotStepMinutes',
+  'bufferBetweenAppointmentsMinutes',
 ] as const satisfies readonly (keyof IUpdateMasterProfileInput)[];
 
 export function payloadToUpdateMasterProfileInput(
@@ -19,7 +25,12 @@ export function payloadToUpdateMasterProfileInput(
   sessionUser: ISessionUser,
   isStaffUser: boolean,
 ): IUpdateMasterProfileApplicationInput {
-  const patch = pickPatch(payload, PATCHABLE_KEYS);
+  const patch = pickPatch(payload, PATCHABLE_KEYS) as IUpdateMasterProfileInput;
+
+  if (payload.pausedUntil !== undefined) {
+    patch.pausedUntil =
+      payload.pausedUntil === null ? null : new Date(payload.pausedUntil);
+  }
 
   if (Object.keys(patch).length === 0) {
     throw new BadRequestException(
