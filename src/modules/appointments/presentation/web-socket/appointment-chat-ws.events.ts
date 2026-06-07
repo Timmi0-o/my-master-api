@@ -5,5 +5,5 @@ export const APPOINTMENT_CHAT_WS_EVENTS = {
   MESSAGE_DELETED: 'appointment-chat.message.deleted',
 } as const;
 
-export const buildAppointmentChatRoomName = (chatId: string): string =>
+export const APPOINTMENT_CHAT_WS_ROOM_NAME = (chatId: string): string =>
   `chat:${chatId}`;

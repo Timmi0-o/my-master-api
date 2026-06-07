@@ -1,12 +1,12 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../auth/presentation/guards/jwt-auth.guard';
-import { UsersModule } from '../users/users.module';
 import type { IMasterProfileRepository } from '../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import type { IMasterServiceRepository } from '../masters/domain/repositories/master-service/i-master-service.repository';
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../masters/domain/repositories/master-service/master-service.repository.tokens';
 import { MastersModule } from '../masters/masters.module';
+import { UsersModule } from '../users/users.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from './application/ports/appointment-chat-realtime.publisher.tokens';
 import type { IAppointmentChatRealtimePublisher } from './application/ports/i-appointment-chat-realtime.publisher';
 import { CreateAppointmentChatMessageUseCase } from './application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
@@ -46,7 +46,11 @@ import { WsJwtAuthGuard } from './presentation/web-socket/guards/ws-jwt-auth.gua
 import { AppointmentChatWsValidator } from './presentation/web-socket/validation/appointment-chat-ws.validator';
 
 @Module({
-  imports: [forwardRef(() => MastersModule), UsersModule, JwtModule.register({})],
+  imports: [
+    forwardRef(() => MastersModule),
+    UsersModule,
+    JwtModule.register({}),
+  ],
   controllers: [
     AppointmentsController,
     AppointmentChatsController,

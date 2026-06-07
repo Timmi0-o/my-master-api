@@ -13,7 +13,7 @@ import { AssertAppointmentChatAccessUseCase } from '../../application/use-cases/
 import { AppointmentChatRealtimeEventBus } from '../../infrastructure/web-socket/appointment-chat-realtime.event-bus';
 import {
   APPOINTMENT_CHAT_WS_EVENTS,
-  buildAppointmentChatRoomName,
+  APPOINTMENT_CHAT_WS_ROOM_NAME,
 } from './appointment-chat-ws.events';
 import type { AppointmentChatAuthenticatedSocket } from './guards/appointment-chat-authenticated-socket.types';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
@@ -43,7 +43,7 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
     this.server = server;
 
     this.eventBusSubscription = this.eventBus.subscribe((event) => {
-      const room = buildAppointmentChatRoomName(event.chatId);
+      const room = APPOINTMENT_CHAT_WS_ROOM_NAME(event.chatId);
 
       if (event.type === 'message.created') {
         server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_CREATED, {
@@ -94,7 +94,7 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
         payloadToAssertAppointmentChatAccessInput(payload, client.data.user),
       );
 
-      await client.join(buildAppointmentChatRoomName(payload.chatId));
+      await client.join(APPOINTMENT_CHAT_WS_ROOM_NAME(payload.chatId));
 
       return { result: { data: { joined: true } } };
     } catch (error) {
@@ -110,7 +110,7 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
   ) {
     try {
       const payload = this.wsValidator.validateLeavePayload(body);
-      await client.leave(buildAppointmentChatRoomName(payload.chatId));
+      await client.leave(APPOINTMENT_CHAT_WS_ROOM_NAME(payload.chatId));
 
       return { result: { data: { left: true } } };
     } catch (error) {
