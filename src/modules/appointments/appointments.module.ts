@@ -1,14 +1,19 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../auth/presentation/guards/jwt-auth.guard';
+import { UsersModule } from '../users/users.module';
 import type { IMasterProfileRepository } from '../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import type { IMasterServiceRepository } from '../masters/domain/repositories/master-service/i-master-service.repository';
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../masters/domain/repositories/master-service/master-service.repository.tokens';
 import { MastersModule } from '../masters/masters.module';
+import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from './application/ports/appointment-chat-realtime.publisher.tokens';
+import type { IAppointmentChatRealtimePublisher } from './application/ports/i-appointment-chat-realtime.publisher';
 import { CreateAppointmentChatMessageUseCase } from './application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
 import { DeleteAppointmentChatMessageByIdUseCase } from './application/use-cases/appointment-chat-message/delete-appointment-chat-message-by-id.use-case';
 import { GetAppointmentChatMessageByIdUseCase } from './application/use-cases/appointment-chat-message/get-appointment-chat-message-by-id.use-case';
 import { GetAppointmentChatMessagesUseCase } from './application/use-cases/appointment-chat-message/get-appointment-chat-messages.use-case';
+import { AssertAppointmentChatAccessUseCase } from './application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
 import { DeleteAppointmentChatByIdUseCase } from './application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from './application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
 import { GetAppointmentChatsUseCase } from './application/use-cases/appointment-chat/get-appointment-chats.use-case';
@@ -28,15 +33,20 @@ import type { IAppointmentRepository } from './domain/repositories/appointment/i
 import { PrismaAppointmentChatMessageRepository } from './infrastructure/persistence/repositories/appointment-chat-message/prisma-appointment-chat-message.repository';
 import { PrismaAppointmentChatRepository } from './infrastructure/persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
 import { PrismaAppointmentRepository } from './infrastructure/persistence/repositories/appointment/prisma-appointment.repository';
+import { AppointmentChatRealtimeEventBus } from './infrastructure/web-socket/appointment-chat-realtime.event-bus';
+import { SocketIoAppointmentChatRealtimePublisher } from './infrastructure/web-socket/socket-io-appointment-chat-realtime.publisher';
 import { AppointmentChatMessagesController } from './presentation/http/controllers/appointment-chat-messages.controller';
 import { AppointmentChatsController } from './presentation/http/controllers/appointment-chats.controller';
 import { AppointmentsController } from './presentation/http/controllers/appointments.controller';
 import { AppointmentChatMessageValidator } from './presentation/http/validation/appointment-chat-message.validator';
 import { AppointmentChatValidator } from './presentation/http/validation/appointment-chat.validator';
 import { AppointmentValidator } from './presentation/http/validation/appointment.validator';
+import { AppointmentChatGateway } from './presentation/web-socket/appointment-chat.gateway';
+import { WsJwtAuthGuard } from './presentation/web-socket/guards/ws-jwt-auth.guard';
+import { AppointmentChatWsValidator } from './presentation/web-socket/validation/appointment-chat-ws.validator';
 
 @Module({
-  imports: [forwardRef(() => MastersModule)],
+  imports: [forwardRef(() => MastersModule), UsersModule, JwtModule.register({})],
   controllers: [
     AppointmentsController,
     AppointmentChatsController,
@@ -46,6 +56,9 @@ import { AppointmentValidator } from './presentation/http/validation/appointment
     AppointmentValidator,
     AppointmentChatValidator,
     AppointmentChatMessageValidator,
+    AppointmentChatWsValidator,
+    AppointmentChatGateway,
+    WsJwtAuthGuard,
     JwtAuthGuard,
     {
       provide: APPOINTMENT_REPOSITORY_TOKEN,
@@ -58,6 +71,11 @@ import { AppointmentValidator } from './presentation/http/validation/appointment
     {
       provide: APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
       useClass: PrismaAppointmentChatMessageRepository,
+    },
+    AppointmentChatRealtimeEventBus,
+    {
+      provide: APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+      useClass: SocketIoAppointmentChatRealtimePublisher,
     },
     {
       provide: GetAppointmentsUseCase,
@@ -140,6 +158,24 @@ import { AppointmentValidator } from './presentation/http/validation/appointment
       ],
     },
     {
+      provide: AssertAppointmentChatAccessUseCase,
+      useFactory: (
+        chatRepo: IAppointmentChatRepository,
+        appointmentRepo: IAppointmentRepository,
+        profileRepo: IMasterProfileRepository,
+      ) =>
+        new AssertAppointmentChatAccessUseCase(
+          chatRepo,
+          appointmentRepo,
+          profileRepo,
+        ),
+      inject: [
+        APPOINTMENT_CHAT_REPOSITORY_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+      ],
+    },
+    {
       provide: DeleteAppointmentChatByIdUseCase,
       useFactory: (
         chatRepo: IAppointmentChatRepository,
@@ -191,18 +227,21 @@ import { AppointmentValidator } from './presentation/http/validation/appointment
         chatRepo: IAppointmentChatRepository,
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
+        realtimePublisher: IAppointmentChatRealtimePublisher,
       ) =>
         new CreateAppointmentChatMessageUseCase(
           messageRepo,
           chatRepo,
           appointmentRepo,
           profileRepo,
+          realtimePublisher,
         ),
       inject: [
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
       ],
     },
     {
@@ -212,18 +251,21 @@ import { AppointmentValidator } from './presentation/http/validation/appointment
         chatRepo: IAppointmentChatRepository,
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
+        realtimePublisher: IAppointmentChatRealtimePublisher,
       ) =>
         new DeleteAppointmentChatMessageByIdUseCase(
           messageRepo,
           chatRepo,
           appointmentRepo,
           profileRepo,
+          realtimePublisher,
         ),
       inject: [
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
       ],
     },
   ],

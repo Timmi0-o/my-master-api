@@ -1,38 +1,27 @@
-import { AppointmentChatMessageNotFoundError } from 'src/modules/appointments/domain/errors/appointment-chat-message-not-found.error';
+import type { IAssertAppointmentChatAccessApplicationInput } from '../../dtos/appointment-chat/assert-appointment-chat-access.input';
 import { AppointmentChatNotFoundError } from 'src/modules/appointments/domain/errors/appointment-chat-not-found.error';
 import { AppointmentNotFoundError } from 'src/modules/appointments/domain/errors/appointment-not-found.error';
-import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import type { IDeleteAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/delete-appointment-chat-message.input';
 import { assertAppointmentAccess } from '../../helpers/assert-appointment-access';
-import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 
-export class DeleteAppointmentChatMessageByIdUseCase {
+export class AssertAppointmentChatAccessUseCase {
   constructor(
-    private readonly messageRepository: IAppointmentChatMessageRepository,
     private readonly appointmentChatRepository: IAppointmentChatRepository,
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
-    private readonly realtimePublisher: IAppointmentChatRealtimePublisher,
   ) {}
 
   async execute(
-    input: IDeleteAppointmentChatMessageApplicationInput,
-  ): Promise<boolean> {
-    const message = await this.messageRepository.findEntityById(input.id);
-    if (!message) {
-      throw new AppointmentChatMessageNotFoundError(input.id);
-    }
-
+    input: IAssertAppointmentChatAccessApplicationInput,
+  ): Promise<void> {
     const chat = await this.appointmentChatRepository.findEntityById(
-      message.chatId,
+      input.chatId,
     );
-
-    if (!chat) {
-      throw new AppointmentChatNotFoundError(message.chatId);
+    if (!chat || (!input.actor.isStaffUser && chat.deletedAt != null)) {
+      throw new AppointmentChatNotFoundError(input.chatId);
     }
 
     const appointment = await this.appointmentRepository.findEntityById(
@@ -50,16 +39,5 @@ export class DeleteAppointmentChatMessageByIdUseCase {
     }
 
     assertAppointmentAccess(appointment, input.actor, profile.userId);
-
-    const deleted = await this.messageRepository.softDeleteById(input.id);
-
-    if (deleted) {
-      await this.realtimePublisher.messageDeleted({
-        chatId: message.chatId,
-        messageId: input.id,
-      });
-    }
-
-    return deleted;
   }
 }
