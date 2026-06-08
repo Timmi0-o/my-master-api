@@ -7,7 +7,7 @@ export const APPOINTMENT_CHAT_REALTIME_WS_EVENTS = {
 
 interface AppointmentChatRealtimeMessageEvent {
   chatId: string;
-  message: IAppointmentChatMessagePublicEntity;
+  message?: IAppointmentChatMessagePublicEntity;
 }
 
 export interface AppointmentChatRealtimeMessageCreatedEvent extends AppointmentChatRealtimeMessageEvent {
@@ -16,6 +16,7 @@ export interface AppointmentChatRealtimeMessageCreatedEvent extends AppointmentC
 
 export interface AppointmentChatRealtimeMessageDeletedEvent extends AppointmentChatRealtimeMessageEvent {
   type: 'message.deleted';
+  messageId: string;
 }
 
 export type AppointmentChatRealtimeEvent =

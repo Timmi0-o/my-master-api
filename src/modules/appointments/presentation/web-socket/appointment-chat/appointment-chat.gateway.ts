@@ -48,7 +48,9 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
       if (event.type === 'message.created') {
         server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_CREATED, {
           result: {
-            data: mapAppointmentChatMessageToWsPayload(event.message),
+            data: event.message
+              ? mapAppointmentChatMessageToWsPayload(event.message)
+              : null,
           },
         });
         return;
