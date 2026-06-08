@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { IAppointmentChatRealtimePublisher } from '../../application/ports/i-appointment-chat-realtime.publisher';
-import type { IAppointmentChatMessagePublicEntity } from '../../domain/entities/appointment-chat-message';
+import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
+import type { IAppointmentChatMessagePublicEntity } from '../../../domain/entities/appointment-chat-message';
 import { AppointmentChatRealtimeEventBus } from './appointment-chat-realtime.event-bus';
 
 @Injectable()

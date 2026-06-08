@@ -9,8 +9,8 @@ import {
 } from '@nestjs/websockets';
 import type { Subscription } from 'rxjs';
 import type { Server } from 'socket.io';
-import { AssertAppointmentChatAccessUseCase } from '../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
-import { AppointmentChatRealtimeEventBus } from '../../infrastructure/web-socket/appointment-chat-realtime.event-bus';
+import { AssertAppointmentChatAccessUseCase } from '../../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
+import { AppointmentChatRealtimeEventBus } from '../../../infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import {
   APPOINTMENT_CHAT_WS_EVENTS,
   APPOINTMENT_CHAT_WS_ROOM_NAME,

@@ -1,10 +1,9 @@
 import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 
-export interface IAppointmentChatMessageWsPayload {
-  id: string;
-  chatId: string;
-  senderUserId: string;
-  body: string;
+export interface IAppointmentChatMessageWsPayload extends Omit<
+  IAppointmentChatMessagePublicEntity,
+  'createdAt' | 'updatedAt'
+> {
   createdAt: string;
   updatedAt: string;
 }

@@ -33,17 +33,17 @@ import type { IAppointmentRepository } from './domain/repositories/appointment/i
 import { PrismaAppointmentChatMessageRepository } from './infrastructure/persistence/repositories/appointment-chat-message/prisma-appointment-chat-message.repository';
 import { PrismaAppointmentChatRepository } from './infrastructure/persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
 import { PrismaAppointmentRepository } from './infrastructure/persistence/repositories/appointment/prisma-appointment.repository';
-import { AppointmentChatRealtimeEventBus } from './infrastructure/web-socket/appointment-chat-realtime.event-bus';
-import { SocketIoAppointmentChatRealtimePublisher } from './infrastructure/web-socket/socket-io-appointment-chat-realtime.publisher';
+import { AppointmentChatRealtimeEventBus } from './infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
+import { SocketIoAppointmentChatRealtimePublisher } from './infrastructure/web-socket/appointment-chat/socket-io-appointment-chat-realtime.publisher';
 import { AppointmentChatMessagesController } from './presentation/http/controllers/appointment-chat-messages.controller';
 import { AppointmentChatsController } from './presentation/http/controllers/appointment-chats.controller';
 import { AppointmentsController } from './presentation/http/controllers/appointments.controller';
 import { AppointmentChatMessageValidator } from './presentation/http/validation/appointment-chat-message.validator';
 import { AppointmentChatValidator } from './presentation/http/validation/appointment-chat.validator';
 import { AppointmentValidator } from './presentation/http/validation/appointment.validator';
-import { AppointmentChatGateway } from './presentation/web-socket/appointment-chat.gateway';
-import { WsJwtAuthGuard } from './presentation/web-socket/guards/ws-jwt-auth.guard';
-import { AppointmentChatWsValidator } from './presentation/web-socket/validation/appointment-chat-ws.validator';
+import { AppointmentChatGateway } from './presentation/web-socket/appointment-chat/appointment-chat.gateway';
+import { WsJwtAuthGuard } from './presentation/web-socket/appointment-chat/guards/ws-jwt-auth.guard';
+import { AppointmentChatWsValidator } from './presentation/web-socket/appointment-chat/validation/appointment-chat-ws.validator';
 
 @Module({
   imports: [
