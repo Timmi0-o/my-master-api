@@ -5,17 +5,18 @@ export const APPOINTMENT_CHAT_REALTIME_WS_EVENTS = {
   MESSAGE_DELETED: 'appointment-chat.message.deleted',
 } as const;
 
-export type AppointmentChatRealtimeMessageCreatedEvent = {
-  type: 'message.created';
+interface AppointmentChatRealtimeMessageEvent {
   chatId: string;
   message: IAppointmentChatMessagePublicEntity;
-};
+}
 
-export type AppointmentChatRealtimeMessageDeletedEvent = {
+export interface AppointmentChatRealtimeMessageCreatedEvent extends AppointmentChatRealtimeMessageEvent {
+  type: 'message.created';
+}
+
+export interface AppointmentChatRealtimeMessageDeletedEvent extends AppointmentChatRealtimeMessageEvent {
   type: 'message.deleted';
-  chatId: string;
-  messageId: string;
-};
+}
 
 export type AppointmentChatRealtimeEvent =
   | AppointmentChatRealtimeMessageCreatedEvent
