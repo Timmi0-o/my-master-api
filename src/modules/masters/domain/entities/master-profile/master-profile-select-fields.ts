@@ -1,4 +1,4 @@
-import type { IMasterProfilePublicEntity } from './i-master-profile-entity';
+import type { IMasterProfilePublicEntity } from './i-master-profile.entity';
 
 export const MASTER_PROFILE_SELECT_FIELDS = [
   'id',

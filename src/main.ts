@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
@@ -15,14 +15,6 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
 
   const logger = app.get<ILoggerService>(ILoggerSymbol);
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
 
   app.enableVersioning({
     type: VersioningType.URI,

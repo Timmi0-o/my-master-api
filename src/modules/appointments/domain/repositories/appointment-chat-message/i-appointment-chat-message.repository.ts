@@ -1,4 +1,10 @@
-import type { IReadRepository } from 'src/modules/shared/domain/repositories';
+import type {
+  ICreateRepository,
+  IReadRepository,
+  ISoftDeleteRepository,
+  IUpdateRepository,
+} from '@shared/domain/repositories';
+import type { TransactionScope } from '@shared/domain/transactions';
 import type {
   IAppointmentChatMessageEntity,
   IAppointmentChatMessagePublicEntity,
@@ -11,12 +17,19 @@ export type IAppointmentChatMessageRepository = IReadRepository<
   IAppointmentChatMessagePublicEntity,
   string,
   IAppointmentChatMessageRelations
-> & {
-  findEntityById(id: string): Promise<IAppointmentChatMessageEntity | null>;
-  create(input: ICreateAppointmentChatMessageInput): Promise<IAppointmentChatMessageEntity>;
-  update(
-    id: string,
-    input: IUpdateAppointmentChatMessageInput,
-  ): Promise<IAppointmentChatMessageEntity>;
-  softDeleteById(id: string): Promise<boolean>;
-};
+> &
+  ICreateRepository<
+    IAppointmentChatMessageEntity,
+    ICreateAppointmentChatMessageInput
+  > &
+  IUpdateRepository<
+    IAppointmentChatMessageEntity,
+    string,
+    IUpdateAppointmentChatMessageInput
+  > &
+  ISoftDeleteRepository<IAppointmentChatMessageEntity, string> & {
+    findEntityById(
+      id: string,
+      scope?: TransactionScope,
+    ): Promise<IAppointmentChatMessageEntity | null>;
+  };

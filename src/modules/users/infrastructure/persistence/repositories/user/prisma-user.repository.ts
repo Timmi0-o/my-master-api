@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import type { ReadResult } from 'src/modules/shared/domain/query';
-import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
-import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
+import { Inject, Injectable } from '@nestjs/common';
+import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
+import type { ISessionUser } from '@shared/domain/i-session-user';
+import type { TransactionScope } from '@shared/domain/transactions';
+import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
+import type { ReadResult } from '@shared/domain/query';
+import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
   EUserRole,
   EUserStatus,
@@ -18,6 +21,7 @@ import {
   type UserRow,
 } from '../../row-mappers/user';
 import { USER_RELATIONS, USER_VALIDATION_CONFIG } from './user.relations';
+import { mapUserWriteError } from './user-write-error.mapper';
 
 @Injectable()
 export class PrismaUserRepository
@@ -32,12 +36,17 @@ export class PrismaUserRepository
   protected readonly validationConfig = USER_VALIDATION_CONFIG;
   protected readonly relationConfig = USER_RELATIONS;
 
-  constructor(private readonly prismaService: PrismaService) {
-    super();
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(LOGGER_TOKEN) logger: ILogger,
+  ) {
+    super(logger);
   }
 
-  protected getDelegate() {
-    return this.prismaService.user;
+  protected getDelegate(scope?: TransactionScope) {
+    return scope
+      ? unwrapPrismaTxFromScope(scope).user
+      : this.prismaService.user;
   }
 
   protected mapRow(row: UserRow): ReadResult<IUserPublicEntity, Record<never, never>> {
@@ -48,8 +57,11 @@ export class PrismaUserRepository
     return { id };
   }
 
-  async findEntityById(userId: string): Promise<IUserEntity | null> {
-    const row = await this.prismaService.user.findUnique({ where: { id: userId } });
+  async findEntityById(
+    userId: string,
+    scope?: TransactionScope,
+  ): Promise<IUserEntity | null> {
+    const row = await this.getDelegate(scope).findUnique({ where: { id: userId } });
     return row ? mapUserEntityRow(row as UserEntityRow) : null;
   }
 
@@ -90,16 +102,47 @@ export class PrismaUserRepository
     };
   }
 
-  async create(user: ICreateUserInput): Promise<IUserEntity> {
-    const row = await this.prismaService.user.create({ data: user });
-    return mapUserEntityRow(row as UserEntityRow);
+  async create(user: ICreateUserInput, scope: TransactionScope): Promise<IUserEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.user.create({ data: user });
+      return mapUserEntityRow(row as UserEntityRow);
+    } catch (error) {
+      throw mapUserWriteError(error, { email: user.email });
+    }
   }
 
-  async softDeleteById(userId: string): Promise<boolean> {
-    const row = await this.prismaService.user.update({
-      where: { id: userId },
-      data: { deletedAt: new Date() },
-    });
-    return row.deletedAt != null;
+  async createMany(
+    inputs: readonly ICreateUserInput[],
+    scope: TransactionScope,
+  ): Promise<IUserEntity[]> {
+    if (inputs.length === 0) {
+      return [];
+    }
+
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const rows = await tx.user.createManyAndReturn({ data: [...inputs] });
+      return rows.map((row) => mapUserEntityRow(row as UserEntityRow));
+    } catch (error) {
+      const first = inputs[0];
+      throw mapUserWriteError(error, { email: first.email });
+    }
+  }
+
+  async softDelete(userId: string, scope: TransactionScope): Promise<IUserEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.user.update({
+        where: { id: userId },
+        data: { deletedAt: new Date() },
+      });
+      return mapUserEntityRow(row as UserEntityRow);
+    } catch (error) {
+      throw mapUserWriteError(error, { id: userId });
+    }
   }
 }

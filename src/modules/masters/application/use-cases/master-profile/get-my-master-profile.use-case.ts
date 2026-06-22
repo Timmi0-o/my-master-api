@@ -1,5 +1,5 @@
-import type { IGetMyMasterProfileApplicationInput } from 'src/modules/masters/application/dtos/master-profile/get-my-master-profile.input';
-import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
+import type { IGetMyMasterProfileApplicationInput } from '../../dtos/master-profile/get-my-master-profile.input';
+import type { IGetMyMasterProfileApplicationOutput } from '../../dtos/master-profile/get-my-master-profile.output';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 
 export class GetMyMasterProfileUseCase {
@@ -9,7 +9,7 @@ export class GetMyMasterProfileUseCase {
 
   async execute(
     input: IGetMyMasterProfileApplicationInput,
-  ): Promise<IMasterProfilePublicEntity | null> {
+  ): Promise<IGetMyMasterProfileApplicationOutput | null> {
     const entity = await this.masterProfileRepository.findEntityByUserId(
       input.actor.userId,
     );

@@ -1,4 +1,4 @@
-import type { IMasterServicePublicEntity } from './i-master-service-entity';
+import type { IMasterServicePublicEntity } from './i-master-service.entity';
 
 export const MASTER_SERVICE_SELECT_FIELDS = [
   'id',

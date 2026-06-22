@@ -4,10 +4,11 @@ import type {
   FindOneParams,
   ReadResult,
   WhereFilter,
-} from 'src/modules/shared/domain/query';
-import { resolveSlice } from 'src/modules/shared/domain/query';
-import type { IReadRepository } from 'src/modules/shared/domain/repositories';
-import type { ILogger } from 'src/modules/shared/domain/logging/logger.token';
+} from '@shared/domain/query';
+import { resolveSlice } from '@shared/domain/query';
+import type { IReadRepository } from '@shared/domain/repositories';
+import type { ILogger } from '@shared/domain/logging/logger.token';
+import type { TransactionScope } from '@shared/domain/transactions';
 import {
   FindManyWithRequiredIdsHelper,
   type FindManyOptions,
@@ -26,23 +27,16 @@ export abstract class PrismaReadRepository<
   TRelations extends object = Record<never, never>,
   TPrismaRow extends object = object,
 > implements IReadRepository<TEntity, TId, TRelations> {
-  /**
-   * Не инжектить logger через constructor базового класса:
-   * Nest наследует param metadata родителя и подставляет LOGGER_TOKEN
-   * в первый параметр дочернего конструктора (prismaService).
-   */
-  protected readonly logger: ILogger = {
-    debug: () => undefined,
-    log: () => undefined,
-    warn: () => undefined,
-    error: () => undefined,
-    configuration: () => undefined,
-  };
+  protected readonly logger: ILogger;
+
+  constructor(logger: ILogger) {
+    this.logger = logger;
+  }
 
   protected abstract readonly validationConfig: ReadOptionsValidationConfig;
   protected abstract readonly relationConfig: Record<string, RelationConfig>;
 
-  protected abstract getDelegate(): PrismaReadDelegate;
+  protected abstract getDelegate(scope?: TransactionScope): PrismaReadDelegate;
   protected abstract mapRow(row: TPrismaRow): ReadResult<TEntity, TRelations>;
   protected abstract toPrismaWhereUnique(id: TId): Record<string, unknown>;
 
@@ -65,6 +59,7 @@ export abstract class PrismaReadRepository<
   async findOne(
     id: TId,
     params?: FindOneParams<TEntity, TRelations>,
+    scope?: TransactionScope,
   ): Promise<ReadResult<TEntity, TRelations> | null> {
     validateReadOptions(params?.selectOptions, this.validationConfig);
 
@@ -73,18 +68,19 @@ export abstract class PrismaReadRepository<
       ...this.resolveSelectArgs(params?.selectOptions),
     };
 
-    const row = await this.getDelegate().findUnique(args);
+    const row = await this.getDelegate(scope).findUnique(args);
 
     return row ? this.mapRow(row as TPrismaRow) : null;
   }
 
   async findMany(
     params?: FindManyParams<TEntity, TRelations>,
+    scope?: TransactionScope,
   ): Promise<ReadResult<TEntity, TRelations>[]> {
     validateReadOptions(params?.selectOptions, this.validationConfig);
 
     if (params?.requiredIds?.length) {
-      return this.findManyWithRequiredIds(params);
+      return this.findManyWithRequiredIds(params, scope);
     }
 
     const slice = resolveSlice(params?.slice);
@@ -96,19 +92,23 @@ export abstract class PrismaReadRepository<
       ...this.resolveSelectArgs(params?.selectOptions),
     };
 
-    const rows = await this.getDelegate().findMany(args);
+    const rows = await this.getDelegate(scope).findMany(args);
 
     return rows.map((row) => this.mapRow(row as TPrismaRow));
   }
 
-  async count(params?: CountParams<TEntity, TRelations>): Promise<number> {
-    return this.getDelegate().count({
+  async count(
+    params?: CountParams<TEntity, TRelations>,
+    scope?: TransactionScope,
+  ): Promise<number> {
+    return this.getDelegate(scope).count({
       where: this.resolveListWhere(params?.where),
     });
   }
 
   private async findManyWithRequiredIds(
     params: FindManyParams<TEntity, TRelations>,
+    scope?: TransactionScope,
   ): Promise<ReadResult<TEntity, TRelations>[]> {
     const slice = resolveSlice(params?.slice);
     const requiredIds = params.requiredIds ?? [];
@@ -125,7 +125,7 @@ export abstract class PrismaReadRepository<
         ...this.resolveSelectArgs(params.selectOptions),
       };
 
-      const rows = await this.getDelegate().findMany(args);
+      const rows = await this.getDelegate(scope).findMany(args);
       if (!rows.length) return null;
 
       return rows.map((row) => this.mapRow(row as TPrismaRow)) as (ReadResult<

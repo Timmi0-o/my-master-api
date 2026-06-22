@@ -1,10 +1,12 @@
 import type { IGetAppointmentByIdApplicationInput } from '../../dtos/appointment/get-appointment-by-id.input';
-import type { IAppointmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment';
-import { AppointmentNotFoundError } from 'src/modules/appointments/domain/errors/appointment-not-found.error';
+import type { IGetAppointmentByIdApplicationOutput } from '../../dtos/appointment/get-appointment-by-id.output';
+import {
+  AppointmentNotFoundError,
+  ensureAppointmentAccessible,
+} from 'src/modules/appointments/domain/entities/appointment';
+import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
-import { assertAppointmentAccess } from '../../helpers/assert-appointment-access';
 
 export class GetAppointmentByIdUseCase {
   constructor(
@@ -14,20 +16,17 @@ export class GetAppointmentByIdUseCase {
 
   async execute(
     input: IGetAppointmentByIdApplicationInput,
-  ): Promise<IAppointmentPublicEntity> {
-    const entity = await this.appointmentRepository.findEntityById(input.id);
-    if (!entity || (!input.actor.isStaffUser && entity.deletedAt != null)) {
+  ): Promise<IGetAppointmentByIdApplicationOutput> {
+    const existing = await this.appointmentRepository.findEntityById(input.id);
+    if (!existing || (!input.actor.isStaffUser && existing.deletedAt != null)) {
       throw new AppointmentNotFoundError(input.id);
     }
 
     const profile = await this.masterProfileRepository.findEntityById(
-      entity.masterProfileId,
+      existing.masterProfileId,
     );
-    if (!profile) {
-      throw new MasterProfileNotFoundError(entity.masterProfileId);
-    }
-
-    assertAppointmentAccess(entity, input.actor, profile.userId);
+    ensureMasterProfileExists(profile, existing.masterProfileId);
+    ensureAppointmentAccessible(existing, input.actor, profile.userId);
 
     const item = await this.appointmentRepository.findOne(input.id, input.params);
     if (!item) {

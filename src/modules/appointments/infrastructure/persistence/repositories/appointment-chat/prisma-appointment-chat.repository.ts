@@ -1,15 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
+import type { TransactionScope } from '@shared/domain/transactions';
+import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
 import type {
+  ICreateAppointmentChatInput,
   IAppointmentChatEntity,
   IAppointmentChatPublicEntity,
   IAppointmentChatRelations,
-  ICreateAppointmentChatInput,
   IUpdateAppointmentChatInput,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
-import type { ReadResult } from 'src/modules/shared/domain/query';
-import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
-import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import type { ReadResult } from '@shared/domain/query';
+import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
   mapAppointmentChatRow,
   type AppointmentChatRow,
@@ -18,6 +21,7 @@ import {
   APPOINTMENT_CHAT_RELATIONS,
   APPOINTMENT_CHAT_VALIDATION_CONFIG,
 } from './appointment-chat.relations';
+import { mapAppointmentChatWriteError } from './appointment-chat-write-error.mapper';
 
 @Injectable()
 export class PrismaAppointmentChatRepository
@@ -32,12 +36,17 @@ export class PrismaAppointmentChatRepository
   protected readonly validationConfig = APPOINTMENT_CHAT_VALIDATION_CONFIG;
   protected readonly relationConfig = APPOINTMENT_CHAT_RELATIONS;
 
-  constructor(private readonly prismaService: PrismaService) {
-    super();
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(LOGGER_TOKEN) logger: ILogger,
+  ) {
+    super(logger);
   }
 
-  protected getDelegate() {
-    return this.prismaService.appointmentChat;
+  protected getDelegate(scope?: TransactionScope) {
+    return scope
+      ? unwrapPrismaTxFromScope(scope).appointmentChat
+      : this.prismaService.appointmentChat;
   }
 
   protected mapRow(
@@ -50,8 +59,11 @@ export class PrismaAppointmentChatRepository
     return { id };
   }
 
-  async findEntityById(id: string): Promise<IAppointmentChatEntity | null> {
-    const row = await this.prismaService.appointmentChat.findUnique({
+  async findEntityById(
+    id: string,
+    scope?: TransactionScope,
+  ): Promise<IAppointmentChatEntity | null> {
+    const row = await this.getDelegate(scope).findUnique({
       where: { id },
     });
     return row ? mapAppointmentChatRow(row as AppointmentChatRow) : null;
@@ -59,8 +71,9 @@ export class PrismaAppointmentChatRepository
 
   async findEntityByAppointmentId(
     appointmentId: string,
+    scope?: TransactionScope,
   ): Promise<IAppointmentChatEntity | null> {
-    const row = await this.prismaService.appointmentChat.findUnique({
+    const row = await this.getDelegate(scope).findUnique({
       where: { appointmentId },
     });
     return row ? mapAppointmentChatRow(row as AppointmentChatRow) : null;
@@ -68,27 +81,71 @@ export class PrismaAppointmentChatRepository
 
   async create(
     input: ICreateAppointmentChatInput,
+    scope: TransactionScope,
   ): Promise<IAppointmentChatEntity> {
-    const row = await this.prismaService.appointmentChat.create({ data: input });
-    return mapAppointmentChatRow(row as AppointmentChatRow);
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.appointmentChat.create({ data: input });
+      return mapAppointmentChatRow(row as AppointmentChatRow);
+    } catch (error) {
+      throw mapAppointmentChatWriteError(error, { appointmentId: input.appointmentId });
+    }
+  }
+
+  async createMany(
+    inputs: readonly ICreateAppointmentChatInput[],
+    scope: TransactionScope,
+  ): Promise<IAppointmentChatEntity[]> {
+    if (inputs.length === 0) {
+      return [];
+    }
+
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const rows = await tx.appointmentChat.createManyAndReturn({
+        data: [...inputs],
+      });
+      return rows.map((row) => mapAppointmentChatRow(row as AppointmentChatRow));
+    } catch (error) {
+      const first = inputs[0];
+      throw mapAppointmentChatWriteError(error, { appointmentId: first.appointmentId });
+    }
   }
 
   async update(
     id: string,
-    input: IUpdateAppointmentChatInput,
+    patch: IUpdateAppointmentChatInput,
+    scope: TransactionScope,
   ): Promise<IAppointmentChatEntity> {
-    const row = await this.prismaService.appointmentChat.update({
-      where: { id },
-      data: input,
-    });
-    return mapAppointmentChatRow(row as AppointmentChatRow);
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.appointmentChat.update({
+        where: { id },
+        data: patch,
+      });
+      return mapAppointmentChatRow(row as AppointmentChatRow);
+    } catch (error) {
+      throw mapAppointmentChatWriteError(error, { id });
+    }
   }
 
-  async softDeleteById(id: string): Promise<boolean> {
-    const row = await this.prismaService.appointmentChat.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-    return row.deletedAt != null;
+  async softDelete(
+    id: string,
+    scope: TransactionScope,
+  ): Promise<IAppointmentChatEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.appointmentChat.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      return mapAppointmentChatRow(row as AppointmentChatRow);
+    } catch (error) {
+      throw mapAppointmentChatWriteError(error, { id });
+    }
   }
 }

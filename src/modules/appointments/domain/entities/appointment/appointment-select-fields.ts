@@ -1,4 +1,4 @@
-import type { IAppointmentPublicEntity } from './i-appointment-entity';
+import type { IAppointmentPublicEntity } from './i-appointment.entity';
 
 export const APPOINTMENT_SELECT_FIELDS = [
   'id',

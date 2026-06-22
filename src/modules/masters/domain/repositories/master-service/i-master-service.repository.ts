@@ -1,4 +1,10 @@
-import type { IReadRepository } from 'src/modules/shared/domain/repositories';
+import type {
+  ICreateRepository,
+  IReadRepository,
+  ISoftDeleteRepository,
+  IUpdateRepository,
+} from '@shared/domain/repositories';
+import type { TransactionScope } from '@shared/domain/transactions';
 import type {
   ICreateMasterServiceInput,
   IMasterServiceEntity,
@@ -11,12 +17,12 @@ export type IMasterServiceRepository = IReadRepository<
   IMasterServicePublicEntity,
   string,
   IMasterServiceRelations
-> & {
-  findEntityById(id: string): Promise<IMasterServiceEntity | null>;
-  create(input: ICreateMasterServiceInput): Promise<IMasterServiceEntity>;
-  update(
-    id: string,
-    input: IUpdateMasterServiceInput,
-  ): Promise<IMasterServiceEntity>;
-  softDeleteById(id: string): Promise<boolean>;
-};
+> &
+  ICreateRepository<IMasterServiceEntity, ICreateMasterServiceInput> &
+  IUpdateRepository<IMasterServiceEntity, string, IUpdateMasterServiceInput> &
+  ISoftDeleteRepository<IMasterServiceEntity, string> & {
+    findEntityById(
+      id: string,
+      scope?: TransactionScope,
+    ): Promise<IMasterServiceEntity | null>;
+  };

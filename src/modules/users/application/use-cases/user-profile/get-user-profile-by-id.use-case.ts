@@ -1,6 +1,6 @@
-import type { IGetUserProfileByIdApplicationInput } from 'src/modules/users/application/dtos/user-profile/get-user-profile-by-id.input';
-import type { IUserProfilePublicEntity } from 'src/modules/users/domain/entities/user-profile';
-import { UserProfileNotFoundError } from 'src/modules/users/domain/errors/user-profile-not-found.error';
+import type { IGetUserProfileByIdApplicationInput } from '../../dtos/user-profile/get-user-profile-by-id.input';
+import type { IGetUserProfileByIdApplicationOutput } from '../../dtos/user-profile/get-user-profile-by-id.output';
+import { UserProfileNotFoundError } from 'src/modules/users/domain/entities/user-profile';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
 
 export class GetUserProfileByIdUseCase {
@@ -10,7 +10,7 @@ export class GetUserProfileByIdUseCase {
 
   async execute(
     input: IGetUserProfileByIdApplicationInput,
-  ): Promise<IUserProfilePublicEntity> {
+  ): Promise<IGetUserProfileByIdApplicationOutput> {
     const entity = await this.userProfileRepository.findEntityById(input.id);
 
     if (!entity || (!input.actor.isStaffUser && entity.deletedAt != null)) {

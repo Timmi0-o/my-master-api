@@ -1,10 +1,11 @@
 import type { IUserEntity } from 'src/modules/users/domain/entities/user';
+import { UserNotFoundError } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
-import { UserNotFoundError } from 'src/modules/users/domain/errors/user-not-found.error';
 import type { IRefreshTokenRepository } from 'src/modules/auth/domain/repositories/i-refresh-token.repository';
 import type { ISessionRepository } from 'src/modules/auth/domain/repositories/i-session.repository';
 import type { IAuthResponse } from '../../domain/auth.types';
 import type { TokenService } from '../../infrastructure/services/token.service';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 interface ILoginMetadata {
   ipAddress?: string | null;
@@ -14,6 +15,7 @@ interface ILoginMetadata {
 export class LoginUseCase {
   constructor(
     private readonly tokenService: TokenService,
+    private readonly transactionManager: ITransactionManager,
     private readonly userRepository: IUserRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly sessionRepository: ISessionRepository,
@@ -33,16 +35,24 @@ export class LoginUseCase {
       email: sessionUser.email,
     });
 
-    await this.refreshTokenRepository.create({
-      userId: sessionUser.id,
-      tokenHash: this.tokenService.hashToken(tokens.refreshToken),
-      expiresAt: this.tokenService.getRefreshTokenExpiresAt(),
-    });
+    await this.transactionManager.runInTransaction(async (scope) => {
+      await this.refreshTokenRepository.create(
+        {
+          userId: sessionUser.id,
+          tokenHash: this.tokenService.hashToken(tokens.refreshToken),
+          expiresAt: this.tokenService.getRefreshTokenExpiresAt(),
+        },
+        scope,
+      );
 
-    await this.sessionRepository.create({
-      userId: sessionUser.id,
-      ipAddress: metadata?.ipAddress ?? null,
-      userAgent: metadata?.userAgent ?? null,
+      await this.sessionRepository.create(
+        {
+          userId: sessionUser.id,
+          ipAddress: metadata?.ipAddress ?? null,
+          userAgent: metadata?.userAgent ?? null,
+        },
+        scope,
+      );
     });
 
     return { data: { user: sessionUser, tokens }, success: true };

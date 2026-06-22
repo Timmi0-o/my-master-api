@@ -1,4 +1,4 @@
-import type { IAppointmentChatMessagePublicEntity } from './i-appointment-chat-message-entity';
+import type { IAppointmentChatMessagePublicEntity } from './i-appointment-chat-message.entity';
 
 export const APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS = [
   'id',

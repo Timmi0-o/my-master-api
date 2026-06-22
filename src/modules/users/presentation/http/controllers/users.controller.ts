@@ -1,6 +1,5 @@
-import { Controller, Get, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
@@ -10,7 +9,6 @@ import { mapGetUsersHttpResponse } from '../response/map-get-users-response';
 import { UserValidator } from '../validation/user.validator';
 
 @Controller({ path: 'users', version: '1' })
-@UseFilters(DomainExceptionFilter)
 @UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(

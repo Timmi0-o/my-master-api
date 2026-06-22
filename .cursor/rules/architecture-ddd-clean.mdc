@@ -23,8 +23,9 @@ alwaysApply: false
 ## Use-case правила
 
 - Один use-case = одна бизнес-операция с явным `Input` и `Output`.
-- Use-case возвращает прикладной результат, а не HTTP-ответ и не ORM-сущность.
-- Бизнес-валидации и инварианты держать в `domain`, а не в контроллерах.
+- Бизнес-валидации и инварианты — в `domain/entities/<entity>/policies/`, не в controllers и не в helpers.
+- Mutate use cases оборачивают write-flow в `ITransactionManager.runInTransaction`.
+- Use-case возвращает `I*ApplicationOutput`, не HTTP-ответ.
 - **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/<entity>/`.
 - HTTP: validator → `payload-to-*-input.ts` в `presentation/http/mappers/<entity>/` → `useCase.execute(input)`.
 - Mutate/get-by-id: `actor: { userId, isStaffUser }` внутри application input.

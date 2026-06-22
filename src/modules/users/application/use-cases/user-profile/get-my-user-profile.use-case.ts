@@ -1,5 +1,5 @@
-import type { IGetMyUserProfileApplicationInput } from 'src/modules/users/application/dtos/user-profile/get-my-user-profile.input';
-import type { IUserProfilePublicEntity } from 'src/modules/users/domain/entities/user-profile';
+import type { IGetMyUserProfileApplicationInput } from '../../dtos/user-profile/get-my-user-profile.input';
+import type { IGetMyUserProfileApplicationOutput } from '../../dtos/user-profile/get-my-user-profile.output';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
 
 export class GetMyUserProfileUseCase {
@@ -7,7 +7,7 @@ export class GetMyUserProfileUseCase {
 
   async execute(
     input: IGetMyUserProfileApplicationInput,
-  ): Promise<IUserProfilePublicEntity | null> {
+  ): Promise<IGetMyUserProfileApplicationOutput> {
     const entity = await this.userProfileRepository.findEntityByUserId(
       input.actor.userId,
     );

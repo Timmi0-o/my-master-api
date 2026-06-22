@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "MasterScheduleExceptions_master_profile_id_starts_at_end_idx" RENAME TO "MasterScheduleExceptions_master_profile_id_starts_at_ends_a_idx";

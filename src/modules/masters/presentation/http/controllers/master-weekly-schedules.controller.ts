@@ -7,11 +7,9 @@ import {
   Patch,
   Post,
   Query,
-  UnauthorizedException,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/modules/auth/presentation/decorators/current-user.decorator';
+import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CreateMasterWeeklyScheduleUseCase } from 'src/modules/masters/application/use-cases/master-weekly-schedule/create-master-weekly-schedule.use-case';
 import { DeleteMasterWeeklyScheduleByIdUseCase } from 'src/modules/masters/application/use-cases/master-weekly-schedule/delete-master-weekly-schedule-by-id.use-case';
@@ -21,7 +19,6 @@ import { UpdateMasterWeeklyScheduleByIdUseCase } from 'src/modules/masters/appli
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToCreateMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-create-master-weekly-schedule-input';
 import { payloadToDeleteMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-delete-master-weekly-schedule-input';
@@ -32,7 +29,6 @@ import { mapGetMasterWeeklySchedulesHttpResponse } from '../response/map-get-mas
 import { MasterWeeklyScheduleValidator } from '../validation/master-weekly-schedule.validator';
 
 @Controller({ path: 'master-weekly-schedules', version: '1' })
-@UseFilters(DomainExceptionFilter)
 @UseGuards(JwtAuthGuard)
 export class MasterWeeklySchedulesController {
   constructor(
@@ -62,12 +58,9 @@ export class MasterWeeklySchedulesController {
   async getMasterWeeklyScheduleById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterWeeklyScheduleValidator.validateIdParam(params);
     const queryPayload =
       this.masterWeeklyScheduleValidator.validateGetByIdQuery(query);
@@ -84,12 +77,9 @@ export class MasterWeeklySchedulesController {
   @Post()
   async createMasterWeeklySchedule(
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const payload =
       this.masterWeeklyScheduleValidator.validateCreatePayload(body);
     const input = payloadToCreateMasterWeeklyScheduleInput(
@@ -105,12 +95,9 @@ export class MasterWeeklySchedulesController {
   async updateMasterWeeklySchedule(
     @Param() params: Record<string, unknown>,
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterWeeklyScheduleValidator.validateIdParam(params);
     const payload =
       this.masterWeeklyScheduleValidator.validateUpdatePayload(body);
@@ -128,12 +115,9 @@ export class MasterWeeklySchedulesController {
   @Delete(':id')
   async deleteMasterWeeklySchedule(
     @Param() params: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterWeeklyScheduleValidator.validateIdParam(params);
     const input = payloadToDeleteMasterWeeklyScheduleInput(
       id,

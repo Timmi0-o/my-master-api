@@ -10,6 +10,12 @@ export interface ILoginPayload {
   password: string;
 }
 
+export interface IRegisterPayload {
+  email: string;
+  username: string;
+  password: string;
+}
+
 export interface IRefreshPayload {
   refreshToken: string;
 }

@@ -1,6 +1,6 @@
-import type { IGetMasterProfileByIdApplicationInput } from 'src/modules/masters/application/dtos/master-profile/get-master-profile-by-id.input';
-import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
+import type { IGetMasterProfileByIdApplicationInput } from '../../dtos/master-profile/get-master-profile-by-id.input';
+import type { IGetMasterProfileByIdApplicationOutput } from '../../dtos/master-profile/get-master-profile-by-id.output';
+import { MasterProfileNotFoundError } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 
 export class GetMasterProfileByIdUseCase {
@@ -10,7 +10,7 @@ export class GetMasterProfileByIdUseCase {
 
   async execute(
     input: IGetMasterProfileByIdApplicationInput,
-  ): Promise<IMasterProfilePublicEntity> {
+  ): Promise<IGetMasterProfileByIdApplicationOutput> {
     const entity = await this.masterProfileRepository.findEntityById(input.id);
 
     if (!entity || (!input.actor.isStaffUser && entity.deletedAt != null)) {

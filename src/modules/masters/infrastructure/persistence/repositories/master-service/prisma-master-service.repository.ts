@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
+import type { TransactionScope } from '@shared/domain/transactions';
+import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
 import type {
   ICreateMasterServiceInput,
   IMasterServiceEntity,
@@ -7,9 +10,9 @@ import type {
   IUpdateMasterServiceInput,
 } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
-import type { ReadResult } from 'src/modules/shared/domain/query';
-import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
-import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import type { ReadResult } from '@shared/domain/query';
+import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
   mapMasterServiceRow,
   type MasterServiceRow,
@@ -18,6 +21,7 @@ import {
   MASTER_SERVICE_RELATIONS,
   MASTER_SERVICE_VALIDATION_CONFIG,
 } from './master-service.relations';
+import { mapMasterServiceWriteError } from './master-service-write-error.mapper';
 
 @Injectable()
 export class PrismaMasterServiceRepository
@@ -32,12 +36,17 @@ export class PrismaMasterServiceRepository
   protected readonly validationConfig = MASTER_SERVICE_VALIDATION_CONFIG;
   protected readonly relationConfig = MASTER_SERVICE_RELATIONS;
 
-  constructor(private readonly prismaService: PrismaService) {
-    super();
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(LOGGER_TOKEN) logger: ILogger,
+  ) {
+    super(logger);
   }
 
-  protected getDelegate() {
-    return this.prismaService.masterService;
+  protected getDelegate(scope?: TransactionScope) {
+    return scope
+      ? unwrapPrismaTxFromScope(scope).masterService
+      : this.prismaService.masterService;
   }
 
   protected mapRow(
@@ -50,8 +59,11 @@ export class PrismaMasterServiceRepository
     return { id };
   }
 
-  async findEntityById(id: string): Promise<IMasterServiceEntity | null> {
-    const row = await this.prismaService.masterService.findUnique({
+  async findEntityById(
+    id: string,
+    scope?: TransactionScope,
+  ): Promise<IMasterServiceEntity | null> {
+    const row = await this.getDelegate(scope).findUnique({
       where: { id },
     });
     return row ? mapMasterServiceRow(row as MasterServiceRow) : null;
@@ -59,27 +71,71 @@ export class PrismaMasterServiceRepository
 
   async create(
     input: ICreateMasterServiceInput,
+    scope: TransactionScope,
   ): Promise<IMasterServiceEntity> {
-    const row = await this.prismaService.masterService.create({ data: input });
-    return mapMasterServiceRow(row as MasterServiceRow);
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.masterService.create({ data: input });
+      return mapMasterServiceRow(row as MasterServiceRow);
+    } catch (error) {
+      throw mapMasterServiceWriteError(error, { masterProfileId: input.masterProfileId });
+    }
+  }
+
+  async createMany(
+    inputs: readonly ICreateMasterServiceInput[],
+    scope: TransactionScope,
+  ): Promise<IMasterServiceEntity[]> {
+    if (inputs.length === 0) {
+      return [];
+    }
+
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const rows = await tx.masterService.createManyAndReturn({
+        data: [...inputs],
+      });
+      return rows.map((row) => mapMasterServiceRow(row as MasterServiceRow));
+    } catch (error) {
+      const first = inputs[0];
+      throw mapMasterServiceWriteError(error, { masterProfileId: first.masterProfileId });
+    }
   }
 
   async update(
     id: string,
-    input: IUpdateMasterServiceInput,
+    patch: IUpdateMasterServiceInput,
+    scope: TransactionScope,
   ): Promise<IMasterServiceEntity> {
-    const row = await this.prismaService.masterService.update({
-      where: { id },
-      data: input,
-    });
-    return mapMasterServiceRow(row as MasterServiceRow);
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.masterService.update({
+        where: { id },
+        data: patch,
+      });
+      return mapMasterServiceRow(row as MasterServiceRow);
+    } catch (error) {
+      throw mapMasterServiceWriteError(error, { id });
+    }
   }
 
-  async softDeleteById(id: string): Promise<boolean> {
-    const row = await this.prismaService.masterService.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-    return row.deletedAt != null;
+  async softDelete(
+    id: string,
+    scope: TransactionScope,
+  ): Promise<IMasterServiceEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.masterService.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      return mapMasterServiceRow(row as MasterServiceRow);
+    } catch (error) {
+      throw mapMasterServiceWriteError(error, { id });
+    }
   }
 }

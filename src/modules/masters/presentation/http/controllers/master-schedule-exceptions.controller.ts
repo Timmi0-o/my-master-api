@@ -7,11 +7,9 @@ import {
   Patch,
   Post,
   Query,
-  UnauthorizedException,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/modules/auth/presentation/decorators/current-user.decorator';
+import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CreateMasterScheduleExceptionUseCase } from 'src/modules/masters/application/use-cases/master-schedule-exception/create-master-schedule-exception.use-case';
 import { DeleteMasterScheduleExceptionByIdUseCase } from 'src/modules/masters/application/use-cases/master-schedule-exception/delete-master-schedule-exception-by-id.use-case';
@@ -21,7 +19,6 @@ import { UpdateMasterScheduleExceptionByIdUseCase } from 'src/modules/masters/ap
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToCreateMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-create-master-schedule-exception-input';
 import { payloadToDeleteMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-delete-master-schedule-exception-input';
@@ -32,7 +29,6 @@ import { mapGetMasterScheduleExceptionsHttpResponse } from '../response/map-get-
 import { MasterScheduleExceptionValidator } from '../validation/master-schedule-exception.validator';
 
 @Controller({ path: 'master-schedule-exceptions', version: '1' })
-@UseFilters(DomainExceptionFilter)
 @UseGuards(JwtAuthGuard)
 export class MasterScheduleExceptionsController {
   constructor(
@@ -62,12 +58,9 @@ export class MasterScheduleExceptionsController {
   async getMasterScheduleExceptionById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterScheduleExceptionValidator.validateIdParam(params);
     const queryPayload =
       this.masterScheduleExceptionValidator.validateGetByIdQuery(query);
@@ -84,12 +77,9 @@ export class MasterScheduleExceptionsController {
   @Post()
   async createMasterScheduleException(
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const payload =
       this.masterScheduleExceptionValidator.validateCreatePayload(body);
     const input = payloadToCreateMasterScheduleExceptionInput(
@@ -105,12 +95,9 @@ export class MasterScheduleExceptionsController {
   async updateMasterScheduleException(
     @Param() params: Record<string, unknown>,
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterScheduleExceptionValidator.validateIdParam(params);
     const payload =
       this.masterScheduleExceptionValidator.validateUpdatePayload(body);
@@ -128,12 +115,9 @@ export class MasterScheduleExceptionsController {
   @Delete(':id')
   async deleteMasterScheduleException(
     @Param() params: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterScheduleExceptionValidator.validateIdParam(params);
     const input = payloadToDeleteMasterScheduleExceptionInput(
       id,

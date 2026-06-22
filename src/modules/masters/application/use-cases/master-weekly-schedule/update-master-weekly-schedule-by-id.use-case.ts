@@ -1,36 +1,35 @@
-import type { IUpdateMasterWeeklyScheduleApplicationInput } from 'src/modules/masters/application/dtos/master-weekly-schedule/update-master-weekly-schedule.input';
-import type { IMasterWeeklyScheduleEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
-import { MasterWeeklyScheduleNotFoundError } from 'src/modules/masters/domain/errors/master-weekly-schedule-not-found.error';
+import type { IUpdateMasterWeeklyScheduleApplicationInput } from '../../dtos/master-weekly-schedule/update-master-weekly-schedule.input';
+import type { IUpdateMasterWeeklyScheduleApplicationOutput } from '../../dtos/master-weekly-schedule/update-master-weekly-schedule.output';
+import { ensureMasterWeeklyScheduleExists } from 'src/modules/masters/domain/entities/master-weekly-schedule';
+import {
+  ensureMasterProfileAccessible,
+  ensureMasterProfileExists,
+} from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterWeeklyScheduleRepository } from 'src/modules/masters/domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
-import { assertMasterProfileAccess } from '../../helpers/assert-master-profile-access';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class UpdateMasterWeeklyScheduleByIdUseCase {
   constructor(
+    private readonly transactionManager: ITransactionManager,
     private readonly masterWeeklyScheduleRepository: IMasterWeeklyScheduleRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
   ) {}
 
   async execute(
     input: IUpdateMasterWeeklyScheduleApplicationInput,
-  ): Promise<IMasterWeeklyScheduleEntity> {
-    const existing = await this.masterWeeklyScheduleRepository.findEntityById(
-      input.id,
-    );
-    if (!existing) {
-      throw new MasterWeeklyScheduleNotFoundError(input.id);
-    }
+  ): Promise<IUpdateMasterWeeklyScheduleApplicationOutput> {
+    const existing = await this.masterWeeklyScheduleRepository.findEntityById(input.id);
+    ensureMasterWeeklyScheduleExists(existing, input.id);
 
     const profile = await this.masterProfileRepository.findEntityById(
       existing.masterProfileId,
     );
-    if (!profile) {
-      throw new MasterProfileNotFoundError(existing.masterProfileId);
-    }
+    ensureMasterProfileExists(profile, existing.masterProfileId);
+    ensureMasterProfileAccessible(profile, input.actor);
 
-    assertMasterProfileAccess(profile, input.actor);
-
-    return this.masterWeeklyScheduleRepository.update(input.id, input.patch);
+    return this.transactionManager.runInTransaction((scope) =>
+      this.masterWeeklyScheduleRepository.update(input.id, input.patch, scope),
+    );
   }
 }

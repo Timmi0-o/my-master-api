@@ -1,26 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import type { ReadResult } from 'src/modules/shared/domain/query';
-import { PrismaService } from 'src/modules/shared/infrastructure/persistence/prisma/prisma.service';
-import { PrismaReadRepository } from 'src/modules/shared/infrastructure/persistence/repositories/base/prisma-read.repository';
-import {
+import { Inject, Injectable } from '@nestjs/common';
+import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
+import type { TransactionScope } from '@shared/domain/transactions';
+import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
+import type {
   ICreateUserProfileInput,
   IUserProfileEntity,
+  IUserProfilePublicEntity,
   IUpdateUserProfileInput,
 } from 'src/modules/users/domain/entities/user-profile';
-import { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
+import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
+import type { ReadResult } from '@shared/domain/query';
+import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
   mapUserProfileRow,
-  UserProfileRow,
+  type UserProfileRow,
 } from '../../row-mappers/user-profile';
 import {
   USER_PROFILE_RELATIONS,
   USER_PROFILE_VALIDATION_CONFIG,
 } from './user-profile.relations';
+import { mapUserProfileWriteError } from './user-profile-write-error.mapper';
 
 @Injectable()
 export class PrismaUserProfileRepository
   extends PrismaReadRepository<
-    IUserProfileEntity,
+    IUserProfilePublicEntity,
     string,
     Record<never, never>,
     UserProfileRow
@@ -30,17 +35,22 @@ export class PrismaUserProfileRepository
   protected readonly validationConfig = USER_PROFILE_VALIDATION_CONFIG;
   protected readonly relationConfig = USER_PROFILE_RELATIONS;
 
-  constructor(private readonly prismaService: PrismaService) {
-    super();
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(LOGGER_TOKEN) logger: ILogger,
+  ) {
+    super(logger);
   }
 
-  protected getDelegate() {
-    return this.prismaService.userProfile;
+  protected getDelegate(scope?: TransactionScope) {
+    return scope
+      ? unwrapPrismaTxFromScope(scope).userProfile
+      : this.prismaService.userProfile;
   }
 
   protected mapRow(
     row: UserProfileRow,
-  ): ReadResult<IUserProfileEntity, Record<never, never>> {
+  ): ReadResult<IUserProfilePublicEntity, Record<never, never>> {
     return mapUserProfileRow(row);
   }
 
@@ -48,43 +58,93 @@ export class PrismaUserProfileRepository
     return { id };
   }
 
-  async findEntityById(id: string): Promise<IUserProfileEntity | null> {
-    const row = await this.prismaService.userProfile.findUnique({
+  async findEntityById(
+    id: string,
+    scope?: TransactionScope,
+  ): Promise<IUserProfileEntity | null> {
+    const row = await this.getDelegate(scope).findUnique({
       where: { id },
     });
-    return row ? mapUserProfileRow(row) : null;
+    return row ? mapUserProfileRow(row as UserProfileRow) : null;
   }
 
   async findEntityByUserId(
     userId: string,
+    scope?: TransactionScope,
   ): Promise<IUserProfileEntity | null> {
-    const row = await this.prismaService.userProfile.findUnique({
+    const row = await this.getDelegate(scope).findUnique({
       where: { userId },
     });
-    return row ? mapUserProfileRow(row) : null;
+    return row ? mapUserProfileRow(row as UserProfileRow) : null;
   }
 
-  async create(input: ICreateUserProfileInput): Promise<IUserProfileEntity> {
-    const row = await this.prismaService.userProfile.create({ data: input });
-    return mapUserProfileRow(row);
+  async create(
+    input: ICreateUserProfileInput,
+    scope: TransactionScope,
+  ): Promise<IUserProfileEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.userProfile.create({ data: input });
+      return mapUserProfileRow(row as UserProfileRow);
+    } catch (error) {
+      throw mapUserProfileWriteError(error, { userId: input.userId });
+    }
+  }
+
+  async createMany(
+    inputs: readonly ICreateUserProfileInput[],
+    scope: TransactionScope,
+  ): Promise<IUserProfileEntity[]> {
+    if (inputs.length === 0) {
+      return [];
+    }
+
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const rows = await tx.userProfile.createManyAndReturn({
+        data: [...inputs],
+      });
+      return rows.map((row) => mapUserProfileRow(row as UserProfileRow));
+    } catch (error) {
+      const first = inputs[0];
+      throw mapUserProfileWriteError(error, { userId: first.userId });
+    }
   }
 
   async update(
     id: string,
-    input: IUpdateUserProfileInput,
+    patch: IUpdateUserProfileInput,
+    scope: TransactionScope,
   ): Promise<IUserProfileEntity> {
-    const row = await this.prismaService.userProfile.update({
-      where: { id },
-      data: input,
-    });
-    return mapUserProfileRow(row);
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.userProfile.update({
+        where: { id },
+        data: patch,
+      });
+      return mapUserProfileRow(row as UserProfileRow);
+    } catch (error) {
+      throw mapUserProfileWriteError(error, { id });
+    }
   }
 
-  async softDeleteById(id: string): Promise<boolean> {
-    const row = await this.prismaService.userProfile.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-    return row.deletedAt != null;
+  async softDelete(
+    id: string,
+    scope: TransactionScope,
+  ): Promise<IUserProfileEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.userProfile.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      return mapUserProfileRow(row as UserProfileRow);
+    } catch (error) {
+      throw mapUserProfileWriteError(error, { id });
+    }
   }
 }

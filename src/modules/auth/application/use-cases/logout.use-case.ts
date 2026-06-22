@@ -1,9 +1,11 @@
 import type { IRefreshTokenRepository } from 'src/modules/auth/domain/repositories/i-refresh-token.repository';
 import type { TokenService } from '../../infrastructure/services/token.service';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class LogoutUseCase {
   constructor(
     private readonly tokenService: TokenService,
+    private readonly transactionManager: ITransactionManager,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
   ) {}
 
@@ -15,7 +17,9 @@ export class LogoutUseCase {
       return { success: true };
     }
 
-    await this.refreshTokenRepository.revokeById(storedToken.id);
+    await this.transactionManager.runInTransaction((scope) =>
+      this.refreshTokenRepository.revokeById(storedToken.id, scope),
+    );
     return { success: true };
   }
 }

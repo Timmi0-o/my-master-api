@@ -10,7 +10,7 @@ alwaysApply: false
 
 - `IReadRepository` / `PrismaReadRepository` — **не** CQRS и не отдельный read-репозиторий.
 - Это порт **запросов списка/одной записи**: `findOne`, `findMany`, `count` с `ReadResult<Entity, Relations>`.
-- Write (`create`, `update`, `softDeleteById`, `findEntityById`) — в том же `I*Repository` и том же `Prisma*Repository`.
+- Write (`create`, `update`, `softDelete`, `findEntityById`) — ISP-порты в том же `I*Repository`; write требует `TransactionScope`.
 
 ## Один репозиторий на сущность
 
@@ -18,7 +18,7 @@ alwaysApply: false
 PrismaMasterProfileRepository
   extends PrismaReadRepository<PublicEntity, id, Relations, PrismaRow>
   implements IMasterProfileRepository
-  + findEntityById / create / update / softDeleteById
+  + findEntityById / create / update / softDelete (все write — с scope)
 ```
 
 Auth-модули (session, refresh) — плоский Prisma без базы, если нет list/preset.

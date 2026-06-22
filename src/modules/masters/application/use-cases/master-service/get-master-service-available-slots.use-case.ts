@@ -4,8 +4,8 @@ import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/app
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
-import { MasterServiceNotFoundError } from 'src/modules/masters/domain/errors/master-service-not-found.error';
+import { MasterProfileNotFoundError } from 'src/modules/masters/domain/entities/master-profile';
+import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';

@@ -1,21 +1,21 @@
-export interface IRefreshTokenRecord {
-  id: string;
-  userId: string;
-  tokenHash: string;
-  expiresAt: Date;
-  revokedAt: Date | null;
-}
+import type { TransactionScope } from '@shared/domain/transactions';
+import type { IRefreshTokenEntity } from '../entities/refresh-token';
+
+export type IRefreshTokenRecord = IRefreshTokenEntity;
 
 export interface IRefreshTokenRepository {
-  create(payload: {
-    userId: string;
-    tokenHash: string;
-    expiresAt: Date;
-  }): Promise<IRefreshTokenRecord>;
+  create(
+    payload: {
+      userId: string;
+      tokenHash: string;
+      expiresAt: Date;
+    },
+    scope: TransactionScope,
+  ): Promise<IRefreshTokenRecord>;
 
   findByHash(tokenHash: string): Promise<IRefreshTokenRecord | null>;
 
-  revokeById(tokenId: string): Promise<void>;
+  revokeById(tokenId: string, scope: TransactionScope): Promise<void>;
 
-  revokeAllForUser(userId: string): Promise<void>;
+  revokeAllForUser(userId: string, scope: TransactionScope): Promise<void>;
 }

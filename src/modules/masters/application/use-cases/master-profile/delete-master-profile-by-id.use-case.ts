@@ -1,23 +1,29 @@
-import type { IDeleteMasterProfileApplicationInput } from 'src/modules/masters/application/dtos/master-profile/delete-master-profile.input';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
+import type { IDeleteMasterProfileApplicationInput } from '../../dtos/master-profile/delete-master-profile.input';
+import type { IDeleteMasterProfileApplicationOutput } from '../../dtos/master-profile/delete-master-profile.output';
+import {
+  ensureMasterProfileAccessible,
+  ensureMasterProfileExists,
+} from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { assertMasterProfileAccess } from '../../helpers/assert-master-profile-access';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class DeleteMasterProfileByIdUseCase {
   constructor(
+    private readonly transactionManager: ITransactionManager,
     private readonly masterProfileRepository: IMasterProfileRepository,
   ) {}
 
-  async execute(input: IDeleteMasterProfileApplicationInput): Promise<boolean> {
+  async execute(
+    input: IDeleteMasterProfileApplicationInput,
+  ): Promise<IDeleteMasterProfileApplicationOutput> {
     const existing = await this.masterProfileRepository.findEntityById(
       input.id,
     );
-    if (!existing) {
-      throw new MasterProfileNotFoundError(input.id);
-    }
+    ensureMasterProfileExists(existing, input.id);
+    ensureMasterProfileAccessible(existing, input.actor);
 
-    assertMasterProfileAccess(existing, input.actor);
-
-    return this.masterProfileRepository.softDeleteById(input.id);
+    return this.transactionManager.runInTransaction((scope) =>
+      this.masterProfileRepository.softDelete(input.id, scope),
+    );
   }
 }

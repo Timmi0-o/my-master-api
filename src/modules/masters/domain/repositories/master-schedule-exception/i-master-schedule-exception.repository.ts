@@ -1,4 +1,10 @@
-import type { IReadRepository } from 'src/modules/shared/domain/repositories';
+import type {
+  ICreateRepository,
+  IReadRepository,
+  ISoftDeleteRepository,
+  IUpdateRepository,
+} from '@shared/domain/repositories';
+import type { TransactionScope } from '@shared/domain/transactions';
 import type {
   ICreateMasterScheduleExceptionInput,
   IMasterScheduleExceptionEntity,
@@ -11,14 +17,19 @@ export type IMasterScheduleExceptionRepository = IReadRepository<
   IMasterScheduleExceptionPublicEntity,
   string,
   IMasterScheduleExceptionRelations
-> & {
-  findEntityById(id: string): Promise<IMasterScheduleExceptionEntity | null>;
-  create(
-    input: ICreateMasterScheduleExceptionInput,
-  ): Promise<IMasterScheduleExceptionEntity>;
-  update(
-    id: string,
-    input: IUpdateMasterScheduleExceptionInput,
-  ): Promise<IMasterScheduleExceptionEntity>;
-  softDeleteById(id: string): Promise<boolean>;
-};
+> &
+  ICreateRepository<
+    IMasterScheduleExceptionEntity,
+    ICreateMasterScheduleExceptionInput
+  > &
+  IUpdateRepository<
+    IMasterScheduleExceptionEntity,
+    string,
+    IUpdateMasterScheduleExceptionInput
+  > &
+  ISoftDeleteRepository<IMasterScheduleExceptionEntity, string> & {
+    findEntityById(
+      id: string,
+      scope?: TransactionScope,
+    ): Promise<IMasterScheduleExceptionEntity | null>;
+  };

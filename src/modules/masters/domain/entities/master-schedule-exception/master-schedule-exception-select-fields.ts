@@ -1,4 +1,4 @@
-import type { IMasterScheduleExceptionPublicEntity } from './i-master-schedule-exception-entity';
+import type { IMasterScheduleExceptionPublicEntity } from './i-master-schedule-exception.entity';
 
 export const MASTER_SCHEDULE_EXCEPTION_SELECT_FIELDS = [
   'id',

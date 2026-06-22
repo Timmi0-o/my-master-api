@@ -8,11 +8,9 @@ import {
   Patch,
   Post,
   Query,
-  UnauthorizedException,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/modules/auth/presentation/decorators/current-user.decorator';
+import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CreateAppointmentUseCase } from 'src/modules/appointments/application/use-cases/appointment/create-appointment.use-case';
 import { DeleteAppointmentByIdUseCase } from 'src/modules/appointments/application/use-cases/appointment/delete-appointment-by-id.use-case';
@@ -24,7 +22,6 @@ import { UpdateAppointmentByIdUseCase } from 'src/modules/appointments/applicati
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToCreateAppointmentInput } from '../mappers/appointment/payload-to-create-appointment-input';
 import { payloadToDeleteAppointmentInput } from '../mappers/appointment/payload-to-delete-appointment-input';
@@ -37,7 +34,6 @@ import { mapGetAppointmentsHttpResponse } from '../response/map-get-appointments
 import { AppointmentValidator } from '../validation/appointment.validator';
 
 @Controller({ path: 'appointments', version: '1' })
-@UseFilters(DomainExceptionFilter)
 @UseGuards(JwtAuthGuard)
 export class AppointmentsController {
   constructor(
@@ -54,12 +50,9 @@ export class AppointmentsController {
   @Get('me')
   async getMyAppointments(
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const payload = this.appointmentValidator.validateGetAppointmentsQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const input = payloadToGetMyAppointmentsInput(params, user, metadata.isStaffUser);
@@ -70,12 +63,9 @@ export class AppointmentsController {
   @Get('my-clients')
   async getMyClientsAppointments(
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const payload = this.appointmentValidator.validateGetAppointmentsQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const input = payloadToGetMyClientsAppointmentsInput(
@@ -105,12 +95,9 @@ export class AppointmentsController {
   async getAppointmentById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.appointmentValidator.validateIdParam(params);
     const queryPayload = this.appointmentValidator.validateGetByIdQuery(query);
     const input = payloadToGetAppointmentByIdInput(
@@ -126,12 +113,9 @@ export class AppointmentsController {
   @Post()
   async createAppointment(
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const payload = this.appointmentValidator.validateCreatePayload(body);
     const input = payloadToCreateAppointmentInput(
       payload,
@@ -146,12 +130,9 @@ export class AppointmentsController {
   async updateAppointment(
     @Param() params: Record<string, unknown>,
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.appointmentValidator.validateIdParam(params);
     const payload = this.appointmentValidator.validateUpdatePayload(body);
     const input = payloadToUpdateAppointmentInput(
@@ -167,12 +148,9 @@ export class AppointmentsController {
   @Delete(':id')
   async deleteAppointment(
     @Param() params: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.appointmentValidator.validateIdParam(params);
     const input = payloadToDeleteAppointmentInput(
       id,

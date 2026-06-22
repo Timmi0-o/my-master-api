@@ -1,4 +1,4 @@
-import type { IUserPublicEntity } from './i-user-entity';
+import type { IUserPublicEntity } from './i-user.entity';
 
 export const USER_SELECT_FIELDS = [
   'id',

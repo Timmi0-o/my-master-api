@@ -1,7 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import { EUserStatus, type IUserEntity } from 'src/modules/users/domain/entities/user';
+import { EUserStatus, UserNotActiveError, type IUserEntity } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
-import { UserNotActiveError } from 'src/modules/users/domain/errors/user-not-active.error';
 
 export class ValidateUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}

@@ -4,15 +4,18 @@ import { BaseValidator } from 'src/modules/shared/presentation/http/validation/b
 import type {
   ILoginMetadataInput,
   IRefreshTokenInput,
+  IRegisterPayload,
   IUserIdInput,
   IValidateUserInput,
 } from './schemas/auth.schema.types';
 import { loginMetadataSchema } from './schemas/login-metadata.schema';
 import { refreshTokenSchema } from './schemas/refresh-token.schema';
+import { registerPayloadSchema } from './schemas/register-payload.schema';
 import { userIdSchema } from './schemas/user-id.schema';
 import { validateUserSchema } from './schemas/validate-user.schema';
 
 const validateUser = ajv.compile(validateUserSchema);
+const validateRegisterPayload = ajv.compile(registerPayloadSchema);
 const validateRefreshToken = ajv.compile(refreshTokenSchema);
 const validateUserId = ajv.compile(userIdSchema);
 const validateLoginMetadata = ajv.compile(loginMetadataSchema);
@@ -30,6 +33,22 @@ export class AuthValidator extends BaseValidator {
       data: normalized,
       errorMessage: 'Некорректные учетные данные',
       logLabel: 'AuthValidateCredentials',
+      dataForSchema: normalized,
+    });
+  }
+
+  validateRegisterPayload(raw: Record<string, unknown>): IRegisterPayload {
+    const normalized: IRegisterPayload = {
+      email: typeof raw.email === 'string' ? raw.email.trim() : '',
+      username: typeof raw.username === 'string' ? raw.username.trim() : '',
+      password: String(raw.password ?? ''),
+    };
+
+    return this.validateAndReturn<IRegisterPayload>({
+      validate: validateRegisterPayload,
+      data: normalized,
+      errorMessage: 'Некорректные данные регистрации',
+      logLabel: 'AuthRegisterPayload',
       dataForSchema: normalized,
     });
   }

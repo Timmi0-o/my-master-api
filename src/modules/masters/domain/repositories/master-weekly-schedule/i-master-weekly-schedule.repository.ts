@@ -1,4 +1,10 @@
-import type { IReadRepository } from 'src/modules/shared/domain/repositories';
+import type {
+  ICreateRepository,
+  IReadRepository,
+  ISoftDeleteRepository,
+  IUpdateRepository,
+} from '@shared/domain/repositories';
+import type { TransactionScope } from '@shared/domain/transactions';
 import type {
   ICreateMasterWeeklyScheduleInput,
   IMasterWeeklyScheduleEntity,
@@ -11,14 +17,19 @@ export type IMasterWeeklyScheduleRepository = IReadRepository<
   IMasterWeeklySchedulePublicEntity,
   string,
   IMasterWeeklyScheduleRelations
-> & {
-  findEntityById(id: string): Promise<IMasterWeeklyScheduleEntity | null>;
-  create(
-    input: ICreateMasterWeeklyScheduleInput,
-  ): Promise<IMasterWeeklyScheduleEntity>;
-  update(
-    id: string,
-    input: IUpdateMasterWeeklyScheduleInput,
-  ): Promise<IMasterWeeklyScheduleEntity>;
-  softDeleteById(id: string): Promise<boolean>;
-};
+> &
+  ICreateRepository<
+    IMasterWeeklyScheduleEntity,
+    ICreateMasterWeeklyScheduleInput
+  > &
+  IUpdateRepository<
+    IMasterWeeklyScheduleEntity,
+    string,
+    IUpdateMasterWeeklyScheduleInput
+  > &
+  ISoftDeleteRepository<IMasterWeeklyScheduleEntity, string> & {
+    findEntityById(
+      id: string,
+      scope?: TransactionScope,
+    ): Promise<IMasterWeeklyScheduleEntity | null>;
+  };

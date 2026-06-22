@@ -1,21 +1,27 @@
-import type { IDeleteUserProfileApplicationInput } from 'src/modules/users/application/dtos/user-profile/delete-user-profile.input';
-import { UserProfileNotFoundError } from 'src/modules/users/domain/errors/user-profile-not-found.error';
+import type { IDeleteUserProfileApplicationInput } from '../../dtos/user-profile/delete-user-profile.input';
+import type { IDeleteUserProfileApplicationOutput } from '../../dtos/user-profile/delete-user-profile.output';
+import {
+  ensureUserProfileAccessible,
+  ensureUserProfileExists,
+} from 'src/modules/users/domain/entities/user-profile';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
-import { assertUserProfileAccess } from '../../helpers/assert-user-profile-access';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class DeleteUserProfileByIdUseCase {
   constructor(
+    private readonly transactionManager: ITransactionManager,
     private readonly userProfileRepository: IUserProfileRepository,
   ) {}
 
-  async execute(input: IDeleteUserProfileApplicationInput): Promise<boolean> {
+  async execute(
+    input: IDeleteUserProfileApplicationInput,
+  ): Promise<IDeleteUserProfileApplicationOutput> {
     const existing = await this.userProfileRepository.findEntityById(input.id);
-    if (!existing) {
-      throw new UserProfileNotFoundError(input.id);
-    }
+    ensureUserProfileExists(existing, input.id);
+    ensureUserProfileAccessible(existing, input.actor);
 
-    assertUserProfileAccess(existing, input.actor);
-
-    return this.userProfileRepository.softDeleteById(input.id);
+    return this.transactionManager.runInTransaction((scope) =>
+      this.userProfileRepository.softDelete(input.id, scope),
+    );
   }
 }

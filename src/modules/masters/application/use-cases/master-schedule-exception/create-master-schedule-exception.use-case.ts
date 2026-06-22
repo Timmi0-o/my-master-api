@@ -1,30 +1,29 @@
-import type { ICreateMasterScheduleExceptionApplicationInput } from 'src/modules/masters/application/dtos/master-schedule-exception/create-master-schedule-exception.input';
-import type {
-  ICreateMasterScheduleExceptionInput,
-  IMasterScheduleExceptionEntity,
-} from 'src/modules/masters/domain/entities/master-schedule-exception';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
+import type { ICreateMasterScheduleExceptionApplicationInput } from '../../dtos/master-schedule-exception/create-master-schedule-exception.input';
+import type { ICreateMasterScheduleExceptionApplicationOutput } from '../../dtos/master-schedule-exception/create-master-schedule-exception.output';
+import type { ICreateMasterScheduleExceptionInput } from 'src/modules/masters/domain/entities/master-schedule-exception';
+import {
+  ensureMasterProfileAccessible,
+  ensureMasterProfileExists,
+} from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
-import { assertMasterProfileAccess } from '../../helpers/assert-master-profile-access';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class CreateMasterScheduleExceptionUseCase {
   constructor(
+    private readonly transactionManager: ITransactionManager,
     private readonly masterScheduleExceptionRepository: IMasterScheduleExceptionRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
   ) {}
 
   async execute(
     input: ICreateMasterScheduleExceptionApplicationInput,
-  ): Promise<IMasterScheduleExceptionEntity> {
+  ): Promise<ICreateMasterScheduleExceptionApplicationOutput> {
     const profile = await this.masterProfileRepository.findEntityById(
       input.masterProfileId,
     );
-    if (!profile) {
-      throw new MasterProfileNotFoundError(input.masterProfileId);
-    }
-
-    assertMasterProfileAccess(profile, input.actor);
+    ensureMasterProfileExists(profile, input.masterProfileId);
+    ensureMasterProfileAccessible(profile, input.actor);
 
     const createInput: ICreateMasterScheduleExceptionInput = {
       masterProfileId: input.masterProfileId,
@@ -37,6 +36,8 @@ export class CreateMasterScheduleExceptionUseCase {
       note: input.note ?? null,
     };
 
-    return this.masterScheduleExceptionRepository.create(createInput);
+    return this.transactionManager.runInTransaction((scope) =>
+      this.masterScheduleExceptionRepository.create(createInput, scope),
+    );
   }
 }

@@ -5,11 +5,9 @@ import {
   Get,
   Param,
   Query,
-  UnauthorizedException,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/modules/auth/presentation/decorators/current-user.decorator';
+import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { DeleteAppointmentChatByIdUseCase } from 'src/modules/appointments/application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from 'src/modules/appointments/application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
@@ -17,7 +15,6 @@ import { GetAppointmentChatsUseCase } from 'src/modules/appointments/application
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToDeleteAppointmentChatInput } from '../mappers/appointment-chat/payload-to-delete-appointment-chat-input';
 import { payloadToFindManyParams } from '../mappers/appointment-chat/payload-to-find-many-params.mapper';
@@ -26,7 +23,6 @@ import { mapGetAppointmentChatsHttpResponse } from '../response/map-get-appointm
 import { AppointmentChatValidator } from '../validation/appointment-chat.validator';
 
 @Controller({ path: 'appointment-chats', version: '1' })
-@UseFilters(DomainExceptionFilter)
 @UseGuards(JwtAuthGuard)
 export class AppointmentChatsController {
   constructor(
@@ -55,12 +51,9 @@ export class AppointmentChatsController {
   async getAppointmentChatById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.appointmentChatValidator.validateIdParam(params);
     const queryPayload = this.appointmentChatValidator.validateGetByIdQuery(query);
     const input = payloadToGetAppointmentChatByIdInput(
@@ -76,12 +69,9 @@ export class AppointmentChatsController {
   @Delete(':id')
   async deleteAppointmentChat(
     @Param() params: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.appointmentChatValidator.validateIdParam(params);
     const input = payloadToDeleteAppointmentChatInput(
       id,

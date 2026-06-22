@@ -1,25 +1,31 @@
 import type { ICreateAppointmentApplicationInput } from '../../dtos/appointment/create-appointment.input';
-import type {
-  IAppointmentEntity,
-  ICreateAppointmentWithChatInput,
-} from 'src/modules/appointments/domain/entities/appointment';
+import type { ICreateAppointmentApplicationOutput } from '../../dtos/appointment/create-appointment.output';
+import type { ICreateAppointmentInput } from 'src/modules/appointments/domain/entities/appointment';
+import type { ICreateAppointmentChatInput } from 'src/modules/appointments/domain/entities/appointment-chat';
+import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/errors/master-profile-not-found.error';
-import { MasterServiceNotFoundError } from 'src/modules/masters/domain/errors/master-service-not-found.error';
+import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
+import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
+import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class CreateAppointmentUseCase {
   constructor(
+    private readonly transactionManager: ITransactionManager,
     private readonly appointmentRepository: IAppointmentRepository,
+    private readonly appointmentChatRepository: IAppointmentChatRepository,
+    private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly masterServiceRepository: IMasterServiceRepository,
   ) {}
 
   async execute(
     input: ICreateAppointmentApplicationInput,
-  ): Promise<IAppointmentEntity> {
+  ): Promise<ICreateAppointmentApplicationOutput> {
     const clientUserId =
       input.actor.isStaffUser && input.clientUserId
         ? input.clientUserId
@@ -28,9 +34,7 @@ export class CreateAppointmentUseCase {
     const profile = await this.masterProfileRepository.findEntityById(
       input.masterProfileId,
     );
-    if (!profile) {
-      throw new MasterProfileNotFoundError(input.masterProfileId);
-    }
+    ensureMasterProfileExists(profile, input.masterProfileId);
 
     const service = await this.masterServiceRepository.findEntityById(
       input.masterServiceId,
@@ -39,7 +43,7 @@ export class CreateAppointmentUseCase {
       throw new MasterServiceNotFoundError(input.masterServiceId);
     }
 
-    const createInput: ICreateAppointmentWithChatInput = {
+    const createInput: ICreateAppointmentInput = {
       masterProfileId: input.masterProfileId,
       masterServiceId: input.masterServiceId,
       clientUserId,
@@ -51,16 +55,29 @@ export class CreateAppointmentUseCase {
       cancelledAt: null,
       cancelledBy: null,
       cancelReason: null,
-      ...(input.initialMessage
-        ? {
-            initialMessage: {
-              body: input.initialMessage.body,
-              senderUserId: input.actor.userId,
-            },
-          }
-        : {}),
     };
 
-    return this.appointmentRepository.createWithChat(createInput);
+    return this.transactionManager.runInTransaction(async (scope) => {
+      const appointment = await this.appointmentRepository.create(
+        createInput,
+        scope,
+      );
+
+      const chatInput: ICreateAppointmentChatInput = {
+        appointmentId: appointment.id,
+      };
+      const chat = await this.appointmentChatRepository.create(chatInput, scope);
+
+      if (input.initialMessage) {
+        const messageInput: ICreateAppointmentChatMessageInput = {
+          chatId: chat.id,
+          senderUserId: input.actor.userId,
+          body: input.initialMessage.body,
+        };
+        await this.appointmentChatMessageRepository.create(messageInput, scope);
+      }
+
+      return appointment;
+    });
   }
 }

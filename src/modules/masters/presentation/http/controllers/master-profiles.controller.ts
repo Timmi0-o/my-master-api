@@ -7,11 +7,9 @@ import {
   Patch,
   Post,
   Query,
-  UnauthorizedException,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/modules/auth/presentation/decorators/current-user.decorator';
+import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CreateMasterProfileUseCase } from 'src/modules/masters/application/use-cases/master-profile/create-master-profile.use-case';
 import { DeleteMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/delete-master-profile-by-id.use-case';
@@ -22,7 +20,6 @@ import { UpdateMasterProfileByIdUseCase } from 'src/modules/masters/application/
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { DomainExceptionFilter } from 'src/modules/shared/infrastructure/filters/domain-exception.filter';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
@@ -34,8 +31,6 @@ import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-pro
 import { MasterProfileValidator } from '../validation/master-profile.validator';
 
 @Controller({ path: 'master-profiles', version: '1' })
-@UseFilters(DomainExceptionFilter)
-@UseGuards(JwtAuthGuard)
 export class MasterProfilesController {
   constructor(
     private readonly getMasterProfilesUseCase: GetMasterProfilesUseCase,
@@ -59,15 +54,13 @@ export class MasterProfilesController {
     return mapGetMasterProfilesHttpResponse(output, payload);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMyMasterProfile(
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const queryPayload =
       this.masterProfileValidator.validateGetByIdQuery(query);
     const input = payloadToGetMyMasterProfileInput(
@@ -79,16 +72,14 @@ export class MasterProfilesController {
     return { data: item };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getMasterProfileById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterProfileValidator.validateIdParam(params);
     const queryPayload =
       this.masterProfileValidator.validateGetByIdQuery(query);
@@ -102,15 +93,13 @@ export class MasterProfilesController {
     return { data: item };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createMasterProfile(
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const payload = this.masterProfileValidator.validateCreatePayload(body);
     const input = payloadToCreateMasterProfileInput(
       payload,
@@ -121,16 +110,14 @@ export class MasterProfilesController {
     return { data };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async updateMasterProfile(
     @Param() params: Record<string, unknown>,
     @Body() body: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterProfileValidator.validateIdParam(params);
     const payload = this.masterProfileValidator.validateUpdatePayload(body);
     const input = payloadToUpdateMasterProfileInput(
@@ -143,15 +130,13 @@ export class MasterProfilesController {
     return { data };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteMasterProfile(
     @Param() params: Record<string, unknown>,
-    @CurrentUser() user: ISessionUser | null,
+    @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!user) {
-      throw new UnauthorizedException('User is not authenticated');
-    }
     const { id } = this.masterProfileValidator.validateIdParam(params);
     const input = payloadToDeleteMasterProfileInput(
       id,

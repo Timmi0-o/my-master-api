@@ -1,16 +1,18 @@
-import type { ICreateUserProfileApplicationInput } from 'src/modules/users/application/dtos/user-profile/create-user-profile.input';
-import type {
-  ICreateUserProfileInput,
-  IUserProfileEntity,
-} from 'src/modules/users/domain/entities/user-profile';
+import type { ICreateUserProfileApplicationInput } from '../../dtos/user-profile/create-user-profile.input';
+import type { ICreateUserProfileApplicationOutput } from '../../dtos/user-profile/create-user-profile.output';
+import type { ICreateUserProfileInput } from 'src/modules/users/domain/entities/user-profile';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
+import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class CreateUserProfileUseCase {
-  constructor(private readonly userProfileRepository: IUserProfileRepository) {}
+  constructor(
+    private readonly transactionManager: ITransactionManager,
+    private readonly userProfileRepository: IUserProfileRepository,
+  ) {}
 
   async execute(
     input: ICreateUserProfileApplicationInput,
-  ): Promise<IUserProfileEntity> {
+  ): Promise<ICreateUserProfileApplicationOutput> {
     const userId =
       input.actor.isStaffUser && input.userId
         ? input.userId
@@ -22,6 +24,8 @@ export class CreateUserProfileUseCase {
       rating: input.rating,
     };
 
-    return this.userProfileRepository.create(createInput);
+    return this.transactionManager.runInTransaction((scope) =>
+      this.userProfileRepository.create(createInput, scope),
+    );
   }
 }
