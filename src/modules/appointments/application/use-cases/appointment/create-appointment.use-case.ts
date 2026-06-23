@@ -3,10 +3,10 @@ import type { ICreateAppointmentInput } from 'src/modules/appointments/domain/en
 import type { ICreateAppointmentChatInput } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
+import { ensureMasterProfileIsDifferent } from 'src/modules/appointments/domain/entities/appointment/policies/ensure-master-profile-is-different.policy';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
-import { ensureMasterProfileIsDifferent } from 'src/modules/masters/domain/entities/appointment/policies/ensure-master-profile-is-different.policy';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';

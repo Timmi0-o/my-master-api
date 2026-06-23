@@ -1,5 +1,5 @@
-import type { IMasterProfileEntity } from '../../master-profile/i-master-profile.entity';
-import { IMasterProfileActor } from '../../master-profile/policies/master-profile-actor.types';
+import type { IMasterProfileEntity } from '../../../../../masters/domain/entities/master-profile/i-master-profile.entity';
+import { IMasterProfileActor } from '../../../../../masters/domain/entities/master-profile/policies/master-profile-actor.types';
 import { AppointmentMasterIdMustBeStrangerError } from '../errors';
 
 export function ensureMasterProfileIsDifferent(
