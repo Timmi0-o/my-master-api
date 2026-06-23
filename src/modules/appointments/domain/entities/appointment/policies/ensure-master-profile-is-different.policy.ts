@@ -2,6 +2,9 @@ import type { IMasterProfileEntity } from '../../../../../masters/domain/entitie
 import { IMasterProfileActor } from '../../../../../masters/domain/entities/master-profile/policies/master-profile-actor.types';
 import { AppointmentMasterIdMustBeStrangerError } from '../errors';
 
+/**
+ * Проверка, что мастер не может записаться на себя
+ */
 export function ensureMasterProfileIsDifferent(
   profile: IMasterProfileEntity,
   actor: IMasterProfileActor,
