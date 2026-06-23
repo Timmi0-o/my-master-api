@@ -1,7 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
+import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
+import { PrismaUserRepository } from 'src/modules/users/infrastructure/persistence/repositories/user/prisma-user.repository';
 import { AuthModule } from '../../../../auth/auth.module';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
@@ -15,13 +17,13 @@ import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
-import { PrismaAppointmentChatRepository } from '../../persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
-import { AppointmentChatRealtimeEventBus } from '../../web-socket/appointment-chat/appointment-chat-realtime.event-bus';
-import { SocketIoAppointmentChatRealtimePublisher } from '../../web-socket/appointment-chat/socket-io-appointment-chat-realtime.publisher';
 import { AppointmentChatValidator } from '../../../presentation/http/validation/appointment-chat.validator';
 import { AppointmentChatGateway } from '../../../presentation/web-socket/appointment-chat/appointment-chat.gateway';
 import { WsJwtAuthGuard } from '../../../presentation/web-socket/appointment-chat/guards/ws-jwt-auth.guard';
 import { AppointmentChatWsValidator } from '../../../presentation/web-socket/appointment-chat/validation/appointment-chat-ws.validator';
+import { PrismaAppointmentChatRepository } from '../../persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
+import { AppointmentChatRealtimeEventBus } from '../../web-socket/appointment-chat/appointment-chat-realtime.event-bus';
+import { SocketIoAppointmentChatRealtimePublisher } from '../../web-socket/appointment-chat/socket-io-appointment-chat-realtime.publisher';
 import { AppointmentModule } from '../appointment/appointment.module';
 
 @Module({
@@ -44,6 +46,10 @@ import { AppointmentModule } from '../appointment/appointment.module';
     {
       provide: APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
       useClass: SocketIoAppointmentChatRealtimePublisher,
+    },
+    {
+      provide: USER_REPOSITORY_TOKEN,
+      useClass: PrismaUserRepository,
     },
     {
       provide: GetAppointmentChatsUseCase,
