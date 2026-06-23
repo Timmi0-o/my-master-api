@@ -17,5 +17,7 @@ export function toDbWhere<T, R extends object = Record<never, never>>(
     return undefined;
   }
 
-  return Object.keys(where).length > 0 ? (where as Record<string, unknown>) : undefined;
+  return Object.keys(where).length > 0
+    ? (where as Record<string, unknown>)
+    : undefined;
 }

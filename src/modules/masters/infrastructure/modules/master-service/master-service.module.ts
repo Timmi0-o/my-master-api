@@ -9,6 +9,7 @@ import { DeleteMasterServiceByIdUseCase } from '../../../application/use-cases/m
 import { GetMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServiceAvailableSlotsUseCase } from '../../../application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServicesUseCase } from '../../../application/use-cases/master-service/get-master-services.use-case';
+import { GetMyServicesUseCase } from '../../../application/use-cases/master-service/get-my-services.use-case';
 import { UpdateMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/update-master-service-by-id.use-case';
 import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-profile/master-profile.repository.tokens';
@@ -42,6 +43,14 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
       useFactory: (repo: IMasterServiceRepository) =>
         new GetMasterServicesUseCase(repo),
       inject: [MASTER_SERVICE_REPOSITORY_TOKEN],
+    },
+    {
+      provide: GetMyServicesUseCase,
+      useFactory: (
+        serviceRepo: IMasterServiceRepository,
+        profileRepo: IMasterProfileRepository,
+      ) => new GetMyServicesUseCase(serviceRepo, profileRepo),
+      inject: [MASTER_SERVICE_REPOSITORY_TOKEN, MASTER_PROFILE_REPOSITORY_TOKEN],
     },
     {
       provide: GetMasterServiceByIdUseCase,
@@ -132,6 +141,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
     MASTER_SERVICE_REPOSITORY_TOKEN,
     MasterServiceValidator,
     GetMasterServicesUseCase,
+    GetMyServicesUseCase,
     GetMasterServiceByIdUseCase,
     GetMasterServiceAvailableSlotsUseCase,
     CreateMasterServiceUseCase,

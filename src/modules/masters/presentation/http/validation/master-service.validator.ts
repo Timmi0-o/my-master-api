@@ -5,6 +5,8 @@ import { createMasterServicePayloadSchema } from './schemas/create-master-servic
 import type { ICreateMasterServicePayload } from './schemas/create-master-service-payload.types';
 import { updateMasterServicePayloadSchema } from './schemas/update-master-service-payload.schema';
 import type { IUpdateMasterServicePayload } from './schemas/update-master-service-payload.types';
+import { getMyServicesQuerySchema } from './schemas/get-my-services-query.schema';
+import type { IGetMyServicesQueryPayload } from './schemas/get-my-services-query.types';
 import { getMasterServicesQuerySchema } from './schemas/get-master-services-query.schema';
 import type { IGetMasterServicesQueryPayload } from './schemas/get-master-services-query.types';
 import { getByIdQuerySchema } from './schemas/get-by-id-query.schema';
@@ -15,6 +17,7 @@ import { getMasterServiceAvailableSlotsQuerySchema } from './schemas/get-master-
 import type { IGetMasterServiceAvailableSlotsQueryPayload } from './schemas/get-master-service-available-slots-query.types';
 
 const validateGetMasterServicesQuery = ajv.compile(getMasterServicesQuerySchema);
+const validateGetMyServicesQuery = ajv.compile(getMyServicesQuerySchema);
 const validateGetByIdQuery = ajv.compile(getByIdQuerySchema);
 const validateGetMasterServiceAvailableSlotsQuery = ajv.compile(
   getMasterServiceAvailableSlotsQuerySchema,
@@ -38,6 +41,19 @@ export class MasterServiceValidator extends BaseValidator {
       data: normalized,
       errorMessage: 'Некорректные параметры запроса списка услуг мастеров',
       logLabel: 'GetMasterServicesQuery',
+      dataForSchema: normalized,
+    });
+  }
+
+  validateGetMyServicesQuery(
+    raw: Record<string, unknown>,
+  ): IGetMyServicesQueryPayload {
+    const normalized = this.normalizeMyServicesListQueryRaw(raw);
+    return this.validateAndReturn<IGetMyServicesQueryPayload>({
+      validate: validateGetMyServicesQuery,
+      data: normalized,
+      errorMessage: 'Некорректные параметры запроса списка моих услуг',
+      logLabel: 'GetMyServicesQuery',
       dataForSchema: normalized,
     });
   }
@@ -102,6 +118,18 @@ export class MasterServiceValidator extends BaseValidator {
   private normalizeListQueryRaw(
     raw: Record<string, unknown>,
   ): IGetMasterServicesQueryPayload {
+    return this.normalizeListQueryRawBase(raw) as IGetMasterServicesQueryPayload;
+  }
+
+  private normalizeMyServicesListQueryRaw(
+    raw: Record<string, unknown>,
+  ): IGetMyServicesQueryPayload {
+    return this.normalizeListQueryRawBase(raw) as IGetMyServicesQueryPayload;
+  }
+
+  private normalizeListQueryRawBase(
+    raw: Record<string, unknown>,
+  ): Record<string, unknown> {
     const out: Record<string, unknown> = { ...raw };
 
     if (typeof out.filter === 'string') {
@@ -125,6 +153,6 @@ export class MasterServiceValidator extends BaseValidator {
         : [out.requiredIds];
     }
 
-    return out as IGetMasterServicesQueryPayload;
+    return out;
   }
 }

@@ -6,15 +6,15 @@ import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-me
 import type { FindManyParams } from 'src/modules/shared/domain/query';
 import { mapOrderBy } from 'src/modules/shared/presentation/http/query/map-order-by';
 import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
-import type { IGetMasterServicesQueryPayload } from '../../validation/schemas/get-master-services-query.types';
-import { extractMasterServiceFilter } from './extract-master-service-filter';
+import type { IGetMyServicesQueryPayload } from '../../validation/schemas/get-my-services-query.types';
+import { extractMyMasterServiceFilter } from './extract-my-master-service-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
 
-export function payloadToFindManyParams(
-  payload: IGetMasterServicesQueryPayload,
+export function payloadToFindMyServicesParams(
+  payload: IGetMyServicesQueryPayload,
   metadata: IGetMetadata,
 ): FindManyParams<IMasterServicePublicEntity, IMasterServiceRelations> {
-  const filterWhere = extractMasterServiceFilter(
+  const filterWhere = extractMyMasterServiceFilter(
     payload.filter,
     metadata.isStaffUser,
   );

@@ -16,6 +16,7 @@ import { DeleteMasterServiceByIdUseCase } from 'src/modules/masters/application/
 import { GetMasterServiceAvailableSlotsUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-services.use-case';
+import { GetMyServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-my-services.use-case';
 import { UpdateMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
@@ -24,9 +25,12 @@ import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-meta
 import { payloadToCreateMasterServiceInput } from '../mappers/master-service/payload-to-create-master-service-input';
 import { payloadToDeleteMasterServiceInput } from '../mappers/master-service/payload-to-delete-master-service-input';
 import { payloadToFindManyParams } from '../mappers/master-service/payload-to-find-many-params.mapper';
+import { payloadToFindMyServicesParams } from '../mappers/master-service/payload-to-find-my-services-params.mapper';
 import { payloadToGetMasterServiceByIdInput } from '../mappers/master-service/payload-to-get-master-service-by-id-input';
+import { payloadToGetMyServicesInput } from '../mappers/master-service/payload-to-get-my-services-input';
 import { payloadToUpdateMasterServiceInput } from '../mappers/master-service/payload-to-update-master-service-input';
 import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-services-response';
+import { mapGetMyServicesHttpResponse } from '../response/map-get-my-services-response';
 import { MasterServiceValidator } from '../validation/master-service.validator';
 
 @Controller({ path: 'master-services', version: '1' })
@@ -39,6 +43,7 @@ export class MasterServicesController {
     private readonly deleteMasterServiceByIdUseCase: DeleteMasterServiceByIdUseCase,
     private readonly getMasterServiceAvailableSlotsUseCase: GetMasterServiceAvailableSlotsUseCase,
     private readonly masterServiceValidator: MasterServiceValidator,
+    private readonly getMyServicesUseCase: GetMyServicesUseCase,
   ) {}
 
   @Get()
@@ -48,9 +53,29 @@ export class MasterServicesController {
   ) {
     const payload =
       this.masterServiceValidator.validateGetMasterServicesQuery(query);
+
     const params = payloadToFindManyParams(payload, metadata);
+
     const output = await this.getMasterServicesUseCase.execute(params);
     return mapGetMasterServicesHttpResponse(output, payload);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my')
+  async getMyServices(
+    @Query() query: IRawQuery,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const payload = this.masterServiceValidator.validateGetMyServicesQuery(query);
+    const params = payloadToFindMyServicesParams(payload, metadata);
+    const input = payloadToGetMyServicesInput(
+      params,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.getMyServicesUseCase.execute(input);
+    return mapGetMyServicesHttpResponse(output, payload);
   }
 
   @UseGuards(JwtAuthGuard)
