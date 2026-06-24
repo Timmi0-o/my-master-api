@@ -76,7 +76,7 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
           'email',
           'phone',
           'username',
-          'role',
+          'roleId',
           'status',
           'language',
           'name',

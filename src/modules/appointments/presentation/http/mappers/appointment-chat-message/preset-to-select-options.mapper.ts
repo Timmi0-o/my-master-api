@@ -24,7 +24,7 @@ const PRESETS: Record<TPresetType, SelectOptions<IAppointmentChatMessagePublicEn
           'email',
           'phone',
           'username',
-          'role',
+          'roleId',
           'status',
           'language',
           'name',
