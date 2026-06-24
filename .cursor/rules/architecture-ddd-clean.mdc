@@ -26,8 +26,22 @@ alwaysApply: false
 - Бизнес-валидации и инварианты — в `domain/entities/<entity>/policies/`, не в controllers и не в helpers.
 - Mutate use cases оборачивают write-flow в `ITransactionManager.runInTransaction`.
 - Use-case возвращает `I*ApplicationOutput`, не HTTP-ответ.
+- **Use-case не вызывает другой use-case** — оркестрация нескольких операций только в controller.
 - **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/<entity>/`.
 - HTTP: validator → `payload-to-*-input.ts` в `presentation/http/mappers/<entity>/` → `useCase.execute(input)`.
+- Оркестрация в controller: после `execute` первого use-case — `output-*-to-*-input.ts` → `secondUseCase.execute(...)`.
 - Mutate/get-by-id: `actor: { userId, isStaffUser }` внутри application input.
 - List: `payload-to-find-many-params.mapper.ts` → `FindManyParams` (без actor, visibility в mapper).
 - Shared: `mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.
+
+## Presentation mappers
+
+| Тип | Файл | Функция | Когда |
+|-----|------|---------|-------|
+| HTTP → use-case | `payload-to-create-user-profile-input.ts` | `payloadToCreateUserProfileInput` | validator payload + session → `I*ApplicationInput` |
+| Output → use-case | `output-create-user-profile-to-create-root-folder-input.ts` | `outputCreateUserProfileToCreateRootFolderInput` | output (и при необходимости исходный input) первого use-case → input второго |
+
+Правила именования orchestration-мапперов:
+- Файл: `output-<source-use-case-kebab>-to-<target-use-case-kebab>-input.ts`
+- Функция: camelCase того же пути — `outputCreateUserProfileToCreateRootFolderInput`
+- Не использовать префикс `to*` для таких мапперов.

@@ -1,0 +1,56 @@
+export enum FileStatus {
+  PENDING = 'PENDING',
+  UPLOADED = 'UPLOADED',
+  READY = 'READY',
+}
+
+export enum FileType {
+  DOCUMENT = 'DOCUMENT',
+  SPREADSHEET = 'SPREADSHEET',
+  PRESENTATION = 'PRESENTATION',
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+  AUDIO = 'AUDIO',
+  ARCHIVE = 'ARCHIVE',
+  OTHER = 'OTHER',
+}
+
+export enum FileOwnerType {
+  SYSTEM = 'SYSTEM',
+  USER = 'USER',
+}
+
+export enum FileAccessLevel {
+  PUBLIC = 'PUBLIC',
+  INTERNAL = 'INTERNAL',
+  PRIVATE = 'PRIVATE',
+  RESTRICTED = 'RESTRICTED',
+  SHARED = 'SHARED',
+}
+
+export enum FilePurpose {
+  MASTER_PROFILE_PHOTO = 'MASTER_PROFILE_PHOTO',
+  MASTER_PORTFOLIO = 'MASTER_PORTFOLIO',
+  APPOINTMENT_ATTACHMENT = 'APPOINTMENT_ATTACHMENT',
+  PROFILE_PHOTO = 'PROFILE_PHOTO',
+  OTHER = 'OTHER',
+}
+
+export enum FileAccessTargetType {
+  USER = 'USER',
+  ROLE = 'ROLE',
+}
+
+export enum FileAccessPermission {
+  READ = 'READ',
+  WRITE = 'WRITE',
+  DELETE = 'DELETE',
+  DOWNLOAD = 'DOWNLOAD',
+  SHARE = 'SHARE',
+}
+
+export enum FolderSystemType {
+  MASTER_DOCUMENTS = 'MASTER_DOCUMENTS',
+  USER_DOCUMENTS = 'USER_DOCUMENTS',
+  APPOINTMENTS = 'APPOINTMENTS',
+}

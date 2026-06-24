@@ -1,9 +1,9 @@
 model MasterService {
-  id          String @id @default(uuid())
-  name        String @map("name")
-  description String @map("description")
-  price       Float  @map("price")
-  durationMinutes Int @default(60) @map("duration_minutes")
+  id              String @id @default(uuid())
+  name            String @map("name")
+  description     String @map("description")
+  price           Float  @map("price")
+  durationMinutes Int    @default(60) @map("duration_minutes")
 
   masterProfileId String @map("master_profile_id")
 

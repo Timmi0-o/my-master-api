@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
+import { CreateRootFolderUseCase } from 'src/modules/files/application/use-cases/folder/create-root-folder.use-case';
 import { CreateUserProfileUseCase } from 'src/modules/users/application/use-cases/user-profile/create-user-profile.use-case';
 import { DeleteUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/delete-user-profile-by-id.use-case';
 import { GetUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/get-user-profile-by-id.use-case';
@@ -21,6 +22,7 @@ import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-me
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
+import { outputCreateUserProfileToCreateRootFolderInput } from '../mappers/user-profile/output-create-user-profile-to-create-root-folder-input';
 import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload-to-create-user-profile-input';
 import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
 import { payloadToFindManyParams } from '../mappers/user-profile/payload-to-find-many-params.mapper';
@@ -38,6 +40,7 @@ export class UserProfilesController {
     private readonly getUserProfileByIdUseCase: GetUserProfileByIdUseCase,
     private readonly getMyUserProfileUseCase: GetMyUserProfileUseCase,
     private readonly createUserProfileUseCase: CreateUserProfileUseCase,
+    private readonly createRootFolderUseCase: CreateRootFolderUseCase,
     private readonly updateUserProfileByIdUseCase: UpdateUserProfileByIdUseCase,
     private readonly deleteUserProfileByIdUseCase: DeleteUserProfileByIdUseCase,
     private readonly userProfileValidator: UserProfileValidator,
@@ -103,6 +106,9 @@ export class UserProfilesController {
       metadata.isStaffUser,
     );
     const data = await this.createUserProfileUseCase.execute(input);
+    await this.createRootFolderUseCase.execute(
+      outputCreateUserProfileToCreateRootFolderInput(data, input),
+    );
     return { data };
   }
 

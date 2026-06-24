@@ -1,0 +1,25 @@
+import type { IFilePublicEntity } from './i-file.entity';
+
+export const FILE_SELECT_FIELDS = [
+  'id',
+  'folderId',
+  'uploadedBy',
+  'fileName',
+  'originalName',
+  'mimeType',
+  'fileSize',
+  'fileUrl',
+  'checksum',
+  'status',
+  'fileType',
+  'ownerType',
+  'ownerKind',
+  'ownerId',
+  'accessLevel',
+  'purpose',
+  'metadata',
+  'tags',
+  'createdAt',
+  'updatedAt',
+  'deletedAt',
+] as const satisfies readonly (keyof IFilePublicEntity)[];

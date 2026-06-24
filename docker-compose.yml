@@ -16,6 +16,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - my-master-network
 
   app:
     build:
@@ -23,8 +25,12 @@ services:
       target: development
     container_name: my-master-api-app
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
       postgres:
+        condition: service_healthy
+      my-master-minio:
         condition: service_healthy
     environment:
       NODE_ENV: development
@@ -32,6 +38,15 @@ services:
       DATABASE_URL: postgresql://app:app@postgres:5432/my_master_api?schema=public
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      S3_ENDPOINT: http://my-master-minio:9000
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9010}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minio}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minio123456}
+      S3_BUCKET: ${S3_BUCKET:-my-master}
+      S3_FORCE_PATH_STYLE: 'true'
+      S3_USE_SSL: 'false'
+      MINIO_WEBHOOK_SECRET: ${MINIO_WEBHOOK_SECRET}
       CHOKIDAR_USEPOLLING: 'true'
       WATCHPACK_POLLING: 'true'
     ports:
@@ -54,6 +69,67 @@ services:
           path: yarn.lock
         - action: rebuild
           path: Dockerfile
+    networks:
+      - my-master-network
+
+  my-master-minio:
+    image: minio/minio:latest
+    container_name: my-master-minio
+    command: server /data --console-address ":9001"
+    environment:
+      # Креды должны совпадать с S3_ACCESS_KEY/S3_SECRET_KEY из my-master-api/.env
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123456}
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL:-http://localhost:9010}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-http://localhost:9011}
+      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_API_CORS_ALLOW_ORIGIN:-*}
+      MINIO_NOTIFY_WEBHOOK_ENABLE_primary: 'on'
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: http://my-master-api-app:${APP_PORT}/v1/internal/files/minio-events
+      MINIO_NOTIFY_WEBHOOK_QUEUE_LIMIT_primary: '10000'
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_primary: ${MINIO_WEBHOOK_SECRET}
+
+    ports:
+      - '${MINIO_PORT:-9000}:9000' # S3 API
+      - '${MINIO_CONSOLE_PORT:-9001}:9001' # web-консоль
+    volumes:
+      - my-master-minio_data:/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'curl -f http://127.0.0.1:9000/minio/health/live || exit 1',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - my-master-network
+
+  my-master-minio-setup:
+    image: minio/mc
+    container_name: my-master-minio-setup
+    depends_on:
+      my-master-minio:
+        condition: service_healthy
+    networks:
+      - my-master-network
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://my-master-minio:9000 ${MINIO_ROOT_USER:-minio} ${MINIO_ROOT_PASSWORD:-minio123456}; do
+        echo waiting for minio;
+        sleep 2;
+      done;
+      mc mb --ignore-existing local/${MINIO_BUCKET:-my-master};
+      mc event add local/${MINIO_BUCKET:-my-master} arn:minio:sqs::primary:webhook --event put;
+      echo minio configured;
+      exit 0;
+      "
 
 volumes:
   postgres_data:
+  my-master-minio_data:
+
+networks:
+  my-master-network:
+    name: my-master-network

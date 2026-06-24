@@ -1,8 +1,8 @@
-import type { ICreateMasterProfileApplicationInput } from '../../dtos/master-profile/create-master-profile.input';
-import type { ICreateMasterProfileApplicationOutput } from '../../dtos/master-profile/create-master-profile.output';
+import type { ITransactionManager } from '@shared/domain/transactions';
 import type { ICreateMasterProfileInput } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import type { ITransactionManager } from '@shared/domain/transactions';
+import type { ICreateMasterProfileApplicationInput } from '../../dtos/master-profile/create-master-profile.input';
+import type { ICreateMasterProfileApplicationOutput } from '../../dtos/master-profile/create-master-profile.output';
 
 export class CreateMasterProfileUseCase {
   constructor(

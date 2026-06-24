@@ -1,8 +1,8 @@
-import type { ICreateUserProfileApplicationInput } from '../../dtos/user-profile/create-user-profile.input';
-import type { ICreateUserProfileApplicationOutput } from '../../dtos/user-profile/create-user-profile.output';
+import type { ITransactionManager } from '@shared/domain/transactions';
 import type { ICreateUserProfileInput } from 'src/modules/users/domain/entities/user-profile';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
-import type { ITransactionManager } from '@shared/domain/transactions';
+import type { ICreateUserProfileApplicationInput } from '../../dtos/user-profile/create-user-profile.input';
+import type { ICreateUserProfileApplicationOutput } from '../../dtos/user-profile/create-user-profile.output';
 
 export class CreateUserProfileUseCase {
   constructor(

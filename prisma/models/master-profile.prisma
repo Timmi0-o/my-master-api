@@ -17,11 +17,11 @@ model MasterProfile {
   slotStepMinutes                  Int @default(30) @map("slot_step_minutes")
   bufferBetweenAppointmentsMinutes Int @default(0) @map("buffer_between_appointments_minutes")
 
-  services            MasterService[]
-  appointments        Appointment[]
-  weeklySchedules     MasterWeeklySchedule[]
-  scheduleExceptions  MasterScheduleException[]
-  user                User                      @relation(fields: [userId], references: [id])
+  services           MasterService[]
+  appointments       Appointment[]
+  weeklySchedules    MasterWeeklySchedule[]
+  scheduleExceptions MasterScheduleException[]
+  user               User                      @relation(fields: [userId], references: [id])
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
+import { CreateRootFolderUseCase } from 'src/modules/files/application/use-cases/folder/create-root-folder.use-case';
 import { CreateMasterProfileUseCase } from 'src/modules/masters/application/use-cases/master-profile/create-master-profile.use-case';
 import { DeleteMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/delete-master-profile-by-id.use-case';
 import { GetMasterProfileByIdUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-profile-by-id.use-case';
@@ -27,6 +28,7 @@ import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-fi
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
 import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
+import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
 import { MasterProfileValidator } from '../validation/master-profile.validator';
 
@@ -37,6 +39,7 @@ export class MasterProfilesController {
     private readonly getMasterProfileByIdUseCase: GetMasterProfileByIdUseCase,
     private readonly getMyMasterProfileUseCase: GetMyMasterProfileUseCase,
     private readonly createMasterProfileUseCase: CreateMasterProfileUseCase,
+    private readonly createRootFolderUseCase: CreateRootFolderUseCase,
     private readonly updateMasterProfileByIdUseCase: UpdateMasterProfileByIdUseCase,
     private readonly deleteMasterProfileByIdUseCase: DeleteMasterProfileByIdUseCase,
     private readonly masterProfileValidator: MasterProfileValidator,
@@ -101,12 +104,18 @@ export class MasterProfilesController {
     @GetMetadata() metadata: IGetMetadata,
   ) {
     const payload = this.masterProfileValidator.validateCreatePayload(body);
+
     const input = payloadToCreateMasterProfileInput(
       payload,
       user,
       metadata.isStaffUser,
     );
     const data = await this.createMasterProfileUseCase.execute(input);
+
+    await this.createRootFolderUseCase.execute(
+      outputCreateMasterProfileToCreateRootFolderInput(data, input),
+    );
+
     return { data };
   }
 
@@ -119,7 +128,9 @@ export class MasterProfilesController {
     @GetMetadata() metadata: IGetMetadata,
   ) {
     const { id } = this.masterProfileValidator.validateIdParam(params);
+
     const payload = this.masterProfileValidator.validateUpdatePayload(body);
+
     const input = payloadToUpdateMasterProfileInput(
       id,
       payload,

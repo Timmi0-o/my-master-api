@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
+import { FilesModule } from '../files/files.module';
 import { MasterProfileModule } from './infrastructure/modules/master-profile/master-profile.module';
 import { MasterScheduleExceptionModule } from './infrastructure/modules/master-schedule-exception/master-schedule-exception.module';
 import { MasterServiceModule } from './infrastructure/modules/master-service/master-service.module';
@@ -14,6 +15,7 @@ import { MasterWeeklySchedulesController } from './presentation/http/controllers
   imports: [
     forwardRef(() => AppointmentsModule),
     AuthModule,
+    FilesModule,
     MasterProfileModule,
     MasterServiceModule,
     MasterWeeklyScheduleModule,

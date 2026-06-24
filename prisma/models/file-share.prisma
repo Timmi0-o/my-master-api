@@ -1,0 +1,35 @@
+model FileShare {
+  id     String @id @default(uuid())
+  fileId String @map("file_id")
+
+  token    String  @unique @map("token")
+  password String? @map("password")
+
+  allowedIps String[] @default([]) @map("allowed_ips")
+
+  maxDownloads Int? @map("max_downloads")
+  downloads    Int  @default(0) @map("downloads")
+  maxViews     Int? @map("max_views")
+  views        Int  @default(0) @map("views")
+
+  allowDownload Boolean @default(true) @map("allow_download")
+  allowPreview  Boolean @default(true) @map("allow_preview")
+
+  expiresAt DateTime? @map("expires_at")
+
+  name         String?
+  description  String?
+  createdBy    String    @map("created_by")
+  lastAccessAt DateTime? @map("last_access_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([createdBy])
+  @@map("FileShares")
+}

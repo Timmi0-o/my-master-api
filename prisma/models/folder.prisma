@@ -1,0 +1,39 @@
+model Folder {
+  id String @id @default(uuid())
+
+  ownerKind String @map("owner_kind")
+  ownerId   String @map("owner_id")
+  createdBy String @map("created_by")
+
+  name     String
+  parentId String? @map("parent_id")
+  path     String
+  depth    Int     @default(0)
+
+  isSystem   Boolean           @default(false) @map("is_system")
+  systemType FolderSystemType? @map("system_type")
+
+  allowedPurposes FilePurpose[] @default([]) @map("allowed_purposes")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Folder[] @relation("FolderHierarchy")
+  files    File[]
+
+  @@unique([ownerKind, ownerId, path])
+  @@index([ownerKind, ownerId])
+  @@index([parentId])
+  @@index([systemType])
+  @@index([deletedAt])
+  @@index([ownerKind, ownerId, systemType])
+  @@map("Folders")
+}
+
+enum FolderSystemType {
+  MASTER_DOCUMENTS
+  USER_DOCUMENTS
+  APPOINTMENTS
+}

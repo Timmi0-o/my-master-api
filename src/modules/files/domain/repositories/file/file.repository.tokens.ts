@@ -1,0 +1,1 @@
+export const FILE_REPOSITORY_TOKEN = Symbol('FILE_REPOSITORY_TOKEN');

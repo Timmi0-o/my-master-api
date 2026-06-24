@@ -1,0 +1,81 @@
+model File {
+  id String @id @default(uuid())
+
+  folderId   String? @map("folder_id")
+  uploadedBy String  @map("uploaded_by")
+
+  fileName     String @map("file_name")
+  originalName String @map("original_name")
+  mimeType     String @default("") @map("mime_type")
+  fileSize     BigInt @default(0) @map("file_size")
+  fileUrl      String @unique @map("file_url")
+
+  checksum String? @map("checksum")
+
+  status      FileStatus      @default(PENDING) @map("status")
+  fileType    FileType        @map("file_type")
+  ownerType   FileOwnerType   @map("owner_type")
+  ownerKind   String?         @map("owner_kind")
+  ownerId     String?         @map("owner_id")
+  accessLevel FileAccessLevel @map("access_level")
+  purpose     FilePurpose     @map("purpose")
+
+  metadata Json?
+  tags     String[] @default([])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  folder     Folder?      @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  accesses   FileAccess[]
+  fileShares FileShare[]
+
+  @@index([folderId])
+  @@index([uploadedBy])
+  @@index([ownerType])
+  @@index([ownerKind, ownerId])
+  @@index([purpose])
+  @@index([checksum])
+  @@index([deletedAt])
+  @@index([ownerKind, ownerId, purpose])
+  @@map("Files")
+}
+
+enum FileOwnerType {
+  SYSTEM
+  USER
+}
+
+enum FileStatus {
+  PENDING
+  UPLOADED
+  READY
+}
+
+enum FileType {
+  DOCUMENT
+  SPREADSHEET
+  PRESENTATION
+  IMAGE
+  VIDEO
+  AUDIO
+  ARCHIVE
+  OTHER
+}
+
+enum FileAccessLevel {
+  PUBLIC
+  INTERNAL
+  PRIVATE
+  RESTRICTED
+  SHARED
+}
+
+enum FilePurpose {
+  MASTER_PROFILE_PHOTO
+  MASTER_PORTFOLIO
+  APPOINTMENT_ATTACHMENT
+  PROFILE_PHOTO
+  OTHER
+}
