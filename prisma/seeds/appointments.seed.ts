@@ -4,6 +4,8 @@ import type {
   PrismaClient,
 } from '@prisma/client';
 import { addDays, setHours, setMinutes, startOfDay } from 'date-fns';
+import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
+import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
 import type { SeedRunner } from './index';
 
 const APPOINTMENTS_TARGET = 24;
@@ -77,7 +79,7 @@ const buildSpecs = (): AppointmentSeedSpec[] => {
     const spec: AppointmentSeedSpec = {
       masterProfileIndex: i % 12,
       serviceIndex: i % 2,
-      clientUserIndex: 5 + (i * 2) % 25,
+      clientUserIndex: 5 + ((i * 2) % 25),
       status,
       daysFromNow,
       hour,
@@ -171,7 +173,7 @@ export const appointmentsSeed: SeedRunner = async (
     where: {
       deletedAt: null,
       status: 'ACTIVE',
-      role: { roleIdentifier: 'USER' },
+      roleId: SYSTEM_ROLE_IDS[ERoleIdentifier.USER],
     },
     orderBy: { email: 'asc' },
     select: { id: true },
@@ -182,8 +184,11 @@ export const appointmentsSeed: SeedRunner = async (
 
   for (const [index, spec] of specs.entries()) {
     const profile =
-      profilesWithServices[spec.masterProfileIndex % profilesWithServices.length];
-    const service = profile.services[spec.serviceIndex % profile.services.length];
+      profilesWithServices[
+        spec.masterProfileIndex % profilesWithServices.length
+      ];
+    const service =
+      profile.services[spec.serviceIndex % profile.services.length];
 
     if (!service) {
       continue;
@@ -232,14 +237,11 @@ export const appointmentsSeed: SeedRunner = async (
         totalPrice: service.price,
         serviceName: service.name,
         cancelledAt: isCancelled ? addDays(startsAt, -1) : null,
-        cancelledBy: isCancelled ? spec.cancelledBy ?? 'CLIENT' : null,
-        cancelReason: isCancelled ? spec.cancelReason ?? null : null,
+        cancelledBy: isCancelled ? (spec.cancelledBy ?? 'CLIENT') : null,
+        cancelReason: isCancelled ? (spec.cancelReason ?? null) : null,
         chat: {
           create: {
-            messages:
-              messages.length > 0
-                ? { create: messages }
-                : undefined,
+            messages: messages.length > 0 ? { create: messages } : undefined,
           },
         },
       },

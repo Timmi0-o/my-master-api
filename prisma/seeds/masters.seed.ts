@@ -1,4 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
+import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
+import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
 import type { SeedRunner } from './index';
 import { MASTERS_CATALOG } from './masters-catalog';
 
@@ -24,7 +26,7 @@ const pickSeedUsers = async (prisma: PrismaClient) => {
     where: {
       deletedAt: null,
       status: 'ACTIVE',
-      role: { roleIdentifier: 'USER' },
+      roleId: SYSTEM_ROLE_IDS[ERoleIdentifier.USER],
     },
     orderBy: { email: 'asc' },
     select: { id: true, email: true },
