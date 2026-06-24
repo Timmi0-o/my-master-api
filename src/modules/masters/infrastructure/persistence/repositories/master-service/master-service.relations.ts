@@ -1,9 +1,23 @@
+import { MASTER_SERVICE_IMAGE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-service-image/master-service-image-select-fields';
 import { MASTER_SERVICE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-service/master-service-select-fields';
 import {
   DEFAULT_MAX_INCLUDE_DEPTH,
   type ReadOptionsValidationConfig,
 } from 'src/modules/shared/infrastructure/persistence/repositories/base/config/read-validation.config';
 import type { RelationConfig } from 'src/modules/shared/infrastructure/persistence/repositories/base/config/relation.config';
+
+const MASTER_SERVICE_IMAGE_FILE_SELECT_FIELDS = [
+  'id',
+  'fileUrl',
+  'originalName',
+  'mimeType',
+  'fileType',
+  'purpose',
+  'status',
+  'fileSize',
+  'createdAt',
+  'updatedAt',
+] as const;
 
 export const MASTER_SERVICE_RELATIONS: Record<string, RelationConfig> = {
   masterProfile: {
@@ -24,6 +38,14 @@ export const MASTER_SERVICE_RELATIONS: Record<string, RelationConfig> = {
       'updatedAt',
       'deletedAt',
     ],
+  },
+  images: {
+    allowedSelectFields: [...MASTER_SERVICE_IMAGE_SELECT_FIELDS],
+    nested: {
+      file: {
+        allowedSelectFields: [...MASTER_SERVICE_IMAGE_FILE_SELECT_FIELDS],
+      },
+    },
   },
 };
 

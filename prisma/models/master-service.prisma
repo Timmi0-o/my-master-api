@@ -7,8 +7,9 @@ model MasterService {
 
   masterProfileId String @map("master_profile_id")
 
-  masterProfile MasterProfile @relation(fields: [masterProfileId], references: [id])
+  masterProfile MasterProfile        @relation(fields: [masterProfileId], references: [id])
   appointments  Appointment[]
+  images        MasterServiceImage[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

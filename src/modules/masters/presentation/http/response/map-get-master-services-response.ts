@@ -1,6 +1,7 @@
 import { buildPaginatedListResponse } from 'src/modules/shared/presentation/http/response/build-paginated-list-response';
 import type { GetMasterServicesOutput } from 'src/modules/masters/application/dtos/master-service/get-master-services.output';
 import type { IGetMasterServicesQueryPayload } from '../validation/schemas/get-master-services-query.types';
+import { mapMasterServicesToHttpResponse } from './map-master-service-http-response';
 
 export type IGetMasterServicesHttpResponse = ReturnType<
   typeof mapGetMasterServicesHttpResponse
@@ -11,7 +12,7 @@ export function mapGetMasterServicesHttpResponse(
   payload: IGetMasterServicesQueryPayload,
 ) {
   return buildPaginatedListResponse({
-    items: output.items,
+    items: mapMasterServicesToHttpResponse(output.items),
     totalCount: output.total,
     page: payload.page,
     limit: payload.limit,
