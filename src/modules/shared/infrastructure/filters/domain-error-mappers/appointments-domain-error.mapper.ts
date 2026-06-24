@@ -1,7 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { DomainErrorMapper } from './domain-error-mapper.types';
 import {
   AppointmentForbiddenError,
+  AppointmentNotAvailableError,
   AppointmentNotFoundError,
 } from 'src/modules/appointments/domain/entities/appointment';
 import {
@@ -27,6 +28,9 @@ export const mapAppointmentsDomainError: DomainErrorMapper = (error) => {
     error instanceof AppointmentChatMessageForbiddenError
   ) {
     return new ForbiddenException(error.message);
+  }
+  if (error instanceof AppointmentNotAvailableError) {
+    return new ConflictException(error.message);
   }
   return null;
 };

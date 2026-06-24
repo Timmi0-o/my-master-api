@@ -2,10 +2,10 @@ import { formatInTimeZone } from 'date-fns-tz';
 import type { IAppointmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
-import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
-import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
 import { MasterProfileNotFoundError } from 'src/modules/masters/domain/entities/master-profile';
+import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
+import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
@@ -44,6 +44,7 @@ export class GetMasterServiceAvailableSlotsUseCase {
     }
 
     const timezone = profile.timezone || 'Europe/Moscow';
+
     const now = new Date();
     const date = input.date ?? formatInTimeZone(now, timezone, 'yyyy-MM-dd');
 

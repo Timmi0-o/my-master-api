@@ -1,5 +1,6 @@
 import type { ITransactionManager } from '@shared/domain/transactions';
 import type { ICreateAppointmentInput } from 'src/modules/appointments/domain/entities/appointment';
+import { AppointmentNotAvailableError } from 'src/modules/appointments/domain/entities/appointment';
 import type { ICreateAppointmentChatInput } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
@@ -46,6 +47,21 @@ export class CreateAppointmentUseCase {
 
     if (!service || service.masterProfileId !== input.masterProfileId) {
       throw new MasterServiceNotFoundError(input.masterServiceId);
+    }
+
+    const isAvailableSlot =
+      (
+        await this.appointmentRepository.findMany({
+          where: {
+            masterProfileId: input.masterProfileId,
+            masterServiceId: input.masterServiceId,
+            startsAt: input.startsAt,
+          },
+        })
+      )?.length === 0;
+
+    if (!isAvailableSlot) {
+      throw new AppointmentNotAvailableError(input.startsAt);
     }
 
     const createInput: ICreateAppointmentInput = {
