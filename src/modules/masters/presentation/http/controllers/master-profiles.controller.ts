@@ -22,19 +22,19 @@ import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-me
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
+import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
 import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
 import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
 import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
-import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
+import { mapCreateMasterProfileHttpResponse } from '../response/map-create-master-profile-response';
+import { mapDeleteMasterProfileHttpResponse } from '../response/map-delete-master-profile-response';
+import { mapGetMasterProfileByIdHttpResponse } from '../response/map-get-master-profile-by-id-response';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
 import { mapGetMyMasterProfileHttpResponse } from '../response/map-get-my-master-profile-response';
-import { mapGetMasterProfileByIdHttpResponse } from '../response/map-get-master-profile-by-id-response';
-import { mapCreateMasterProfileHttpResponse } from '../response/map-create-master-profile-response';
 import { mapUpdateMasterProfileHttpResponse } from '../response/map-update-master-profile-response';
-import { mapDeleteMasterProfileHttpResponse } from '../response/map-delete-master-profile-response';
 import { MasterProfileValidator } from '../validation/master-profile.validator';
 
 @Controller({ path: 'master-profiles', version: '1' })
@@ -80,23 +80,15 @@ export class MasterProfilesController {
     return mapGetMyMasterProfileHttpResponse(item);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getMasterProfileById(
     @Param() params: Record<string, unknown>,
     @Query() query: IRawQuery,
-    @AuthenticatedUser() user: ISessionUser,
-    @GetMetadata() metadata: IGetMetadata,
   ) {
     const { id } = this.masterProfileValidator.validateIdParam(params);
     const queryPayload =
       this.masterProfileValidator.validateGetByIdQuery(query);
-    const input = payloadToGetMasterProfileByIdInput(
-      id,
-      queryPayload,
-      user,
-      metadata.isStaffUser,
-    );
+    const input = payloadToGetMasterProfileByIdInput(id, queryPayload);
     const item = await this.getMasterProfileByIdUseCase.execute(input);
     return mapGetMasterProfileByIdHttpResponse(item);
   }

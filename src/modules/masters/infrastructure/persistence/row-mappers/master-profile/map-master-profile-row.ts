@@ -1,26 +1,47 @@
+import type { FileRow } from 'src/modules/files/infrastructure/persistence/row-mappers/file/file.row-mapper';
+import { mapFileRow } from 'src/modules/files/infrastructure/persistence/row-mappers/file/file.row-mapper';
 import type {
   IMasterProfileEntity,
   IMasterProfilePublicEntity,
   IMasterProfileRelations,
 } from 'src/modules/masters/domain/entities/master-profile';
-import type { IMasterServicePublicEntity } from 'src/modules/masters/domain/entities/master-service';
+import type {
+  IMasterServicePublicEntity,
+  IMasterServiceRelations,
+} from 'src/modules/masters/domain/entities/master-service';
 import type { MasterServiceRelationRow } from '../master-service/master-service.row.types';
 import type { MasterProfileRow } from './master-profile.row.types';
 
 function mapMasterServiceRelationRow(
   row: MasterServiceRelationRow,
-): IMasterServicePublicEntity {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    price: row.price,
-    durationMinutes: row.durationMinutes,
-    masterProfileId: row.masterProfileId,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    deletedAt: null,
-  };
+): IMasterServicePublicEntity & Partial<IMasterServiceRelations> {
+  const entity: IMasterServicePublicEntity & Partial<IMasterServiceRelations> =
+    {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      price: row.price,
+      durationMinutes: row.durationMinutes,
+      masterProfileId: row.masterProfileId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      deletedAt: null,
+    };
+
+  if (row.images != null) {
+    entity.images = row.images.map((image) => ({
+      id: image.id,
+      masterServiceId: image.masterServiceId,
+      fileId: image.fileId,
+      createdAt: image.createdAt,
+      updatedAt: image.updatedAt,
+      ...(image.file != null
+        ? { file: mapFileRow(image.file as FileRow) }
+        : {}),
+    }));
+  }
+
+  return entity;
 }
 
 export function mapMasterProfileRow(

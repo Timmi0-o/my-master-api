@@ -27,6 +27,7 @@ export type MasterServiceRelationRow = {
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
+  images?: MasterServiceImageRelationRow[] | null;
 };
 
 export type MasterServiceImageFileRelationRow = {
