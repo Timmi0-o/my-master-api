@@ -3,20 +3,26 @@ import { ajv } from 'src/modules/shared/presentation/http/validation/ajv-instanc
 import { BaseValidator } from 'src/modules/shared/presentation/http/validation/base.validator';
 import { createMasterServicePayloadSchema } from './schemas/create-master-service-payload.schema';
 import type { ICreateMasterServicePayload } from './schemas/create-master-service-payload.types';
-import { updateMasterServicePayloadSchema } from './schemas/update-master-service-payload.schema';
-import type { IUpdateMasterServicePayload } from './schemas/update-master-service-payload.types';
-import { getMyServicesQuerySchema } from './schemas/get-my-services-query.schema';
-import type { IGetMyServicesQueryPayload } from './schemas/get-my-services-query.types';
-import { getMasterServicesQuerySchema } from './schemas/get-master-services-query.schema';
-import type { IGetMasterServicesQueryPayload } from './schemas/get-master-services-query.types';
 import { getByIdQuerySchema } from './schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from './schemas/get-by-id-query.types';
-import { idParamSchema } from './schemas/id-param.schema';
-import type { IIdParamPayload } from './schemas/id-param.types';
 import { getMasterServiceAvailableSlotsQuerySchema } from './schemas/get-master-service-available-slots-query.schema';
 import type { IGetMasterServiceAvailableSlotsQueryPayload } from './schemas/get-master-service-available-slots-query.types';
+import { getMasterServicesQuerySchema } from './schemas/get-master-services-query.schema';
+import type { IGetMasterServicesQueryPayload } from './schemas/get-master-services-query.types';
+import { getMyServicesQuerySchema } from './schemas/get-my-services-query.schema';
+import type { IGetMyServicesQueryPayload } from './schemas/get-my-services-query.types';
+import { idParamSchema } from './schemas/id-param.schema';
+import type { IIdParamPayload } from './schemas/id-param.types';
+import { deleteMasterServiceImagesPayloadSchema } from './schemas/delete-master-service-images-payload.schema';
+import type { IDeleteMasterServiceImagesPayload } from './schemas/delete-master-service-images-payload.types';
+import { presignMasterServiceImagesPayloadSchema } from './schemas/presign-master-service-images-payload.schema';
+import type { IPresignMasterServiceImagesPayload } from './schemas/presign-master-service-images-payload.types';
+import { updateMasterServicePayloadSchema } from './schemas/update-master-service-payload.schema';
+import type { IUpdateMasterServicePayload } from './schemas/update-master-service-payload.types';
 
-const validateGetMasterServicesQuery = ajv.compile(getMasterServicesQuerySchema);
+const validateGetMasterServicesQuery = ajv.compile(
+  getMasterServicesQuerySchema,
+);
 const validateGetMyServicesQuery = ajv.compile(getMyServicesQuerySchema);
 const validateGetByIdQuery = ajv.compile(getByIdQuerySchema);
 const validateGetMasterServiceAvailableSlotsQuery = ajv.compile(
@@ -28,6 +34,12 @@ const validateCreateMasterServicePayload = ajv.compile(
 );
 const validateUpdateMasterServicePayload = ajv.compile(
   updateMasterServicePayloadSchema,
+);
+const validatePresignMasterServiceImagesPayload = ajv.compile(
+  presignMasterServiceImagesPayloadSchema,
+);
+const validateDeleteMasterServiceImagesPayload = ajv.compile(
+  deleteMasterServiceImagesPayloadSchema,
 );
 
 @Injectable()
@@ -115,10 +127,36 @@ export class MasterServiceValidator extends BaseValidator {
     });
   }
 
+  validatePresignImagesPayload(
+    raw: Record<string, unknown>,
+  ): IPresignMasterServiceImagesPayload {
+    return this.validateAndReturn<IPresignMasterServiceImagesPayload>({
+      validate: validatePresignMasterServiceImagesPayload,
+      data: raw as unknown as IPresignMasterServiceImagesPayload,
+      errorMessage: 'Некорректный payload presign фотографий услуги',
+      logLabel: 'PresignMasterServiceImagesPayload',
+      dataForSchema: raw,
+    });
+  }
+
+  validateDeleteImagesPayload(
+    raw: Record<string, unknown>,
+  ): IDeleteMasterServiceImagesPayload {
+    return this.validateAndReturn<IDeleteMasterServiceImagesPayload>({
+      validate: validateDeleteMasterServiceImagesPayload,
+      data: raw as unknown as IDeleteMasterServiceImagesPayload,
+      errorMessage: 'Некорректный payload удаления фотографий услуги',
+      logLabel: 'DeleteMasterServiceImagesPayload',
+      dataForSchema: raw,
+    });
+  }
+
   private normalizeListQueryRaw(
     raw: Record<string, unknown>,
   ): IGetMasterServicesQueryPayload {
-    return this.normalizeListQueryRawBase(raw) as IGetMasterServicesQueryPayload;
+    return this.normalizeListQueryRawBase(
+      raw,
+    ) as IGetMasterServicesQueryPayload;
   }
 
   private normalizeMyServicesListQueryRaw(

@@ -6,7 +6,6 @@ import {
   HeadObjectCommand,
   type HeadObjectOutput,
   PutObjectCommand,
-  type PutObjectCommandInput,
   S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
@@ -21,6 +20,7 @@ export class S3Service implements OnModuleInit {
   private readonly logger = new Logger(S3Service.name);
   private readonly s3Client: NodeJsClient<S3Client>;
   private readonly s3PublicClient: NodeJsClient<S3Client>;
+  private readonly s3PresignClient: NodeJsClient<S3Client>;
   private readonly defaultBucket: string;
 
   constructor() {
@@ -42,6 +42,15 @@ export class S3Service implements OnModuleInit {
       ...clientConfig,
       endpoint: config.publicEndpoint,
     });
+    this.s3PresignClient = new S3Client({
+      endpoint: config.publicEndpoint,
+      region: config.region,
+      credentials: {
+        accessKeyId: config.accessKey,
+        secretAccessKey: config.secretKey,
+      },
+      forcePathStyle: config.forcePathStyle,
+    });
     this.defaultBucket = config.bucket;
   }
 
@@ -62,30 +71,29 @@ export class S3Service implements OnModuleInit {
     bucketName: string,
     sha256sum?: string,
   ): Promise<string> {
-    const putInput: PutObjectCommandInput = {
-      Key: objectName,
-      Bucket: bucketName,
-    };
-
-    const opts: Parameters<typeof getSignedUrl>[2] = {
-      expiresIn: 60 * 5,
-    };
-
-    if (sha256sum) {
-      putInput.ChecksumSHA256 = sha256sum;
-      putInput.ChecksumAlgorithm = 'SHA256';
-      opts.unhoistableHeaders = new Set([
-        'x-amz-sdk-checksum-algorithm',
-        'x-amz-checksum-sha256',
-      ]);
-    } else {
-      putInput.ChecksumAlgorithm = 'SHA256';
-    }
-
     return getSignedUrl(
-      this.s3PublicClient,
-      new PutObjectCommand(putInput),
-      opts,
+      this.s3PresignClient,
+      new PutObjectCommand({
+        Key: objectName,
+        Bucket: bucketName,
+        ...(sha256sum ? { ChecksumSHA256: sha256sum } : {}),
+      }),
+      { expiresIn: 60 * 5 },
+    );
+  }
+
+  async presignedGetObject(
+    objectName: string,
+    bucketName: string,
+    expiresIn = 60 * 60,
+  ): Promise<string> {
+    return getSignedUrl(
+      this.s3PresignClient,
+      new GetObjectCommand({
+        Bucket: bucketName,
+        Key: objectName,
+      }),
+      { expiresIn },
     );
   }
 
@@ -103,13 +111,12 @@ export class S3Service implements OnModuleInit {
       new HeadObjectCommand({
         Bucket: bucket,
         Key: key,
-        ChecksumMode: 'ENABLED',
       }),
     );
   }
 
   async getObject(objectName: string, bucketName: string, range?: string) {
-    return this.s3Client.send(
+    return this.s3PublicClient.send(
       new GetObjectCommand({
         Bucket: bucketName,
         Key: objectName,

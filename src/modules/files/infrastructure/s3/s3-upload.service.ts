@@ -15,8 +15,14 @@ export class S3UploadService implements IFileUploaderPort {
     options?: { ownerKind?: string; ownerId?: string },
   ): Promise<SignedUrlEntry> {
     const bucket = this.s3Service.getDefaultBucket();
+
     const slug = this.generateSlugByOrigName(file.name);
-    const objectKey = this.generateFileKey(crypto.randomUUID(), file.name, options);
+
+    const objectKey = this.generateFileKey(
+      crypto.randomUUID(),
+      file.name,
+      options,
+    );
     const url = await this.s3Service.presignedPutObject(
       objectKey,
       bucket,
@@ -45,11 +51,44 @@ export class S3UploadService implements IFileUploaderPort {
 
   private transliterateCyrillic(text: string): string {
     const map: Record<string, string> = {
-      а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh',
-      з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o',
-      п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts',
-      ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu',
-      я: 'ya', і: 'i', ї: 'yi', є: 'e', ґ: 'g', ў: 'u',
+      а: 'a',
+      б: 'b',
+      в: 'v',
+      г: 'g',
+      д: 'd',
+      е: 'e',
+      ё: 'e',
+      ж: 'zh',
+      з: 'z',
+      и: 'i',
+      й: 'y',
+      к: 'k',
+      л: 'l',
+      м: 'm',
+      н: 'n',
+      о: 'o',
+      п: 'p',
+      р: 'r',
+      с: 's',
+      т: 't',
+      у: 'u',
+      ф: 'f',
+      х: 'h',
+      ц: 'ts',
+      ч: 'ch',
+      ш: 'sh',
+      щ: 'sch',
+      ъ: '',
+      ы: 'y',
+      ь: '',
+      э: 'e',
+      ю: 'yu',
+      я: 'ya',
+      і: 'i',
+      ї: 'yi',
+      є: 'e',
+      ґ: 'g',
+      ў: 'u',
     };
     return text
       .split('')

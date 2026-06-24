@@ -14,6 +14,7 @@ import { GetFileUseCase } from './application/use-cases/file/get-file.use-case';
 import { GetFilesByIdsUseCase } from './application/use-cases/file/get-files-by-ids.use-case';
 import { MoveFileUseCase } from './application/use-cases/file/move-file.use-case';
 import { PresignedUploadUseCase } from './application/use-cases/file/presigned-upload.use-case';
+import { ResolveFileDisplayUrlUseCase } from './application/use-cases/file/resolve-file-display-url.use-case';
 import { QueryFilesUseCase } from './application/use-cases/file/query-files.use-case';
 import { UpdateFileUseCase } from './application/use-cases/file/update-file.use-case';
 import { CreateFolderUseCase } from './application/use-cases/folder/create-folder.use-case';
@@ -97,6 +98,12 @@ import type { IMimeDetectorPort } from './application/ports/i-mime-detector.port
         uploader: IFileUploaderPort,
       ) => new PresignedUploadUseCase(fileRepo, uploader),
       inject: [FILE_REPOSITORY_TOKEN, FILE_UPLOADER_PORT_TOKEN],
+    },
+    {
+      provide: ResolveFileDisplayUrlUseCase,
+      useFactory: (s3Service: S3Service) =>
+        new ResolveFileDisplayUrlUseCase(s3Service),
+      inject: [S3Service],
     },
     {
       provide: FileUploadedUseCase,
@@ -279,6 +286,8 @@ import type { IMimeDetectorPort } from './application/ports/i-mime-detector.port
   ],
   exports: [
     PresignedUploadUseCase,
+    DeleteFilesUseCase,
+    ResolveFileDisplayUrlUseCase,
     GetFilesByIdsUseCase,
     CreateRootFolderUseCase,
     FILE_REPOSITORY_TOKEN,

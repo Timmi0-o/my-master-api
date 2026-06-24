@@ -71,6 +71,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
                 'mimeType',
                 'fileType',
                 'purpose',
+                'accessLevel',
                 'status',
                 'fileSize',
                 'createdAt',

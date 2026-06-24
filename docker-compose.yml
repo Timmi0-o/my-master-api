@@ -121,6 +121,7 @@ services:
         sleep 2;
       done;
       mc mb --ignore-existing local/${MINIO_BUCKET:-my-master};
+      mc anonymous set download local/${MINIO_BUCKET:-my-master};
       mc event add local/${MINIO_BUCKET:-my-master} arn:minio:sqs::primary:webhook --event put;
       echo minio configured;
       exit 0;

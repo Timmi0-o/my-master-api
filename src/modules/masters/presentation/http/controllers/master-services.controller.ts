@@ -13,29 +13,35 @@ import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/auth
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { CreateMasterServiceUseCase } from 'src/modules/masters/application/use-cases/master-service/create-master-service.use-case';
 import { DeleteMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/delete-master-service-by-id.use-case';
+import { DeleteMasterServiceImagesUseCase } from 'src/modules/masters/application/use-cases/master-service/delete-master-service-images.use-case';
 import { GetMasterServiceAvailableSlotsUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-services.use-case';
 import { GetMyServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-my-services.use-case';
+import { PresignMasterServiceImagesUseCase } from 'src/modules/masters/application/use-cases/master-service/presign-master-service-images.use-case';
 import { UpdateMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
 import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
 import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
 import { payloadToCreateMasterServiceInput } from '../mappers/master-service/payload-to-create-master-service-input';
+import { payloadToDeleteMasterServiceImagesInput } from '../mappers/master-service/payload-to-delete-master-service-images-input';
 import { payloadToDeleteMasterServiceInput } from '../mappers/master-service/payload-to-delete-master-service-input';
 import { payloadToFindManyParams } from '../mappers/master-service/payload-to-find-many-params.mapper';
 import { payloadToFindMyServicesParams } from '../mappers/master-service/payload-to-find-my-services-params.mapper';
 import { payloadToGetMasterServiceByIdInput } from '../mappers/master-service/payload-to-get-master-service-by-id-input';
 import { payloadToGetMyServicesInput } from '../mappers/master-service/payload-to-get-my-services-input';
+import { payloadToPresignMasterServiceImagesInput } from '../mappers/master-service/payload-to-presign-master-service-images-input';
 import { payloadToUpdateMasterServiceInput } from '../mappers/master-service/payload-to-update-master-service-input';
-import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-services-response';
-import { mapGetMyServicesHttpResponse } from '../response/map-get-my-services-response';
+import { mapCreateMasterServiceHttpResponse } from '../response/map-create-master-service-response';
+import { mapDeleteMasterServiceImagesHttpResponse } from '../response/map-delete-master-service-images-response';
+import { mapDeleteMasterServiceHttpResponse } from '../response/map-delete-master-service-response';
 import { mapGetMasterServiceAvailableSlotsHttpResponse } from '../response/map-get-master-service-available-slots-response';
 import { mapGetMasterServiceByIdHttpResponse } from '../response/map-get-master-service-by-id-response';
-import { mapCreateMasterServiceHttpResponse } from '../response/map-create-master-service-response';
+import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-services-response';
+import { mapGetMyServicesHttpResponse } from '../response/map-get-my-services-response';
+import { mapPresignMasterServiceImagesHttpResponse } from '../response/map-presign-master-service-images-response';
 import { mapUpdateMasterServiceHttpResponse } from '../response/map-update-master-service-response';
-import { mapDeleteMasterServiceHttpResponse } from '../response/map-delete-master-service-response';
 import { MasterServiceValidator } from '../validation/master-service.validator';
 
 @Controller({ path: 'master-services', version: '1' })
@@ -49,6 +55,8 @@ export class MasterServicesController {
     private readonly getMasterServiceAvailableSlotsUseCase: GetMasterServiceAvailableSlotsUseCase,
     private readonly masterServiceValidator: MasterServiceValidator,
     private readonly getMyServicesUseCase: GetMyServicesUseCase,
+    private readonly presignMasterServiceImagesUseCase: PresignMasterServiceImagesUseCase,
+    private readonly deleteMasterServiceImagesUseCase: DeleteMasterServiceImagesUseCase,
   ) {}
 
   @Get()
@@ -72,7 +80,8 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.masterServiceValidator.validateGetMyServicesQuery(query);
+    const payload =
+      this.masterServiceValidator.validateGetMyServicesQuery(query);
     const params = payloadToFindMyServicesParams(payload, metadata);
     const input = payloadToGetMyServicesInput(
       params,
@@ -135,6 +144,52 @@ export class MasterServicesController {
     );
     const output = await this.createMasterServiceUseCase.execute(input);
     return mapCreateMasterServiceHttpResponse(output);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/images/presign')
+  async presignMasterServiceImages(
+    @Param() params: Record<string, unknown>,
+    @Body() body: Record<string, unknown>,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const { id } = this.masterServiceValidator.validateIdParam(params);
+
+    const payload =
+      this.masterServiceValidator.validatePresignImagesPayload(body);
+
+    const input = payloadToPresignMasterServiceImagesInput(
+      id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.presignMasterServiceImagesUseCase.execute(input);
+    return mapPresignMasterServiceImagesHttpResponse(output);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/images')
+  async deleteMasterServiceImages(
+    @Param() params: Record<string, unknown>,
+    @Body() body: Record<string, unknown>,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const { id } = this.masterServiceValidator.validateIdParam(params);
+
+    const payload =
+      this.masterServiceValidator.validateDeleteImagesPayload(body);
+
+    const input = payloadToDeleteMasterServiceImagesInput(
+      id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.deleteMasterServiceImagesUseCase.execute(input);
+    return mapDeleteMasterServiceImagesHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)

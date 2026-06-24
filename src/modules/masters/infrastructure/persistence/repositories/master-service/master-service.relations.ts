@@ -13,6 +13,7 @@ const MASTER_SERVICE_IMAGE_FILE_SELECT_FIELDS = [
   'mimeType',
   'fileType',
   'purpose',
+  'accessLevel',
   'status',
   'fileSize',
   'createdAt',

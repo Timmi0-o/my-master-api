@@ -20,9 +20,13 @@ export class GetMasterServiceByIdUseCase {
       input.id,
       input.params,
     );
+
+    console.log('item', item?.images?.[0]?.file);
+
     if (!item) {
       throw new MasterServiceNotFoundError(input.id);
     }
+
     return item;
   }
 }
