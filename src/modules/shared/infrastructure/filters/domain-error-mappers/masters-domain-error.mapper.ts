@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { DomainErrorMapper } from './domain-error-mapper.types';
 import {
   MasterProfileForbiddenError,
@@ -8,6 +8,10 @@ import {
   MasterServiceForbiddenError,
   MasterServiceNotFoundError,
 } from 'src/modules/masters/domain/entities/master-service';
+import {
+  MasterServiceImageNotFoundError,
+  MasterServiceMaxImagesCountError,
+} from 'src/modules/masters/domain/entities/master-service-image';
 import {
   MasterWeeklyScheduleForbiddenError,
   MasterWeeklyScheduleNotFoundError,
@@ -22,9 +26,13 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterProfileNotFoundError ||
     error instanceof MasterServiceNotFoundError ||
     error instanceof MasterWeeklyScheduleNotFoundError ||
-    error instanceof MasterScheduleExceptionNotFoundError
+    error instanceof MasterScheduleExceptionNotFoundError ||
+    error instanceof MasterServiceImageNotFoundError
   ) {
     return new NotFoundException(error.message);
+  }
+  if (error instanceof MasterServiceMaxImagesCountError) {
+    return new BadRequestException(error.message);
   }
   if (
     error instanceof MasterProfileForbiddenError ||

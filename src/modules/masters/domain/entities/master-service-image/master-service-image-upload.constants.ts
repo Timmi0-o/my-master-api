@@ -7,6 +7,8 @@ import {
 
 export const MASTER_SERVICE_IMAGE_OWNER_KIND = 'master-service' as const;
 
+export const MASTER_SERVICE_MAX_IMAGES_COUNT = 10;
+
 export const MASTER_SERVICE_IMAGE_FILE_DEFAULTS = {
   ownerKind: MASTER_SERVICE_IMAGE_OWNER_KIND,
   ownerType: FileOwnerType.USER,

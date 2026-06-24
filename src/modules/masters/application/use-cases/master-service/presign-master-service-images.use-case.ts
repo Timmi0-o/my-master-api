@@ -1,16 +1,17 @@
+import type { ITransactionManager } from '@shared/domain/transactions';
 import { PresignedUploadUseCase } from 'src/modules/files/application/use-cases/file/presigned-upload.use-case';
 import {
   ensureMasterProfileAccessible,
   ensureMasterProfileExists,
 } from 'src/modules/masters/domain/entities/master-profile';
 import { ensureMasterServiceExists } from 'src/modules/masters/domain/entities/master-service';
+import { ensureMasterServiceMaxImagesCount } from 'src/modules/masters/domain/entities/master-service-image';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceImageRepository } from 'src/modules/masters/domain/repositories/master-service-image/i-master-service-image.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
-import type { ITransactionManager } from '@shared/domain/transactions';
-import { toPresignedUploadFilesForMasterServiceImages } from '../../mappers/master-service/to-presigned-upload-files-for-master-service-images';
 import type { IPresignMasterServiceImagesApplicationInput } from '../../dtos/master-service/presign-master-service-images.input';
 import type { IPresignMasterServiceImagesApplicationOutput } from '../../dtos/master-service/presign-master-service-images.output';
+import { toPresignedUploadFilesForMasterServiceImages } from '../../mappers/master-service/to-presigned-upload-files-for-master-service-images';
 
 export class PresignMasterServiceImagesUseCase {
   constructor(
@@ -38,6 +39,15 @@ export class PresignMasterServiceImagesUseCase {
     );
     ensureMasterProfileExists(profile, service.masterProfileId);
     ensureMasterProfileAccessible(profile, input.actor);
+
+    const existingImages =
+      await this.masterServiceImageRepository.findByMasterServiceId(
+        input.masterServiceId,
+      );
+    ensureMasterServiceMaxImagesCount(
+      existingImages.length,
+      input.files.length,
+    );
 
     const presignedFiles = await this.presignedUploadUseCase.execute({
       actor: input.actor,

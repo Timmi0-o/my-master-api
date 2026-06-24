@@ -7,6 +7,11 @@ export type { IMasterServiceImageRelations } from './i-master-service-image-rela
 export {
   MASTER_SERVICE_IMAGE_FILE_DEFAULTS,
   MASTER_SERVICE_IMAGE_OWNER_KIND,
+  MASTER_SERVICE_MAX_IMAGES_COUNT,
 } from './master-service-image-upload.constants';
 export { MASTER_SERVICE_IMAGE_SELECT_FIELDS } from './master-service-image-select-fields';
-export { MasterServiceImageNotFoundError } from './errors';
+export {
+  MasterServiceImageNotFoundError,
+  MasterServiceMaxImagesCountError,
+} from './errors';
+export { ensureMasterServiceMaxImagesCount } from './policies';
