@@ -2,11 +2,13 @@ import type {
   ICreateRepository,
   IReadRepository,
   ISoftDeleteRepository,
+  IUpdateRepository,
 } from '@shared/domain/repositories';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import type { TransactionScope } from '@shared/domain/transactions';
 import type {
   ICreateUserInput,
+  IUpdateUserInput,
   IUserEntity,
   IUserPublicEntity,
 } from '../../entities/user';
@@ -17,7 +19,8 @@ export type IUserRepository = IReadRepository<
   Record<never, never>
 > &
   ICreateRepository<IUserEntity, ICreateUserInput> &
-  ISoftDeleteRepository<IUserEntity, string> & {
+  ISoftDeleteRepository<IUserEntity, string> &
+  IUpdateRepository<IUserEntity, string, IUpdateUserInput> & {
     findEntityById(
       userId: string,
       scope?: TransactionScope,

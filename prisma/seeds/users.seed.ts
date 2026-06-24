@@ -1,15 +1,17 @@
-import type { Language, PrismaClient, Role, Status } from '@prisma/client';
+import type { Language, PrismaClient, Status } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
+import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
 import type { SeedRunner } from './index';
 
 const USERS_COUNT = 30;
 const SEED_PASSWORD = 'password';
 const SEED_BCRYPT_ROUNDS = 10;
 
-const buildRole = (index: number): Role => {
-  if (index === 1) return 'SUPER_ADMIN';
-  if (index <= 3) return 'ADMIN';
-  return 'USER';
+const buildRoleId = (index: number): string => {
+  if (index === 1) return SYSTEM_ROLE_IDS[ERoleIdentifier.SUPER_ADMIN];
+  if (index <= 3) return SYSTEM_ROLE_IDS[ERoleIdentifier.ADMIN];
+  return SYSTEM_ROLE_IDS[ERoleIdentifier.USER];
 };
 
 const buildStatus = (index: number): Status => {
@@ -25,7 +27,7 @@ const buildUserData = (index: number, passwordHash: string) => {
     email: `user${padded}@example.com`,
     phone: `+7999000${String(index).padStart(4, '0')}`,
     username: `user_${padded}`,
-    role: buildRole(index),
+    roleId: buildRoleId(index),
     status: buildStatus(index),
     passwordHash,
     name: `Name${padded}`,
@@ -49,7 +51,7 @@ export const usersSeed: SeedRunner = async (
       update: {
         phone: userData.phone,
         username: userData.username,
-        role: userData.role,
+        roleId: userData.roleId,
         status: userData.status,
         passwordHash: userData.passwordHash,
         name: userData.name,

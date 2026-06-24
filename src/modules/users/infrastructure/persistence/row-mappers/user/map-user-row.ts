@@ -10,7 +10,7 @@ function mapUserBase(row: UserRow): IUserPublicEntity {
     email: row.email,
     phone: row.phone,
     username: row.username,
-    role: row.role,
+    roleId: row.roleId,
     status: row.status,
     language: row.language,
     name: row.name,

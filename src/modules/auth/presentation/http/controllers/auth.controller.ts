@@ -22,6 +22,13 @@ import { RegisterUseCase } from 'src/modules/auth/application/use-cases/register
 import { AuthenticatedUser } from '../../decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { LocalAuthGuard } from '../../guards/local-auth.guard';
+import {
+  mapLoginHttpResponse,
+  mapRefreshHttpResponse,
+  mapRegisterHttpResponse,
+} from '../response/map-auth-response';
+import { mapGetMeHttpResponse } from '../response/map-get-me-response';
+import { mapLogoutHttpResponse } from '../response/map-logout-response';
 import { AuthValidator } from '../validation/auth.validator';
 
 @Controller({ path: 'auth', version: '1' })
@@ -46,7 +53,8 @@ export class AuthController {
       userAgent: req.headers['user-agent'] ?? null,
     });
 
-    return this.registerUseCase.execute(validated, metadata);
+    const output = await this.registerUseCase.execute(validated, metadata);
+    return mapRegisterHttpResponse(output);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -64,7 +72,8 @@ export class AuthController {
       userAgent: req.headers['user-agent'] ?? null,
     });
 
-    return this.loginUseCase.execute(req.user, metadata);
+    const output = await this.loginUseCase.execute(req.user, metadata);
+    return mapLoginHttpResponse(output);
   }
 
   @Post('refresh')
@@ -72,7 +81,8 @@ export class AuthController {
     const validated = this.authValidator.validateRefreshToken({
       refreshToken: body.refreshToken,
     });
-    return this.refreshUseCase.execute(validated.refreshToken);
+    const output = await this.refreshUseCase.execute(validated.refreshToken);
+    return mapRefreshHttpResponse(output);
   }
 
   @Post('logout')
@@ -80,13 +90,15 @@ export class AuthController {
     const validated = this.authValidator.validateRefreshToken({
       refreshToken: body.refreshToken,
     });
-    return this.logoutUseCase.execute(validated.refreshToken);
+    const output = await this.logoutUseCase.execute(validated.refreshToken);
+    return mapLogoutHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@AuthenticatedUser() user: ISessionUser) {
     const validated = this.authValidator.validateUserId({ userId: user.id });
-    return this.getMeUseCase.execute(validated.userId);
+    const output = await this.getMeUseCase.execute(validated.userId);
+    return mapGetMeHttpResponse(output);
   }
 }

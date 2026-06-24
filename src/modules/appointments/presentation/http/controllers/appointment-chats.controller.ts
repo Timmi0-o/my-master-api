@@ -20,6 +20,8 @@ import { payloadToDeleteAppointmentChatInput } from '../mappers/appointment-chat
 import { payloadToFindManyParams } from '../mappers/appointment-chat/payload-to-find-many-params.mapper';
 import { payloadToGetAppointmentChatByIdInput } from '../mappers/appointment-chat/payload-to-get-appointment-chat-by-id-input';
 import { mapGetAppointmentChatsHttpResponse } from '../response/map-get-appointment-chats-response';
+import { mapGetAppointmentChatByIdHttpResponse } from '../response/map-get-appointment-chat-by-id-response';
+import { mapDeleteAppointmentChatHttpResponse } from '../response/map-delete-appointment-chat-response';
 import { AppointmentChatValidator } from '../validation/appointment-chat.validator';
 
 @Controller({ path: 'appointment-chats', version: '1' })
@@ -63,7 +65,7 @@ export class AppointmentChatsController {
       metadata.isStaffUser,
     );
     const item = await this.getAppointmentChatByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetAppointmentChatByIdHttpResponse(item);
   }
 
   @Delete(':id')
@@ -79,6 +81,6 @@ export class AppointmentChatsController {
       metadata.isStaffUser,
     );
     await this.deleteAppointmentChatByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteAppointmentChatHttpResponse();
   }
 }

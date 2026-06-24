@@ -30,6 +30,11 @@ import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payl
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
 import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
+import { mapGetMyMasterProfileHttpResponse } from '../response/map-get-my-master-profile-response';
+import { mapGetMasterProfileByIdHttpResponse } from '../response/map-get-master-profile-by-id-response';
+import { mapCreateMasterProfileHttpResponse } from '../response/map-create-master-profile-response';
+import { mapUpdateMasterProfileHttpResponse } from '../response/map-update-master-profile-response';
+import { mapDeleteMasterProfileHttpResponse } from '../response/map-delete-master-profile-response';
 import { MasterProfileValidator } from '../validation/master-profile.validator';
 
 @Controller({ path: 'master-profiles', version: '1' })
@@ -72,7 +77,7 @@ export class MasterProfilesController {
       metadata.isStaffUser,
     );
     const item = await this.getMyMasterProfileUseCase.execute(input);
-    return { data: item };
+    return mapGetMyMasterProfileHttpResponse(item);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -93,7 +98,7 @@ export class MasterProfilesController {
       metadata.isStaffUser,
     );
     const item = await this.getMasterProfileByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetMasterProfileByIdHttpResponse(item);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -110,13 +115,13 @@ export class MasterProfilesController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.createMasterProfileUseCase.execute(input);
+    const output = await this.createMasterProfileUseCase.execute(input);
 
     await this.createRootFolderUseCase.execute(
-      outputCreateMasterProfileToCreateRootFolderInput(data, input),
+      outputCreateMasterProfileToCreateRootFolderInput(output, input),
     );
 
-    return { data };
+    return mapCreateMasterProfileHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -137,8 +142,8 @@ export class MasterProfilesController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.updateMasterProfileByIdUseCase.execute(input);
-    return { data };
+    const output = await this.updateMasterProfileByIdUseCase.execute(input);
+    return mapUpdateMasterProfileHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -155,6 +160,6 @@ export class MasterProfilesController {
       metadata.isStaffUser,
     );
     await this.deleteMasterProfileByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteMasterProfileHttpResponse();
   }
 }

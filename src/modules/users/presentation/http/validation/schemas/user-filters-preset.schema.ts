@@ -1,7 +1,6 @@
 import type { IUserFiltersPreset } from '../types/user-filters-preset.types';
 import {
   EUserLanguage,
-  EUserRole,
   EUserStatus,
 } from 'src/modules/users/domain/entities/user/user.enum';
 import { JSONSchemaType } from 'ajv';
@@ -20,10 +19,7 @@ export const userFiltersPresetSchema: JSONSchemaType<IUserFiltersPreset> = {
     id: { ...filterUuidArraySchema, nullable: true },
     email: { ...filterStringArraySchema, nullable: true },
     username: { ...filterStringArraySchema, nullable: true },
-    role: {
-      ...filterEnumArraySchema(Object.values(EUserRole)),
-      nullable: true,
-    },
+    roleId: { ...filterUuidArraySchema, nullable: true },
     status: {
       ...filterEnumArraySchema(Object.values(EUserStatus)),
       nullable: true,

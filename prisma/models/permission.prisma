@@ -1,0 +1,22 @@
+enum PermissionCategory {
+  USER
+  MASTER
+  APPOINTMENT
+  FILE
+  RBAC
+}
+
+model Permission {
+  id          String             @id @default(uuid())
+  name        String             @unique @map("name")
+  description String?            @map("description")
+  category    PermissionCategory @map("category")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+
+  @@index([category])
+  @@map("Permissions")
+}

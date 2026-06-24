@@ -1,8 +1,9 @@
 import * as bcrypt from 'bcrypt';
 import type { LoginUseCase } from './login.use-case';
+import { SYSTEM_ROLE_IDS } from 'src/modules/authorization/domain/entities/role/system-role-ids';
+import { ERoleIdentifier } from 'src/modules/authorization/domain/entities/role/role.enum';
 import {
   EUserLanguage,
-  EUserRole,
   EUserStatus,
   UserAlreadyExistsError,
 } from 'src/modules/users/domain/entities/user';
@@ -58,7 +59,7 @@ export class RegisterUseCase {
           email: input.email,
           username: input.username,
           passwordHash,
-          role: EUserRole.USER,
+          roleId: SYSTEM_ROLE_IDS[ERoleIdentifier.USER],
           status: EUserStatus.ACTIVE,
           name: input.username,
           surname: input.username,

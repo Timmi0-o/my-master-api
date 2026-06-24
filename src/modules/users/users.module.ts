@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { FilesModule } from '../files/files.module';
 import { UserModule } from './infrastructure/modules/user/user.module';
 import { UserProfileModule } from './infrastructure/modules/user-profile/user-profile.module';
@@ -7,7 +8,13 @@ import { UserProfilesController } from './presentation/http/controllers/user-pro
 import { UsersController } from './presentation/http/controllers/users.controller';
 
 @Module({
-  imports: [forwardRef(() => AuthModule), UserModule, UserProfileModule, FilesModule],
+  imports: [
+    forwardRef(() => AuthModule),
+    AuthorizationModule,
+    UserModule,
+    UserProfileModule,
+    FilesModule,
+  ],
   controllers: [UsersController, UserProfilesController],
   exports: [UserModule, UserProfileModule],
 })

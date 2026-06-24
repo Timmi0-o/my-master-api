@@ -41,7 +41,7 @@ export function extractUserFilter(
   pushString('id', sanitized.id);
   pushString('email', sanitized.email);
   pushString('username', sanitized.username);
-  pushString('role', sanitized.role);
+  pushString('roleId', sanitized.roleId);
   pushString('status', sanitized.status);
   pushString('language', sanitized.language);
 

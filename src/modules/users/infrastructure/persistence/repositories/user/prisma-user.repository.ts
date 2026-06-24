@@ -6,10 +6,11 @@ import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/tran
 import type { ReadResult } from '@shared/domain/query';
 import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
 import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import { ERoleIdentifier } from 'src/modules/authorization/domain/entities/role';
 import {
-  EUserRole,
   EUserStatus,
   type ICreateUserInput,
+  type IUpdateUserInput,
   type IUserEntity,
   type IUserPublicEntity,
 } from 'src/modules/users/domain/entities/user';
@@ -86,8 +87,22 @@ export class PrismaUserRepository
         id: true,
         email: true,
         username: true,
-        role: true,
+        roleId: true,
         status: true,
+        role: {
+          select: {
+            roleIdentifier: true,
+            rolePermissions: {
+              select: {
+                permission: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -97,9 +112,31 @@ export class PrismaUserRepository
       id: row.id,
       email: row.email,
       username: row.username,
-      role: row.role as EUserRole,
+      roleId: row.roleId,
+      roleIdentifier: row.role.roleIdentifier as ERoleIdentifier,
+      permissions: row.role.rolePermissions.map(
+        (rolePermission) => rolePermission.permission.name,
+      ),
       status: row.status as EUserStatus,
     };
+  }
+
+  async update(
+    id: string,
+    patch: IUpdateUserInput,
+    scope: TransactionScope,
+  ): Promise<IUserEntity> {
+    const tx = unwrapPrismaTxFromScope(scope);
+
+    try {
+      const row = await tx.user.update({
+        where: { id },
+        data: patch,
+      });
+      return mapUserEntityRow(row as UserEntityRow);
+    } catch (error) {
+      throw mapUserWriteError(error, { id });
+    }
   }
 
   async create(user: ICreateUserInput, scope: TransactionScope): Promise<IUserEntity> {

@@ -1,0 +1,25 @@
+enum RoleIdentifier {
+  USER
+  ADMIN
+  SUPER_ADMIN
+  API_CLIENT
+}
+
+model Role {
+  id             String         @id @default(uuid())
+  name           String         @map("name")
+  description    String?        @map("description")
+  roleIdentifier RoleIdentifier @map("role_identifier")
+  isActive       Boolean        @default(true) @map("is_active")
+  isSystem       Boolean        @default(false) @map("is_system")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@unique([roleIdentifier])
+  @@index([name])
+  @@map("Roles")
+}

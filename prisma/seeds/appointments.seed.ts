@@ -171,7 +171,7 @@ export const appointmentsSeed: SeedRunner = async (
     where: {
       deletedAt: null,
       status: 'ACTIVE',
-      role: 'USER',
+      role: { roleIdentifier: 'USER' },
     },
     orderBy: { email: 'asc' },
     select: { id: true },

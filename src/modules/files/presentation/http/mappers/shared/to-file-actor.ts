@@ -9,6 +9,6 @@ export function toFileActor(
   return {
     userId: sessionUser.id,
     isStaffUser: metadata.isStaffUser,
-    userRole: sessionUser.role,
+    userRole: sessionUser.roleIdentifier,
   };
 }

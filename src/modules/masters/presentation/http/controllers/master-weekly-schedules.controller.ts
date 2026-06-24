@@ -26,6 +26,10 @@ import { payloadToGetMasterWeeklyScheduleByIdInput } from '../mappers/master-wee
 import { payloadToUpdateMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-update-master-weekly-schedule-input';
 import { payloadToFindManyParams } from '../mappers/master-weekly-schedule/payload-to-find-many-params.mapper';
 import { mapGetMasterWeeklySchedulesHttpResponse } from '../response/map-get-master-weekly-schedules-response';
+import { mapGetMasterWeeklyScheduleByIdHttpResponse } from '../response/map-get-master-weekly-schedule-by-id-response';
+import { mapCreateMasterWeeklyScheduleHttpResponse } from '../response/map-create-master-weekly-schedule-response';
+import { mapUpdateMasterWeeklyScheduleHttpResponse } from '../response/map-update-master-weekly-schedule-response';
+import { mapDeleteMasterWeeklyScheduleHttpResponse } from '../response/map-delete-master-weekly-schedule-response';
 import { MasterWeeklyScheduleValidator } from '../validation/master-weekly-schedule.validator';
 
 @Controller({ path: 'master-weekly-schedules', version: '1' })
@@ -71,7 +75,7 @@ export class MasterWeeklySchedulesController {
       metadata.isStaffUser,
     );
     const item = await this.getMasterWeeklyScheduleByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetMasterWeeklyScheduleByIdHttpResponse(item);
   }
 
   @Post()
@@ -87,8 +91,8 @@ export class MasterWeeklySchedulesController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.createMasterWeeklyScheduleUseCase.execute(input);
-    return { data };
+    const output = await this.createMasterWeeklyScheduleUseCase.execute(input);
+    return mapCreateMasterWeeklyScheduleHttpResponse(output);
   }
 
   @Patch(':id')
@@ -107,9 +111,9 @@ export class MasterWeeklySchedulesController {
       user,
       metadata.isStaffUser,
     );
-    const data =
+    const output =
       await this.updateMasterWeeklyScheduleByIdUseCase.execute(input);
-    return { data };
+    return mapUpdateMasterWeeklyScheduleHttpResponse(output);
   }
 
   @Delete(':id')
@@ -125,6 +129,6 @@ export class MasterWeeklySchedulesController {
       metadata.isStaffUser,
     );
     await this.deleteMasterWeeklyScheduleByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteMasterWeeklyScheduleHttpResponse();
   }
 }

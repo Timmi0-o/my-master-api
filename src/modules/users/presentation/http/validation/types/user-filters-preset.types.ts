@@ -9,7 +9,7 @@ export interface IUserFiltersPreset {
   id?: IStringArrayFilter;
   email?: IStringArrayFilter;
   username?: IStringArrayFilter;
-  role?: IStringArrayFilter;
+  roleId?: IStringArrayFilter;
   status?: IStringArrayFilter;
   language?: IStringArrayFilter;
   createdAt?: IDateRangeArrayFilter;

@@ -1,11 +1,11 @@
-import { EUserLanguage, EUserRole, EUserStatus } from './user.enum';
+import { EUserLanguage, EUserStatus } from './user.enum';
 
 export interface IUserEntity {
   id: string;
   email: string;
   phone?: string | null;
   username: string;
-  role: EUserRole;
+  roleId: string;
   status: EUserStatus;
   passwordHash: string;
   name: string;

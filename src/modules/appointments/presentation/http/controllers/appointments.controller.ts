@@ -31,6 +31,10 @@ import { payloadToGetMyAppointmentsInput } from '../mappers/appointment/payload-
 import { payloadToGetMyClientsAppointmentsInput } from '../mappers/appointment/payload-to-get-my-clients-appointments-input';
 import { payloadToUpdateAppointmentInput } from '../mappers/appointment/payload-to-update-appointment-input';
 import { mapGetAppointmentsHttpResponse } from '../response/map-get-appointments-response';
+import { mapGetAppointmentByIdHttpResponse } from '../response/map-get-appointment-by-id-response';
+import { mapCreateAppointmentHttpResponse } from '../response/map-create-appointment-response';
+import { mapUpdateAppointmentHttpResponse } from '../response/map-update-appointment-response';
+import { mapDeleteAppointmentHttpResponse } from '../response/map-delete-appointment-response';
 import { AppointmentValidator } from '../validation/appointment.validator';
 
 @Controller({ path: 'appointments', version: '1' })
@@ -107,7 +111,7 @@ export class AppointmentsController {
       metadata.isStaffUser,
     );
     const item = await this.getAppointmentByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetAppointmentByIdHttpResponse(item);
   }
 
   @Post()
@@ -122,8 +126,8 @@ export class AppointmentsController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.createAppointmentUseCase.execute(input);
-    return { data };
+    const output = await this.createAppointmentUseCase.execute(input);
+    return mapCreateAppointmentHttpResponse(output);
   }
 
   @Patch(':id')
@@ -141,8 +145,8 @@ export class AppointmentsController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.updateAppointmentByIdUseCase.execute(input);
-    return { data };
+    const output = await this.updateAppointmentByIdUseCase.execute(input);
+    return mapUpdateAppointmentHttpResponse(output);
   }
 
   @Delete(':id')
@@ -158,6 +162,6 @@ export class AppointmentsController {
       metadata.isStaffUser,
     );
     await this.deleteAppointmentByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteAppointmentHttpResponse();
   }
 }

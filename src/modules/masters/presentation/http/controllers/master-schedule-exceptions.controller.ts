@@ -26,6 +26,10 @@ import { payloadToGetMasterScheduleExceptionByIdInput } from '../mappers/master-
 import { payloadToUpdateMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-update-master-schedule-exception-input';
 import { payloadToFindManyParams } from '../mappers/master-schedule-exception/payload-to-find-many-params.mapper';
 import { mapGetMasterScheduleExceptionsHttpResponse } from '../response/map-get-master-schedule-exceptions-response';
+import { mapGetMasterScheduleExceptionByIdHttpResponse } from '../response/map-get-master-schedule-exception-by-id-response';
+import { mapCreateMasterScheduleExceptionHttpResponse } from '../response/map-create-master-schedule-exception-response';
+import { mapUpdateMasterScheduleExceptionHttpResponse } from '../response/map-update-master-schedule-exception-response';
+import { mapDeleteMasterScheduleExceptionHttpResponse } from '../response/map-delete-master-schedule-exception-response';
 import { MasterScheduleExceptionValidator } from '../validation/master-schedule-exception.validator';
 
 @Controller({ path: 'master-schedule-exceptions', version: '1' })
@@ -71,7 +75,7 @@ export class MasterScheduleExceptionsController {
       metadata.isStaffUser,
     );
     const item = await this.getMasterScheduleExceptionByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetMasterScheduleExceptionByIdHttpResponse(item);
   }
 
   @Post()
@@ -87,8 +91,8 @@ export class MasterScheduleExceptionsController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.createMasterScheduleExceptionUseCase.execute(input);
-    return { data };
+    const output = await this.createMasterScheduleExceptionUseCase.execute(input);
+    return mapCreateMasterScheduleExceptionHttpResponse(output);
   }
 
   @Patch(':id')
@@ -107,9 +111,9 @@ export class MasterScheduleExceptionsController {
       user,
       metadata.isStaffUser,
     );
-    const data =
+    const output =
       await this.updateMasterScheduleExceptionByIdUseCase.execute(input);
-    return { data };
+    return mapUpdateMasterScheduleExceptionHttpResponse(output);
   }
 
   @Delete(':id')
@@ -125,6 +129,6 @@ export class MasterScheduleExceptionsController {
       metadata.isStaffUser,
     );
     await this.deleteMasterScheduleExceptionByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteMasterScheduleExceptionHttpResponse();
   }
 }

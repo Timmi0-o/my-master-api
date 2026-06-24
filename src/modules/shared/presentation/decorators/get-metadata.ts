@@ -1,5 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { EUserRole } from 'src/modules/users/domain/entities/user';
+import { isStaffRoleIdentifier } from 'src/modules/authorization/domain/policies/is-staff-role-identifier.policy';
+import { ERoleIdentifier } from 'src/modules/authorization/domain/entities/role';
 import { IGetMetadata } from '../../domain/decorators/i-get-metadata';
 import { ISessionUser } from '../../domain/i-session-user';
 
@@ -10,12 +11,15 @@ export const GetMetadata = createParamDecorator<unknown, IGetMetadata>(
     if (!user) return DEFAULT_METADATA;
 
     return {
-      isStaffUser:
-        user.role === EUserRole.ADMIN || user.role === EUserRole.SUPER_ADMIN,
+      isStaffUser: isStaffRoleIdentifier(user.roleIdentifier),
+      roleIdentifier: user.roleIdentifier,
+      permissions: user.permissions,
     };
   },
 );
 
 const DEFAULT_METADATA: IGetMetadata = {
   isStaffUser: false,
+  roleIdentifier: ERoleIdentifier.USER,
+  permissions: [],
 };

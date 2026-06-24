@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { FileUploadedUseCase } from '../../../application/use-cases/file/file-uploaded.use-case';
+import { mapProcessMinioEventHttpResponse } from '../response/map-process-minio-event-response';
 
 type MinioWebhookPayload = {
   EventName: string;
@@ -43,7 +44,7 @@ export class FilesInternalController {
 
     const record = body.Records?.[0];
     if (!record || body.EventName !== 's3:ObjectCreated:Put') {
-      return { data: { processed: false } };
+      return mapProcessMinioEventHttpResponse(false);
     }
 
     const s3 = record.s3;
@@ -57,6 +58,6 @@ export class FilesInternalController {
       userMetadata: s3.object.userMetadata,
     });
 
-    return { data: { processed: true } };
+    return mapProcessMinioEventHttpResponse(true);
   }
 }

@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { GetFileShareUseCase } from '../../../application/use-cases/file-share/get-file-share.use-case';
 import { payloadToGetFileShareInput } from '../mappers/file-share/payload-to-get-file-share-input';
-import { mapFileToHttpResponse } from '../response/map-file-response';
+import { mapGetFileShareByTokenHttpResponse } from '../response/map-files-http-response';
 
 @Controller({ path: 'files/shares', version: '1' })
 export class FileSharesController {
@@ -21,12 +21,7 @@ export class FileSharesController {
       password,
       clientIp,
     });
-    const result = await this.getFileShareUseCase.execute(input);
-    return {
-      data: {
-        share: result.share,
-        file: mapFileToHttpResponse(result.file),
-      },
-    };
+    const output = await this.getFileShareUseCase.execute(input);
+    return mapGetFileShareByTokenHttpResponse(output);
   }
 }

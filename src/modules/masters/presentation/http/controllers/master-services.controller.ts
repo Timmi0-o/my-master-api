@@ -31,6 +31,11 @@ import { payloadToGetMyServicesInput } from '../mappers/master-service/payload-t
 import { payloadToUpdateMasterServiceInput } from '../mappers/master-service/payload-to-update-master-service-input';
 import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-services-response';
 import { mapGetMyServicesHttpResponse } from '../response/map-get-my-services-response';
+import { mapGetMasterServiceAvailableSlotsHttpResponse } from '../response/map-get-master-service-available-slots-response';
+import { mapGetMasterServiceByIdHttpResponse } from '../response/map-get-master-service-by-id-response';
+import { mapCreateMasterServiceHttpResponse } from '../response/map-create-master-service-response';
+import { mapUpdateMasterServiceHttpResponse } from '../response/map-update-master-service-response';
+import { mapDeleteMasterServiceHttpResponse } from '../response/map-delete-master-service-response';
 import { MasterServiceValidator } from '../validation/master-service.validator';
 
 @Controller({ path: 'master-services', version: '1' })
@@ -87,11 +92,11 @@ export class MasterServicesController {
     const { id } = this.masterServiceValidator.validateIdParam(params);
     const queryPayload =
       this.masterServiceValidator.validateGetAvailableSlotsQuery(query);
-    const data = await this.getMasterServiceAvailableSlotsUseCase.execute({
+    const output = await this.getMasterServiceAvailableSlotsUseCase.execute({
       masterServiceId: id,
       date: queryPayload.date,
     });
-    return { data };
+    return mapGetMasterServiceAvailableSlotsHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -112,7 +117,7 @@ export class MasterServicesController {
       metadata.isStaffUser,
     );
     const item = await this.getMasterServiceByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetMasterServiceByIdHttpResponse(item);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -128,8 +133,8 @@ export class MasterServicesController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.createMasterServiceUseCase.execute(input);
-    return { data };
+    const output = await this.createMasterServiceUseCase.execute(input);
+    return mapCreateMasterServiceHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -148,8 +153,8 @@ export class MasterServicesController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.updateMasterServiceByIdUseCase.execute(input);
-    return { data };
+    const output = await this.updateMasterServiceByIdUseCase.execute(input);
+    return mapUpdateMasterServiceHttpResponse(output);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -166,6 +171,6 @@ export class MasterServicesController {
       metadata.isStaffUser,
     );
     await this.deleteMasterServiceByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteMasterServiceHttpResponse();
   }
 }

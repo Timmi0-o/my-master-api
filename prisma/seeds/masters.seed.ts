@@ -24,7 +24,7 @@ const pickSeedUsers = async (prisma: PrismaClient) => {
     where: {
       deletedAt: null,
       status: 'ACTIVE',
-      role: 'USER',
+      role: { roleIdentifier: 'USER' },
     },
     orderBy: { email: 'asc' },
     select: { id: true, email: true },

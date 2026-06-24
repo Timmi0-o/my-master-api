@@ -1,10 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ajv } from 'src/modules/shared/presentation/http/validation/ajv-instance';
 import { BaseValidator } from 'src/modules/shared/presentation/http/validation/base.validator';
+import { assignUserRolePayloadSchema } from './schemas/assign-user-role-payload.schema';
+import type { IAssignUserRolePayload } from './schemas/assign-user-role-payload.types';
 import { getUsersQuerySchema } from './schemas/get-users-query.schema';
 import type { IGetUsersQueryPayload } from './schemas/get-users-query.types';
+import { idParamSchema } from './schemas/id-param.schema';
+import type { IIdParamPayload } from './schemas/id-param.types';
 
 const validateGetUsersQuery = ajv.compile(getUsersQuerySchema);
+const validateIdParam = ajv.compile(idParamSchema);
+const validateAssignUserRolePayload = ajv.compile(assignUserRolePayloadSchema);
 
 @Injectable()
 export class UserValidator extends BaseValidator {
@@ -46,5 +52,28 @@ export class UserValidator extends BaseValidator {
     }
 
     return out as IGetUsersQueryPayload;
+  }
+
+  validateIdParam(raw: Record<string, unknown>): IIdParamPayload {
+    const normalized: IIdParamPayload = { id: String(raw.id ?? '') };
+    return this.validateAndReturn<IIdParamPayload>({
+      validate: validateIdParam,
+      data: normalized,
+      errorMessage: 'Некорректный идентификатор пользователя',
+      logLabel: 'UserIdParam',
+      dataForSchema: normalized,
+    });
+  }
+
+  validateAssignUserRolePayload(
+    raw: Record<string, unknown>,
+  ): IAssignUserRolePayload {
+    return this.validateAndReturn<IAssignUserRolePayload>({
+      validate: validateAssignUserRolePayload,
+      data: raw as unknown as IAssignUserRolePayload,
+      errorMessage: 'Некорректное тело запроса смены роли',
+      logLabel: 'AssignUserRolePayload',
+      dataForSchema: raw,
+    });
   }
 }

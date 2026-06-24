@@ -45,3 +45,17 @@ alwaysApply: false
 - Файл: `output-<source-use-case-kebab>-to-<target-use-case-kebab>-input.ts`
 - Функция: camelCase того же пути — `outputCreateUserProfileToCreateRootFolderInput`
 - Не использовать префикс `to*` для таких мапперов.
+
+## RBAC (authorization module)
+
+- RBAC живёт в `src/modules/authorization/`: `Role`, `Permission`, `RolePermission`.
+- Привязка роли к пользователю — только через `User.roleId` (одна роль на user).
+- Системные роли — `Role.roleIdentifier` (`USER`, `ADMIN`, `SUPER_ADMIN`, `API_CLIENT`).
+- Каталог permissions — константы в `authorization/domain/permissions/permission-names.ts` (`Permissions.users.read`, …); не magic strings в controllers.
+- HTTP-авторизация: `@UseGuards(JwtAuthGuard, AuthorizeGuard)` + `@Authorize({ kind, permissions? })`.
+  - `authenticated` — активный пользователь;
+  - `staff-only` — `roleIdentifier ∈ { ADMIN, SUPER_ADMIN }`;
+  - `permissions` — OR-семантика; `SUPER_ADMIN` bypass.
+- `@AuthorizedCaller()` — caller из request после guard (permissions, roleIdentifier).
+- Management API: `GET /permissions`, `GET /roles`, role-permissions grant/revoke, `PATCH /users/:id/role` — permission `rbac.update`.
+- `isStaffUser` в `IGetMetadata` — временная совместимость; новые endpoint'ы — через `@Authorize` и permissions.

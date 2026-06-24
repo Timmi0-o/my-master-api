@@ -5,7 +5,7 @@ export const USER_SELECT_FIELDS = [
   'email',
   'phone',
   'username',
-  'role',
+  'roleId',
   'status',
   'language',
   'name',

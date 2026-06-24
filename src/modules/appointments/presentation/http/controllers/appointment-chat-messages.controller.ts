@@ -23,6 +23,9 @@ import { payloadToDeleteAppointmentChatMessageInput } from '../mappers/appointme
 import { payloadToFindManyParams } from '../mappers/appointment-chat-message/payload-to-find-many-params.mapper';
 import { payloadToGetAppointmentChatMessageByIdInput } from '../mappers/appointment-chat-message/payload-to-get-appointment-chat-message-by-id-input';
 import { mapGetAppointmentChatMessagesHttpResponse } from '../response/map-get-appointment-chat-messages-response';
+import { mapGetAppointmentChatMessageByIdHttpResponse } from '../response/map-get-appointment-chat-message-by-id-response';
+import { mapCreateAppointmentChatMessageHttpResponse } from '../response/map-create-appointment-chat-message-response';
+import { mapDeleteAppointmentChatMessageHttpResponse } from '../response/map-delete-appointment-chat-message-response';
 import { AppointmentChatMessageValidator } from '../validation/appointment-chat-message.validator';
 
 @Controller({ path: 'appointment-chat-messages', version: '1' })
@@ -67,7 +70,7 @@ export class AppointmentChatMessagesController {
       metadata.isStaffUser,
     );
     const item = await this.getAppointmentChatMessageByIdUseCase.execute(input);
-    return { data: item };
+    return mapGetAppointmentChatMessageByIdHttpResponse(item);
   }
 
   @Post()
@@ -83,8 +86,8 @@ export class AppointmentChatMessagesController {
       user,
       metadata.isStaffUser,
     );
-    const data = await this.createAppointmentChatMessageUseCase.execute(input);
-    return { data };
+    const output = await this.createAppointmentChatMessageUseCase.execute(input);
+    return mapCreateAppointmentChatMessageHttpResponse(output);
   }
 
   @Delete(':id')
@@ -100,6 +103,6 @@ export class AppointmentChatMessagesController {
       metadata.isStaffUser,
     );
     await this.deleteAppointmentChatMessageByIdUseCase.execute(input);
-    return { data: { success: true } };
+    return mapDeleteAppointmentChatMessageHttpResponse();
   }
 }

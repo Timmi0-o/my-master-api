@@ -5,7 +5,7 @@ model User {
   phone    String? @map("phone")
   username String  @map("username")
 
-  role   Role   @default(USER) @map("role")
+  roleId String @map("role_id")
   status Status @default(PENDING) @map("status")
 
   passwordHash String @map("password_hash")
@@ -20,6 +20,8 @@ model User {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
   masterProfile MasterProfile?
   userProfile   UserProfile?
 
@@ -32,13 +34,8 @@ model User {
   @@unique([phone])
   @@unique([username])
   @@index([email, phone, username])
+  @@index([roleId])
   @@map("Users")
-}
-
-enum Role {
-  SUPER_ADMIN
-  ADMIN
-  USER
 }
 
 enum Status {

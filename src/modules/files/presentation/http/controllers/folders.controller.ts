@@ -24,6 +24,13 @@ import { payloadToDeleteFolderInput } from '../mappers/folder/payload-to-delete-
 import { payloadToGetFolderInput } from '../mappers/folder/payload-to-get-folder-input';
 import { payloadToMoveFolderInput } from '../mappers/folder/payload-to-move-folder-input';
 import { payloadToUpdateFolderInput } from '../mappers/folder/payload-to-update-folder-input';
+import {
+  mapCreateFolderHttpResponse,
+  mapDeleteFolderHttpResponse,
+  mapGetFolderHttpResponse,
+  mapMoveFolderHttpResponse,
+  mapUpdateFolderHttpResponse,
+} from '../response/map-folder-response';
 import { FoldersValidator } from '../validation/folders.validator';
 
 @Controller({ path: 'folders', version: '1' })
@@ -46,8 +53,8 @@ export class FoldersController {
   ) {
     const payload = this.foldersValidator.validateGetFolderQuery(query);
     const input = payloadToGetFolderInput(payload, user, metadata);
-    const folder = await this.getFolderUseCase.execute(input);
-    return { data: folder };
+    const output = await this.getFolderUseCase.execute(input);
+    return mapGetFolderHttpResponse(output);
   }
 
   @Post()
@@ -58,8 +65,8 @@ export class FoldersController {
   ) {
     const payload = this.foldersValidator.validateCreateFolder(body);
     const input = payloadToCreateFolderInput(payload, user, metadata);
-    const folder = await this.createFolderUseCase.execute(input);
-    return { data: folder };
+    const output = await this.createFolderUseCase.execute(input);
+    return mapCreateFolderHttpResponse(output);
   }
 
   @Patch(':id')
@@ -72,8 +79,8 @@ export class FoldersController {
     const { id } = this.foldersValidator.validateIdParam(params);
     const payload = this.foldersValidator.validateUpdateFolder(body);
     const input = payloadToUpdateFolderInput(id, payload, user, metadata);
-    const folder = await this.updateFolderUseCase.execute(input);
-    return { data: folder };
+    const output = await this.updateFolderUseCase.execute(input);
+    return mapUpdateFolderHttpResponse(output);
   }
 
   @Post(':id/move')
@@ -86,8 +93,8 @@ export class FoldersController {
     const { id } = this.foldersValidator.validateIdParam(params);
     const payload = this.foldersValidator.validateMoveFolder(body);
     const input = payloadToMoveFolderInput(id, payload, user, metadata);
-    const folder = await this.moveFolderUseCase.execute(input);
-    return { data: folder };
+    const output = await this.moveFolderUseCase.execute(input);
+    return mapMoveFolderHttpResponse(output);
   }
 
   @Delete(':id')
@@ -98,7 +105,7 @@ export class FoldersController {
   ) {
     const { id } = this.foldersValidator.validateIdParam(params);
     const input = payloadToDeleteFolderInput(id, user, metadata);
-    const result = await this.deleteFolderUseCase.execute(input);
-    return { data: result };
+    const output = await this.deleteFolderUseCase.execute(input);
+    return mapDeleteFolderHttpResponse(output);
   }
 }

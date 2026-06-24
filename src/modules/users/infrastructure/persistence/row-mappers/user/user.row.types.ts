@@ -1,11 +1,11 @@
-import type { EUserLanguage, EUserRole, EUserStatus } from 'src/modules/users/domain/entities/user/user.enum';
+import type { EUserLanguage, EUserStatus } from 'src/modules/users/domain/entities/user/user.enum';
 
 export type UserRow = {
   id: string;
   email: string;
   phone: string | null;
   username: string;
-  role: EUserRole;
+  roleId: string;
   status: EUserStatus;
   language: EUserLanguage;
   name: string;

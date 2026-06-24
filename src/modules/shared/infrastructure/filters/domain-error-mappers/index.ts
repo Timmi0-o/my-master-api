@@ -8,6 +8,7 @@ import { mapMastersDomainError } from './masters-domain-error.mapper';
 import { mapAppointmentsDomainError } from './appointments-domain-error.mapper';
 import { mapAuthDomainError } from './auth-domain-error.mapper';
 import { mapFilesDomainError } from './files-domain-error.mapper';
+import { mapAuthorizationDomainError } from './authorization-domain-error.mapper';
 
 const DOMAIN_ERROR_MAPPERS: readonly DomainErrorMapper[] = [
   mapUsersDomainError,
@@ -15,6 +16,7 @@ const DOMAIN_ERROR_MAPPERS: readonly DomainErrorMapper[] = [
   mapAppointmentsDomainError,
   mapAuthDomainError,
   mapFilesDomainError,
+  mapAuthorizationDomainError,
 ];
 
 export function mapDomainErrorToHttp(error: DomainError): HttpException {

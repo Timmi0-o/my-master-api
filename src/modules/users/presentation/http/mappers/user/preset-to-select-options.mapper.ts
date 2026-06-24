@@ -8,7 +8,7 @@ type UserSelectOptions = SelectOptions<IUserPublicEntity, Record<never, never>>;
 
 const USER_PRESETS: Record<TPresetType, UserSelectOptions> = {
   MINIMAL: {
-    select: ['id', 'email', 'username', 'role', 'status'],
+    select: ['id', 'email', 'username', 'roleId', 'status'],
   },
   SHORT: {
     select: [
@@ -16,7 +16,7 @@ const USER_PRESETS: Record<TPresetType, UserSelectOptions> = {
       'email',
       'phone',
       'username',
-      'role',
+      'roleId',
       'status',
       'language',
       'name',
@@ -31,7 +31,7 @@ const USER_PRESETS: Record<TPresetType, UserSelectOptions> = {
       'email',
       'phone',
       'username',
-      'role',
+      'roleId',
       'status',
       'language',
       'name',
