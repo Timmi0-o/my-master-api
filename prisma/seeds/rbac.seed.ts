@@ -45,6 +45,55 @@ const API_CLIENT_PERMISSIONS = [
   Permissions.users.read,
 ];
 
+const SYSTEM_ROLES = [
+  {
+    id: SYSTEM_ROLE_IDS[ERoleIdentifier.USER],
+    roleIdentifier: ERoleIdentifier.USER,
+    name: 'User',
+    description: 'Standard client user',
+  },
+  {
+    id: SYSTEM_ROLE_IDS[ERoleIdentifier.ADMIN],
+    roleIdentifier: ERoleIdentifier.ADMIN,
+    name: 'Admin',
+    description: 'Staff administrator',
+  },
+  {
+    id: SYSTEM_ROLE_IDS[ERoleIdentifier.SUPER_ADMIN],
+    roleIdentifier: ERoleIdentifier.SUPER_ADMIN,
+    name: 'Super Admin',
+    description: 'Full system access',
+  },
+  {
+    id: SYSTEM_ROLE_IDS[ERoleIdentifier.API_CLIENT],
+    roleIdentifier: ERoleIdentifier.API_CLIENT,
+    name: 'API Client',
+    description: 'Machine-to-machine API access',
+  },
+] as const;
+
+async function upsertSystemRoles(prisma: PrismaClient): Promise<void> {
+  for (const role of SYSTEM_ROLES) {
+    await prisma.role.upsert({
+      where: { roleIdentifier: role.roleIdentifier },
+      create: {
+        id: role.id,
+        name: role.name,
+        description: role.description,
+        roleIdentifier: role.roleIdentifier,
+        isActive: true,
+        isSystem: true,
+      },
+      update: {
+        name: role.name,
+        description: role.description,
+        isActive: true,
+        isSystem: true,
+      },
+    });
+  }
+}
+
 async function upsertPermissions(prisma: PrismaClient): Promise<Map<string, string>> {
   const permissionIds = new Map<string, string>();
 
@@ -106,6 +155,7 @@ async function syncRolePermissions(
 }
 
 export const rbacSeed: SeedRunner = async (prisma: PrismaClient): Promise<void> => {
+  await upsertSystemRoles(prisma);
   const permissionIds = await upsertPermissions(prisma);
   const allPermissionNames = PERMISSIONS_CATALOG.map((item) => item.name);
 
