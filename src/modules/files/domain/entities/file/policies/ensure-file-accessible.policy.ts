@@ -79,6 +79,9 @@ async function checkSharedAccess(
   return true;
 }
 
+/**
+ * Проверка, доступен ли файл актору
+ */
 export async function isFileAccessible(
   file: IFileEntity,
   actor: IFileActor,
@@ -107,6 +110,9 @@ export async function isFileAccessible(
   }
 }
 
+/**
+ * Проверка, что файл доступен актору
+ */
 export async function ensureFileAccessible(
   file: IFileEntity,
   actor: IFileActor,

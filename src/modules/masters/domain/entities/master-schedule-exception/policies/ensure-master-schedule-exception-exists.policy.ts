@@ -1,6 +1,9 @@
 import type { IMasterScheduleExceptionEntity } from '../i-master-schedule-exception.entity';
 import { MasterScheduleExceptionNotFoundError } from '../errors';
 
+/**
+ * Проверка, что исключение в расписании мастера существует
+ */
 export function ensureMasterScheduleExceptionExists(
   entity: IMasterScheduleExceptionEntity | null | undefined,
   id: string,

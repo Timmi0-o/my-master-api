@@ -2,6 +2,9 @@ import type { IMasterProfileEntity } from '../i-master-profile.entity';
 import { MasterProfileForbiddenError } from '../errors';
 import type { IMasterProfileActor } from './master-profile-actor.types';
 
+/**
+ * Проверка, что профиль мастера доступен актору (владелец или персонал)
+ */
 export function ensureMasterProfileAccessible(
   profile: IMasterProfileEntity,
   actor: IMasterProfileActor,

@@ -5,6 +5,11 @@ const STAFF_ROLE_IDENTIFIERS = new Set<ERoleIdentifier>([
   ERoleIdentifier.SUPER_ADMIN,
 ]);
 
-export function isStaffRoleIdentifier(roleIdentifier: ERoleIdentifier): boolean {
+/**
+ * Проверка, что роль относится к админам
+ */
+export function isStaffRoleIdentifier(
+  roleIdentifier: ERoleIdentifier,
+): boolean {
   return STAFF_ROLE_IDENTIFIERS.has(roleIdentifier);
 }

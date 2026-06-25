@@ -22,6 +22,9 @@ function hasPermission(
   return access.permissions.includes(permission);
 }
 
+/**
+ * Проверка, может ли актор изменять файл
+ */
 export async function isFileModifiable(
   file: IFileEntity,
   actor: IFileActor,
@@ -58,6 +61,9 @@ export async function isFileModifiable(
   return false;
 }
 
+/**
+ * Проверка, что актор может изменять файл
+ */
 export async function ensureFileModifiable(
   file: IFileEntity,
   actor: IFileActor,

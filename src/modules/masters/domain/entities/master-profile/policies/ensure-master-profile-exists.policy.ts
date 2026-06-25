@@ -1,6 +1,9 @@
 import type { IMasterProfileEntity } from '../i-master-profile.entity';
 import { MasterProfileNotFoundError } from '../errors';
 
+/**
+ * Проверка, что профиль мастера существует
+ */
 export function ensureMasterProfileExists(
   entity: IMasterProfileEntity | null | undefined,
   id: string,

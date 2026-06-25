@@ -2,6 +2,9 @@ import type { IAppointmentEntity } from '../i-appointment.entity';
 import { AppointmentForbiddenError } from '../errors';
 import type { IAppointmentActor } from './appointment-actor.types';
 
+/**
+ * Проверка, что запись доступна актору (клиент, мастер или персонал)
+ */
 export function ensureAppointmentAccessible(
   appointment: IAppointmentEntity,
   actor: IAppointmentActor,

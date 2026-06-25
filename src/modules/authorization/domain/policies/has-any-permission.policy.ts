@@ -1,3 +1,6 @@
+/**
+ * Проверка, что у субъекта есть хотя бы одно из требуемых разрешений
+ */
 export function hasAnyPermission(
   grantedPermissions: readonly string[],
   requiredPermissions: readonly string[],
