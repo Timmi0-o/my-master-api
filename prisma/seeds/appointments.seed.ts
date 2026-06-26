@@ -8,7 +8,17 @@ import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities
 import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
 import type { SeedRunner } from './index';
 
-const APPOINTMENTS_TARGET = 24;
+const APPOINTMENTS_TARGET = 120;
+const MASTER_PROFILES_POOL = 12;
+
+const pickStatus = (index: number): AppointmentStatus => {
+  const bucket = index % 20;
+  if (bucket < 3) return 'PENDING';
+  if (bucket < 7) return 'CONFIRMED';
+  if (bucket < 14) return 'COMPLETED';
+  if (bucket < 17) return 'CANCELLED';
+  return 'NO_SHOW';
+};
 
 type AppointmentSeedSpec = {
   masterProfileIndex: number;
@@ -52,33 +62,23 @@ const CANCEL_REASONS = [
 ] as const;
 
 const buildSpecs = (): AppointmentSeedSpec[] => {
-  const statuses: AppointmentStatus[] = [
-    'PENDING',
-    'CONFIRMED',
-    'CONFIRMED',
-    'COMPLETED',
-    'COMPLETED',
-    'CANCELLED',
-    'NO_SHOW',
-  ];
-
   const specs: AppointmentSeedSpec[] = [];
 
   for (let i = 0; i < APPOINTMENTS_TARGET; i += 1) {
-    const status = statuses[i % statuses.length];
+    const status = pickStatus(i);
     const daysFromNow =
       status === 'COMPLETED' || status === 'NO_SHOW'
-        ? -(2 + (i % 12))
+        ? -(2 + (i % 45))
         : status === 'CANCELLED'
-          ? -(1 + (i % 5))
-          : 1 + (i % 21);
+          ? -(1 + (i % 14))
+          : 1 + (i % 28);
 
     const hour = 9 + (i % 9);
     const minute = i % 2 === 0 ? 0 : 30;
 
     const spec: AppointmentSeedSpec = {
-      masterProfileIndex: i % 12,
-      serviceIndex: i % 2,
+      masterProfileIndex: i % MASTER_PROFILES_POOL,
+      serviceIndex: i % 3,
       clientUserIndex: 5 + ((i * 2) % 25),
       status,
       daysFromNow,
@@ -145,6 +145,7 @@ const pickClientId = (
 export const appointmentsSeed: SeedRunner = async (
   prisma: PrismaClient,
 ): Promise<void> => {
+  await prisma.masterServiceReview.deleteMany();
   await prisma.appointmentChatMessage.deleteMany();
   await prisma.appointmentChat.deleteMany();
   await prisma.appointment.deleteMany();

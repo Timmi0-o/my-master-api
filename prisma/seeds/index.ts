@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import { appointmentsSeed } from './appointments.seed';
 import { masterSchedulesSeed } from './master-schedules.seed';
+import { masterServiceReviewsSeed } from './master-service-reviews.seed';
 import { mastersSeed } from './masters.seed';
 import { rbacSeed } from './rbac.seed';
 import { userProfilesSeed } from './user-profiles.seed';
@@ -15,4 +16,5 @@ export const seeds: SeedRunner[] = [
   mastersSeed,
   masterSchedulesSeed,
   appointmentsSeed,
+  masterServiceReviewsSeed,
 ];

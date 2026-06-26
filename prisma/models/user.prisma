@@ -29,6 +29,7 @@ model User {
   refreshTokens           RefreshToken[]
   clientAppointments      Appointment[]            @relation("ClientAppointments")
   appointmentChatMessages AppointmentChatMessage[] @relation("AppointmentChatMessages")
+  masterServiceReviews    MasterServiceReview[]
 
   @@unique([email])
   @@unique([phone])

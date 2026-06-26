@@ -20,6 +20,13 @@ import {
   MasterScheduleExceptionForbiddenError,
   MasterScheduleExceptionNotFoundError,
 } from 'src/modules/masters/domain/entities/master-schedule-exception';
+import {
+  MasterServiceReviewAlreadyExistsError,
+  MasterServiceReviewAppointmentNotCompletedError,
+  MasterServiceReviewForbiddenError,
+  MasterServiceReviewInvalidRatingError,
+  MasterServiceReviewNotFoundError,
+} from 'src/modules/masters/domain/entities/master-service-review';
 
 export const mapMastersDomainError: DomainErrorMapper = (error) => {
   if (
@@ -27,18 +34,25 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceNotFoundError ||
     error instanceof MasterWeeklyScheduleNotFoundError ||
     error instanceof MasterScheduleExceptionNotFoundError ||
-    error instanceof MasterServiceImageNotFoundError
+    error instanceof MasterServiceImageNotFoundError ||
+    error instanceof MasterServiceReviewNotFoundError
   ) {
     return new NotFoundException(error.message);
   }
-  if (error instanceof MasterServiceMaxImagesCountError) {
+  if (
+    error instanceof MasterServiceMaxImagesCountError ||
+    error instanceof MasterServiceReviewAlreadyExistsError ||
+    error instanceof MasterServiceReviewAppointmentNotCompletedError ||
+    error instanceof MasterServiceReviewInvalidRatingError
+  ) {
     return new BadRequestException(error.message);
   }
   if (
     error instanceof MasterProfileForbiddenError ||
     error instanceof MasterServiceForbiddenError ||
     error instanceof MasterWeeklyScheduleForbiddenError ||
-    error instanceof MasterScheduleExceptionForbiddenError
+    error instanceof MasterScheduleExceptionForbiddenError ||
+    error instanceof MasterServiceReviewForbiddenError
   ) {
     return new ForbiddenException(error.message);
   }

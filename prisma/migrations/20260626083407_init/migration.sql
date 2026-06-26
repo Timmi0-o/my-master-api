@@ -232,6 +232,21 @@ CREATE TABLE "MasterServiceImages" (
 );
 
 -- CreateTable
+CREATE TABLE "MasterServiceReviews" (
+    "id" TEXT NOT NULL,
+    "client_user_id" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL,
+    "text" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+    "master_service_id" TEXT NOT NULL,
+    "appointment_id" TEXT NOT NULL,
+
+    CONSTRAINT "MasterServiceReviews_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "MasterServices" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -469,6 +484,18 @@ CREATE INDEX "MasterServiceImages_file_id_idx" ON "MasterServiceImages"("file_id
 CREATE UNIQUE INDEX "MasterServiceImages_master_service_id_file_id_key" ON "MasterServiceImages"("master_service_id", "file_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "MasterServiceReviews_appointment_id_key" ON "MasterServiceReviews"("appointment_id");
+
+-- CreateIndex
+CREATE INDEX "MasterServiceReviews_master_service_id_created_at_idx" ON "MasterServiceReviews"("master_service_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "MasterServiceReviews_client_user_id_idx" ON "MasterServiceReviews"("client_user_id");
+
+-- CreateIndex
+CREATE INDEX "MasterServiceReviews_deleted_at_idx" ON "MasterServiceReviews"("deleted_at");
+
+-- CreateIndex
 CREATE INDEX "MasterWeeklySchedules_master_profile_id_day_of_week_idx" ON "MasterWeeklySchedules"("master_profile_id", "day_of_week");
 
 -- CreateIndex
@@ -563,6 +590,15 @@ ALTER TABLE "MasterServiceImages" ADD CONSTRAINT "MasterServiceImages_master_ser
 
 -- AddForeignKey
 ALTER TABLE "MasterServiceImages" ADD CONSTRAINT "MasterServiceImages_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "Files"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MasterServiceReviews" ADD CONSTRAINT "MasterServiceReviews_master_service_id_fkey" FOREIGN KEY ("master_service_id") REFERENCES "MasterServices"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MasterServiceReviews" ADD CONSTRAINT "MasterServiceReviews_client_user_id_fkey" FOREIGN KEY ("client_user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MasterServiceReviews" ADD CONSTRAINT "MasterServiceReviews_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "Appointments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "MasterServices" ADD CONSTRAINT "MasterServices_master_profile_id_fkey" FOREIGN KEY ("master_profile_id") REFERENCES "MasterProfiles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
