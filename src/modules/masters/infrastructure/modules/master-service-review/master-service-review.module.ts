@@ -11,13 +11,11 @@ import { GetMasterServiceReviewsUseCase } from '../../../application/use-cases/m
 import { UpdateMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/update-master-service-review-by-id.use-case';
 import type { IMasterServiceReviewRepository } from '../../../domain/repositories/master-service-review/i-master-service-review.repository';
 import { MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service-review/master-service-review.repository.tokens';
-import { MasterServiceReviewValidator } from '../../../presentation/http/validation/master-service-review.validator';
 import { PrismaMasterServiceReviewRepository } from '../../persistence/repositories/master-service-review/prisma-master-service-review.repository';
 
 @Module({
   imports: [forwardRef(() => AppointmentsModule)],
   providers: [
-    MasterServiceReviewValidator,
     {
       provide: MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
       useClass: PrismaMasterServiceReviewRepository,
@@ -79,7 +77,6 @@ import { PrismaMasterServiceReviewRepository } from '../../persistence/repositor
   ],
   exports: [
     MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
-    MasterServiceReviewValidator,
     GetMasterServiceReviewsUseCase,
     GetMasterServiceReviewByIdUseCase,
     CreateMasterServiceReviewUseCase,

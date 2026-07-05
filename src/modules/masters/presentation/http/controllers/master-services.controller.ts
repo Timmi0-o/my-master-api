@@ -1,29 +1,42 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
-import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
-import { CreateMasterServiceUseCase } from 'src/modules/masters/application/use-cases/master-service/create-master-service.use-case';
-import { DeleteMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/delete-master-service-by-id.use-case';
-import { DeleteMasterServiceImagesUseCase } from 'src/modules/masters/application/use-cases/master-service/delete-master-service-images.use-case';
-import { GetMasterServiceAvailableSlotsUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
-import { GetMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
-import { GetMasterServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-master-services.use-case';
-import { GetMyServicesUseCase } from 'src/modules/masters/application/use-cases/master-service/get-my-services.use-case';
-import { PresignMasterServiceImagesUseCase } from 'src/modules/masters/application/use-cases/master-service/presign-master-service-images.use-case';
-import { UpdateMasterServiceByIdUseCase } from 'src/modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
-import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
-import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
+import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
+import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { CreateMasterServiceUseCase } from '@modules/masters/application/use-cases/master-service/create-master-service.use-case';
+import { DeleteMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/delete-master-service-by-id.use-case';
+import { DeleteMasterServiceImagesUseCase } from '@modules/masters/application/use-cases/master-service/delete-master-service-images.use-case';
+import { GetMasterServiceAvailableSlotsUseCase } from '@modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
+import { GetMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
+import { GetMasterServicesUseCase } from '@modules/masters/application/use-cases/master-service/get-master-services.use-case';
+import { GetMyServicesUseCase } from '@modules/masters/application/use-cases/master-service/get-my-services.use-case';
+import { PresignMasterServiceImagesUseCase } from '@modules/masters/application/use-cases/master-service/presign-master-service-images.use-case';
+import { UpdateMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
+import { createMasterServicePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/create-master-service-payload.schema';
+import type { ICreateMasterServicePayload } from '@modules/masters/presentation/http/validation/schemas/create-master-service-payload.types';
+import { deleteMasterServiceImagesPayloadSchema } from '@modules/masters/presentation/http/validation/schemas/delete-master-service-images-payload.schema';
+import type { IDeleteMasterServiceImagesPayload } from '@modules/masters/presentation/http/validation/schemas/delete-master-service-images-payload.types';
+import { getByIdQuerySchema } from '@modules/masters/presentation/http/validation/schemas/get-by-id-query.schema';
+import type { IGetByIdQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-by-id-query.types';
+import { getMasterServiceAvailableSlotsQuerySchema } from '@modules/masters/presentation/http/validation/schemas/get-master-service-available-slots-query.schema';
+import type { IGetMasterServiceAvailableSlotsQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-master-service-available-slots-query.types';
+import { getMasterServicesQuerySchema } from '@modules/masters/presentation/http/validation/schemas/get-master-services-query.schema';
+import type { IGetMasterServicesQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-master-services-query.types';
+import { getMyServicesQuerySchema } from '@modules/masters/presentation/http/validation/schemas/get-my-services-query.schema';
+import type { IGetMyServicesQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-my-services-query.types';
+import { idParamSchema } from '@modules/masters/presentation/http/validation/schemas/id-param.schema';
+import type { IIdParamPayload } from '@modules/masters/presentation/http/validation/schemas/id-param.types';
+import { presignMasterServiceImagesPayloadSchema } from '@modules/masters/presentation/http/validation/schemas/presign-master-service-images-payload.schema';
+import type { IPresignMasterServiceImagesPayload } from '@modules/masters/presentation/http/validation/schemas/presign-master-service-images-payload.types';
+import { updateMasterServicePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/update-master-service-payload.schema';
+import type { IUpdateMasterServicePayload } from '@modules/masters/presentation/http/validation/schemas/update-master-service-payload.types';
+import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
+import type { ISessionUser } from '@shared/domain/i-session-user';
+import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
+import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
+import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
+import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateMasterServiceInput } from '../mappers/master-service/payload-to-create-master-service-input';
 import { payloadToDeleteMasterServiceImagesInput } from '../mappers/master-service/payload-to-delete-master-service-images-input';
 import { payloadToDeleteMasterServiceInput } from '../mappers/master-service/payload-to-delete-master-service-input';
@@ -42,7 +55,6 @@ import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-ser
 import { mapGetMyServicesHttpResponse } from '../response/map-get-my-services-response';
 import { mapPresignMasterServiceImagesHttpResponse } from '../response/map-presign-master-service-images-response';
 import { mapUpdateMasterServiceHttpResponse } from '../response/map-update-master-service-response';
-import { MasterServiceValidator } from '../validation/master-service.validator';
 
 @Controller({ path: 'master-services', version: '1' })
 export class MasterServicesController {
@@ -53,35 +65,38 @@ export class MasterServicesController {
     private readonly updateMasterServiceByIdUseCase: UpdateMasterServiceByIdUseCase,
     private readonly deleteMasterServiceByIdUseCase: DeleteMasterServiceByIdUseCase,
     private readonly getMasterServiceAvailableSlotsUseCase: GetMasterServiceAvailableSlotsUseCase,
-    private readonly masterServiceValidator: MasterServiceValidator,
     private readonly getMyServicesUseCase: GetMyServicesUseCase,
     private readonly presignMasterServiceImagesUseCase: PresignMasterServiceImagesUseCase,
     private readonly deleteMasterServiceImagesUseCase: DeleteMasterServiceImagesUseCase,
   ) {}
 
   @Get()
+  @PublicEndpoint()
   async getMasterServices(
-    @Query() query: IRawQuery,
+    @HttpQuery(getMasterServicesQuerySchema, {
+      preprocess: normalizeListQueryRaw,
+      errorMessage: 'Некорректные параметры запроса списка услуг мастеров',
+    })
+    payload: IGetMasterServicesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload =
-      this.masterServiceValidator.validateGetMasterServicesQuery(query);
-
     const params = payloadToFindManyParams(payload, metadata);
-
     const output = await this.getMasterServicesUseCase.execute(params);
     return mapGetMasterServicesHttpResponse(output, payload);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('my')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async getMyServices(
-    @Query() query: IRawQuery,
+    @HttpQuery(getMyServicesQuerySchema, {
+      preprocess: normalizeListQueryRaw,
+      errorMessage: 'Некорректные параметры запроса списка моих услуг',
+    })
+    payload: IGetMyServicesQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload =
-      this.masterServiceValidator.validateGetMyServicesQuery(query);
     const params = payloadToFindMyServicesParams(payload, metadata);
     const input = payloadToGetMyServicesInput(
       params,
@@ -92,35 +107,45 @@ export class MasterServicesController {
     return mapGetMyServicesHttpResponse(output, payload);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id/available-slots')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async getMasterServiceAvailableSlots(
-    @Param() params: Record<string, unknown>,
-    @Query() query: IRawQuery,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpQuery(getMasterServiceAvailableSlotsQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса свободных слотов',
+    })
+    queryPayload: IGetMasterServiceAvailableSlotsQueryPayload,
   ) {
-    const { id } = this.masterServiceValidator.validateIdParam(params);
-    const queryPayload =
-      this.masterServiceValidator.validateGetAvailableSlotsQuery(query);
     const output = await this.getMasterServiceAvailableSlotsUseCase.execute({
-      masterServiceId: id,
+      masterServiceId: params.id,
       date: queryPayload.date,
     });
     return mapGetMasterServiceAvailableSlotsHttpResponse(output);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async getMasterServiceById(
-    @Param() params: Record<string, unknown>,
-    @Query() query: IRawQuery,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpQuery(getByIdQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса',
+    })
+    queryPayload: IGetByIdQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.masterServiceValidator.validateIdParam(params);
-    const queryPayload =
-      this.masterServiceValidator.validateGetByIdQuery(query);
     const input = payloadToGetMasterServiceByIdInput(
-      id,
+      params.id,
       queryPayload,
       user,
       metadata.isStaffUser,
@@ -129,14 +154,17 @@ export class MasterServicesController {
     return mapGetMasterServiceByIdHttpResponse(item);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async createMasterService(
-    @Body() body: Record<string, unknown>,
+    @HttpBody(createMasterServicePayloadSchema, {
+      errorMessage: 'Некорректный payload создания услуги мастера',
+    })
+    payload: ICreateMasterServicePayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.masterServiceValidator.validateCreatePayload(body);
     const input = payloadToCreateMasterServiceInput(
       payload,
       user,
@@ -146,21 +174,24 @@ export class MasterServicesController {
     return mapCreateMasterServiceHttpResponse(output);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post(':id/images/presign')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async presignMasterServiceImages(
-    @Param() params: Record<string, unknown>,
-    @Body() body: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(presignMasterServiceImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload presign фотографий услуги',
+    })
+    payload: IPresignMasterServiceImagesPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.masterServiceValidator.validateIdParam(params);
-
-    const payload =
-      this.masterServiceValidator.validatePresignImagesPayload(body);
-
     const input = payloadToPresignMasterServiceImagesInput(
-      id,
+      params.id,
       payload,
       user,
       metadata.isStaffUser,
@@ -169,21 +200,24 @@ export class MasterServicesController {
     return mapPresignMasterServiceImagesHttpResponse(output);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id/images')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async deleteMasterServiceImages(
-    @Param() params: Record<string, unknown>,
-    @Body() body: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(deleteMasterServiceImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload удаления фотографий услуги',
+    })
+    payload: IDeleteMasterServiceImagesPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.masterServiceValidator.validateIdParam(params);
-
-    const payload =
-      this.masterServiceValidator.validateDeleteImagesPayload(body);
-
     const input = payloadToDeleteMasterServiceImagesInput(
-      id,
+      params.id,
       payload,
       user,
       metadata.isStaffUser,
@@ -192,18 +226,24 @@ export class MasterServicesController {
     return mapDeleteMasterServiceImagesHttpResponse(output);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async updateMasterService(
-    @Param() params: Record<string, unknown>,
-    @Body() body: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(updateMasterServicePayloadSchema, {
+      errorMessage: 'Некорректный payload обновления услуги мастера',
+    })
+    payload: IUpdateMasterServicePayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.masterServiceValidator.validateIdParam(params);
-    const payload = this.masterServiceValidator.validateUpdatePayload(body);
     const input = payloadToUpdateMasterServiceInput(
-      id,
+      params.id,
       payload,
       user,
       metadata.isStaffUser,
@@ -212,16 +252,20 @@ export class MasterServicesController {
     return mapUpdateMasterServiceHttpResponse(output);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
   async deleteMasterService(
-    @Param() params: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.masterServiceValidator.validateIdParam(params);
     const input = payloadToDeleteMasterServiceInput(
-      id,
+      params.id,
       user,
       metadata.isStaffUser,
     );

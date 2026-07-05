@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { JSONSchemaType } from 'ajv';
 import {
   FileAccessLevel,
   FileOwnerType,
@@ -26,7 +26,8 @@ const fileAccessLevelValues = Object.values(FileAccessLevel);
 const filePurposeValues = Object.values(FilePurpose);
 const fileTypeValues = Object.values(FileType);
 
-export const presignedUploadPayloadSchema = {
+export const presignedUploadPayloadSchema: JSONSchemaType<IPresignedUploadPayload> =
+  {
     type: 'object',
     properties: {
       files: {

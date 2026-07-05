@@ -1,14 +1,16 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { isStaffRoleIdentifier } from 'src/modules/authorization/domain/policies/is-staff-role-identifier.policy';
-import { ERoleIdentifier } from 'src/modules/authorization/domain/entities/role';
-import { IGetMetadata } from '../../domain/decorators/i-get-metadata';
-import { ISessionUser } from '../../domain/i-session-user';
+import { ERoleIdentifier } from '@modules/authorization/domain/entities/role';
+import { isStaffRoleIdentifier } from '@modules/authorization/domain/policies/is-staff-role-identifier.policy';
+import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
+import type { ISessionUser } from '@shared/domain/i-session-user';
 
 export const GetMetadata = createParamDecorator<unknown, IGetMetadata>(
-  (data, ctx: ExecutionContext) => {
+  (_data, ctx: ExecutionContext) => {
     const user = ctx.switchToHttp().getRequest<{ user: ISessionUser }>()?.user;
 
-    if (!user) return DEFAULT_METADATA;
+    if (!user) {
+      return DEFAULT_METADATA;
+    }
 
     return {
       isStaffUser: isStaffRoleIdentifier(user.roleIdentifier),

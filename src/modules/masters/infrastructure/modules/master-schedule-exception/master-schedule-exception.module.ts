@@ -11,13 +11,11 @@ import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/ma
 import type { IMasterScheduleExceptionRepository } from '../../../domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
 import { MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN } from '../../../domain/repositories/master-schedule-exception/master-schedule-exception.repository.tokens';
 import { PrismaMasterScheduleExceptionRepository } from '../../persistence/repositories/master-schedule-exception/prisma-master-schedule-exception.repository';
-import { MasterScheduleExceptionValidator } from '../../../presentation/http/validation/master-schedule-exception.validator';
 import { MasterProfileModule } from '../master-profile/master-profile.module';
 
 @Module({
   imports: [MasterProfileModule],
   providers: [
-    MasterScheduleExceptionValidator,
     {
       provide: MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
       useClass: PrismaMasterScheduleExceptionRepository,
@@ -91,7 +89,6 @@ import { MasterProfileModule } from '../master-profile/master-profile.module';
   ],
   exports: [
     MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
-    MasterScheduleExceptionValidator,
     GetMasterScheduleExceptionsUseCase,
     GetMasterScheduleExceptionByIdUseCase,
     CreateMasterScheduleExceptionUseCase,

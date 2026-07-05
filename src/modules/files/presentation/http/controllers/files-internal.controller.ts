@@ -1,11 +1,6 @@
-import {
-  Body,
-  Controller,
-  Headers,
-  Post,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { FileUploadedUseCase } from '../../../application/use-cases/file/file-uploaded.use-case';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { FileUploadedUseCase } from '@modules/files/application/use-cases/file/file-uploaded.use-case';
+import { InternalWebhookGuard } from '@modules/files/presentation/guards/internal-webhook.guard';
 import { mapProcessMinioEventHttpResponse } from '../response/map-process-minio-event-response';
 
 type MinioWebhookPayload = {
@@ -30,18 +25,8 @@ export class FilesInternalController {
   constructor(private readonly fileUploadedUseCase: FileUploadedUseCase) {}
 
   @Post('minio-events')
-  async handleMinioEvent(
-    @Body() body: MinioWebhookPayload,
-    @Headers('x-minio-webhook-secret') secret?: string,
-    @Headers('authorization') authorization?: string,
-  ) {
-    const expectedSecret = process.env.MINIO_WEBHOOK_SECRET;
-    const tokenFromAuth = authorization?.replace(/^Bearer\s+/i, '');
-    const providedSecret = secret ?? tokenFromAuth;
-    if (expectedSecret && providedSecret !== expectedSecret) {
-      throw new UnauthorizedException('Invalid webhook secret');
-    }
-
+  @UseGuards(InternalWebhookGuard)
+  async handleMinioEvent(@Body() body: MinioWebhookPayload) {
     const record = body.Records?.[0];
     if (!record || body.EventName !== 's3:ObjectCreated:Put') {
       return mapProcessMinioEventHttpResponse(false);

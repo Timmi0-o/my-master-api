@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { UsersModule } from '../users/users.module';
 import { MastersModule } from '../masters/masters.module';
 import { AppointmentModule } from './infrastructure/modules/appointment/appointment.module';
@@ -14,6 +15,7 @@ import { AppointmentsController } from './presentation/http/controllers/appointm
     forwardRef(() => MastersModule),
     UsersModule,
     AuthModule,
+    AuthorizationModule,
     AppointmentModule,
     AppointmentChatModule,
     AppointmentChatMessageModule,

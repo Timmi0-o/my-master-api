@@ -28,7 +28,7 @@ alwaysApply: false
 - Use-case возвращает `I*ApplicationOutput`, не HTTP-ответ.
 - **Use-case не вызывает другой use-case** — оркестрация нескольких операций только в controller.
 - **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/<entity>/`.
-- HTTP: validator → `payload-to-*-input.ts` в `presentation/http/mappers/<entity>/` → `useCase.execute(input)`.
+- HTTP: `@HttpBody` / `@HttpQuery` / `@HttpParams` (AJV schema) → `payload-to-*-input.ts` в `presentation/http/mappers/<entity>/` → `useCase.execute(input)`.
 - Оркестрация в controller: после `execute` первого use-case — `output-*-to-*-input.ts` → `secondUseCase.execute(...)`.
 - Mutate/get-by-id: `actor: { userId, isStaffUser }` внутри application input.
 - List: `payload-to-find-many-params.mapper.ts` → `FindManyParams` (без actor, visibility в mapper).
@@ -58,4 +58,21 @@ alwaysApply: false
   - `permissions` — OR-семантика; `SUPER_ADMIN` bypass.
 - `@AuthorizedCaller()` — caller из request после guard (permissions, roleIdentifier).
 - Management API: `GET /permissions`, `GET /roles`, role-permissions grant/revoke, `PATCH /users/:id/role` — permission `rbac.update`.
-- `isStaffUser` в `IGetMetadata` — временная совместимость; новые endpoint'ы — через `@Authorize` и permissions.
+- `isStaffUser` в `IGetMetadata` — deprecated; предпочитать `@Authorize` + domain policies `ensure*Accessible`.
+
+## HTTP validation (v2)
+
+- Схемы: `presentation/http/validation/schemas/*.schema.ts` + `*.types.ts` (AJV `JSONSchemaType`).
+- Декораторы: `@HttpBody(schema)`, `@HttpQuery(schema)`, `@HttpParams(schema)` из `@shared/presentation/http/decorators`.
+- Preprocess для list query: `normalizeListQueryRaw` из `@shared/presentation/http/helpers/normalize-list-query-raw`.
+- Preprocess для path params: `normalizeIdParam` / `normalizeParams` из `@shared/presentation/http/helpers/normalize-id-param`.
+- Публичные endpoints: `@PublicEndpoint()` из `@shared/presentation/decorators/public-endpoint.decorator`.
+- **Не** использовать `*Validator` classes и `BaseValidator`.
+
+## HTTP vs RPC (tourgis)
+
+| RPC (geo-service) | HTTP (my-master-api) |
+|-------------------|----------------------|
+| `@MessagePattern` | `@Get/@Post/@Patch/@Delete` |
+| `@RpcPayload(schema)` | `@HttpBody` / `@HttpQuery` / `@HttpParams` |
+| `@RpcAuth()` | `@AuthorizedCaller()` / `@AuthenticatedUser()` |

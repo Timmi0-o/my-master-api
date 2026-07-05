@@ -8,13 +8,11 @@ import type { IUserRepository } from '../../../domain/repositories/user/i-user.r
 import { USER_REPOSITORY_TOKEN } from '../../../domain/repositories/user/user.repository.tokens';
 import { GetUsersUseCase } from '../../../application/use-cases/user/get-users.use-case';
 import { PrismaUserRepository } from '../../persistence/repositories/user/prisma-user.repository';
-import { UserValidator } from '../../../presentation/http/validation/user.validator';
-import { AuthorizationModule } from 'src/modules/authorization/authorization.module';
+import { AuthorizationModule } from '@modules/authorization/authorization.module';
 
 @Module({
   imports: [AuthorizationModule],
   providers: [
-    UserValidator,
     {
       provide: USER_REPOSITORY_TOKEN,
       useClass: PrismaUserRepository,
@@ -46,7 +44,6 @@ import { AuthorizationModule } from 'src/modules/authorization/authorization.mod
   ],
   exports: [
     USER_REPOSITORY_TOKEN,
-    UserValidator,
     GetUsersUseCase,
     AssignUserRoleUseCase,
   ],

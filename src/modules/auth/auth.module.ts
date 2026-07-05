@@ -25,7 +25,6 @@ import { TokenService } from './infrastructure/services/token.service';
 import { JwtAccessStrategy } from './infrastructure/strategies/jwt-access.strategy';
 import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { AuthController } from './presentation/http/controllers/auth.controller';
-import { AuthValidator } from './presentation/http/validation/auth.validator';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { AuthValidator } from './presentation/http/validation/auth.validator';
   ],
   controllers: [AuthController],
   providers: [
-    AuthValidator,
     JwtAuthGuard,
     TokenService,
     {

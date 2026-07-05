@@ -1,30 +1,32 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
-import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
-import { Permissions } from 'src/modules/authorization/domain/permissions/permission-names';
-import { Authorize } from 'src/modules/authorization/presentation/decorators/authorize.decorator';
-import { AuthorizeGuard } from 'src/modules/authorization/presentation/guards/authorize.guard';
-import { CreateRootFolderUseCase } from 'src/modules/files/application/use-cases/folder/create-root-folder.use-case';
-import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
-import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
-import { CreateUserProfileUseCase } from 'src/modules/users/application/use-cases/user-profile/create-user-profile.use-case';
-import { DeleteUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/delete-user-profile-by-id.use-case';
-import { GetMyUserProfileUseCase } from 'src/modules/users/application/use-cases/user-profile/get-my-user-profile.use-case';
-import { GetUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/get-user-profile-by-id.use-case';
-import { GetUserProfilesUseCase } from 'src/modules/users/application/use-cases/user-profile/get-user-profiles.use-case';
-import { UpdateUserProfileByIdUseCase } from 'src/modules/users/application/use-cases/user-profile/update-user-profile-by-id.use-case';
+import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
+import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
+import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { CreateRootFolderUseCase } from '@modules/files/application/use-cases/folder/create-root-folder.use-case';
+import { CreateUserProfileUseCase } from '@modules/users/application/use-cases/user-profile/create-user-profile.use-case';
+import { DeleteUserProfileByIdUseCase } from '@modules/users/application/use-cases/user-profile/delete-user-profile-by-id.use-case';
+import { GetMyUserProfileUseCase } from '@modules/users/application/use-cases/user-profile/get-my-user-profile.use-case';
+import { GetUserProfileByIdUseCase } from '@modules/users/application/use-cases/user-profile/get-user-profile-by-id.use-case';
+import { GetUserProfilesUseCase } from '@modules/users/application/use-cases/user-profile/get-user-profiles.use-case';
+import { UpdateUserProfileByIdUseCase } from '@modules/users/application/use-cases/user-profile/update-user-profile-by-id.use-case';
+import { createUserProfilePayloadSchema } from '@modules/users/presentation/http/validation/schemas/create-user-profile-payload.schema';
+import type { ICreateUserProfilePayload } from '@modules/users/presentation/http/validation/schemas/create-user-profile-payload.types';
+import { getByIdQuerySchema } from '@modules/users/presentation/http/validation/schemas/get-by-id-query.schema';
+import type { IGetByIdQueryPayload } from '@modules/users/presentation/http/validation/schemas/get-by-id-query.types';
+import { getUserProfilesQuerySchema } from '@modules/users/presentation/http/validation/schemas/get-user-profiles-query.schema';
+import type { IGetUserProfilesQueryPayload } from '@modules/users/presentation/http/validation/schemas/get-user-profiles-query.types';
+import { idParamSchema } from '@modules/users/presentation/http/validation/schemas/id-param.schema';
+import type { IIdParamPayload } from '@modules/users/presentation/http/validation/schemas/id-param.types';
+import { updateUserProfilePayloadSchema } from '@modules/users/presentation/http/validation/schemas/update-user-profile-payload.schema';
+import type { IUpdateUserProfilePayload } from '@modules/users/presentation/http/validation/schemas/update-user-profile-payload.types';
+import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
+import type { ISessionUser } from '@shared/domain/i-session-user';
+import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
+import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
+import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { outputCreateUserProfileToCreateRootFolderInput } from '../mappers/user-profile/output-create-user-profile-to-create-root-folder-input';
 import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload-to-create-user-profile-input';
 import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
@@ -38,7 +40,6 @@ import { mapGetMyUserProfileHttpResponse } from '../response/map-get-my-user-pro
 import { mapGetUserProfileByIdHttpResponse } from '../response/map-get-user-profile-by-id-response';
 import { mapGetUserProfilesHttpResponse } from '../response/map-get-user-profiles-response';
 import { mapUpdateUserProfileHttpResponse } from '../response/map-update-user-profile-response';
-import { UserProfileValidator } from '../validation/user-profile.validator';
 
 @Controller({ path: 'user-profiles', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -51,7 +52,6 @@ export class UserProfilesController {
     private readonly createRootFolderUseCase: CreateRootFolderUseCase,
     private readonly updateUserProfileByIdUseCase: UpdateUserProfileByIdUseCase,
     private readonly deleteUserProfileByIdUseCase: DeleteUserProfileByIdUseCase,
-    private readonly userProfileValidator: UserProfileValidator,
   ) {}
 
   @Get()
@@ -60,11 +60,14 @@ export class UserProfilesController {
     permissions: [Permissions.userProfiles.read],
   })
   async getUserProfiles(
-    @Query() query: IRawQuery,
+    @HttpQuery(getUserProfilesQuerySchema, {
+      preprocess: normalizeListQueryRaw,
+      errorMessage:
+        'Некорректные параметры запроса списка профилей пользователей',
+    })
+    payload: IGetUserProfilesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload =
-      this.userProfileValidator.validateGetUserProfilesQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getUserProfilesUseCase.execute(params);
     return mapGetUserProfilesHttpResponse(output, payload);
@@ -73,11 +76,13 @@ export class UserProfilesController {
   @Get('me')
   @Authorize({ kind: 'authenticated' })
   async getMyUserProfile(
-    @Query() query: IRawQuery,
+    @HttpQuery(getByIdQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса',
+    })
+    queryPayload: IGetByIdQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const queryPayload = this.userProfileValidator.validateGetByIdQuery(query);
     const input = payloadToGetMyUserProfileInput(
       queryPayload,
       user,
@@ -93,15 +98,20 @@ export class UserProfilesController {
     permissions: [Permissions.userProfiles.read],
   })
   async getUserProfileById(
-    @Param() params: Record<string, unknown>,
-    @Query() query: IRawQuery,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpQuery(getByIdQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса',
+    })
+    queryPayload: IGetByIdQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.userProfileValidator.validateIdParam(params);
-    const queryPayload = this.userProfileValidator.validateGetByIdQuery(query);
     const input = payloadToGetUserProfileByIdInput(
-      id,
+      params.id,
       queryPayload,
       user,
       metadata.isStaffUser,
@@ -116,11 +126,13 @@ export class UserProfilesController {
     permissions: [Permissions.userProfiles.create],
   })
   async createUserProfile(
-    @Body() body: Record<string, unknown>,
+    @HttpBody(createUserProfilePayloadSchema, {
+      errorMessage: 'Некорректный payload создания профиля пользователя',
+    })
+    payload: ICreateUserProfilePayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.userProfileValidator.validateCreatePayload(body);
     const input = payloadToCreateUserProfileInput(
       payload,
       user,
@@ -139,15 +151,20 @@ export class UserProfilesController {
     permissions: [Permissions.userProfiles.update],
   })
   async updateUserProfile(
-    @Param() params: Record<string, unknown>,
-    @Body() body: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(updateUserProfilePayloadSchema, {
+      errorMessage: 'Некорректный payload обновления профиля пользователя',
+    })
+    payload: IUpdateUserProfilePayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.userProfileValidator.validateIdParam(params);
-    const payload = this.userProfileValidator.validateUpdatePayload(body);
     const input = payloadToUpdateUserProfileInput(
-      id,
+      params.id,
       payload,
       user,
       metadata.isStaffUser,
@@ -162,13 +179,16 @@ export class UserProfilesController {
     permissions: [Permissions.userProfiles.delete],
   })
   async deleteUserProfile(
-    @Param() params: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.userProfileValidator.validateIdParam(params);
     const input = payloadToDeleteUserProfileInput(
-      id,
+      params.id,
       user,
       metadata.isStaffUser,
     );

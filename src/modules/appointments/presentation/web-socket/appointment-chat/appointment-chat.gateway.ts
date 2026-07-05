@@ -9,8 +9,8 @@ import {
 } from '@nestjs/websockets';
 import type { Subscription } from 'rxjs';
 import type { Server } from 'socket.io';
-import { AssertAppointmentChatAccessUseCase } from '../../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
-import { AppointmentChatRealtimeEventBus } from '../../../infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
+import { AssertAppointmentChatAccessUseCase } from '@modules/appointments/application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
+import { AppointmentChatRealtimeEventBus } from '@modules/appointments/infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import {
   APPOINTMENT_CHAT_WS_EVENTS,
   APPOINTMENT_CHAT_WS_ROOM_NAME,
@@ -20,7 +20,7 @@ import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { mapAppointmentChatMessageToWsPayload } from './mappers/map-appointment-chat-message-to-ws-payload';
 import { mapWsErrorResponse } from './mappers/map-ws-error-response';
 import { payloadToAssertAppointmentChatAccessInput } from './mappers/payload-to-assert-appointment-chat-access-input';
-import { AppointmentChatWsValidator } from './validation/appointment-chat-ws.validator';
+import { validateJoinAppointmentChatPayload } from './validation/validate-join-appointment-chat-payload';
 
 @WebSocketGateway({
   namespace: '/v1/appointment-chats',
@@ -35,7 +35,6 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
   constructor(
     private readonly eventBus: AppointmentChatRealtimeEventBus,
     private readonly wsJwtAuthGuard: WsJwtAuthGuard,
-    private readonly wsValidator: AppointmentChatWsValidator,
     private readonly assertAccessUseCase: AssertAppointmentChatAccessUseCase,
   ) {}
 
@@ -90,7 +89,10 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
-      const payload = this.wsValidator.validateJoinPayload(body);
+      const payload = validateJoinAppointmentChatPayload(
+        body,
+        'Некорректные данные для подключения к чату',
+      );
 
       await this.assertAccessUseCase.execute(
         payloadToAssertAppointmentChatAccessInput(payload, client.data.user),
@@ -111,7 +113,10 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
-      const payload = this.wsValidator.validateLeavePayload(body);
+      const payload = validateJoinAppointmentChatPayload(
+        body,
+        'Некорректные данные для выхода из чата',
+      );
       await client.leave(APPOINTMENT_CHAT_WS_ROOM_NAME(payload.chatId));
 
       return { result: { data: { left: true } } };

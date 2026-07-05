@@ -1,3 +1,4 @@
+import { JSONSchemaType } from 'ajv';
 import { idSchema } from '@shared/presentation/http/validation/schemas/common.schemas';
 import {
   FileAccessLevel,
@@ -34,7 +35,7 @@ const filePurposeValues = Object.values(FilePurpose);
 const fileTypeValues = Object.values(FileType);
 const fileStatusValues = Object.values(FileStatus);
 
-export const createFilesPayloadSchema = {
+export const createFilesPayloadSchema: JSONSchemaType<ICreateFilesPayload> = {
   type: 'object',
   properties: {
     files: {
@@ -43,7 +44,7 @@ export const createFilesPayloadSchema = {
       items: {
         type: 'object',
         properties: {
-          folderId: { type: 'string', nullable: true },
+          folderId: { ...idSchema, nullable: true },
           fileName: { type: 'string', minLength: 1 },
           originalName: { type: 'string', minLength: 1 },
           mimeType: { type: 'string', nullable: true },
@@ -58,7 +59,7 @@ export const createFilesPayloadSchema = {
           fileType: { type: 'string', enum: fileTypeValues },
           ownerType: { type: 'string', enum: fileOwnerTypeValues },
           ownerKind: { type: 'string', nullable: true },
-          ownerId: { type: 'string', nullable: true },
+          ownerId: { ...idSchema, nullable: true },
           accessLevel: { type: 'string', enum: fileAccessLevelValues },
           purpose: { type: 'string', enum: filePurposeValues },
           metadata: {

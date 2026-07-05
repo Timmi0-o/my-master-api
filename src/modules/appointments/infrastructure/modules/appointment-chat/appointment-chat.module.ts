@@ -17,10 +17,8 @@ import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
-import { AppointmentChatValidator } from '../../../presentation/http/validation/appointment-chat.validator';
 import { AppointmentChatGateway } from '../../../presentation/web-socket/appointment-chat/appointment-chat.gateway';
 import { WsJwtAuthGuard } from '../../../presentation/web-socket/appointment-chat/guards/ws-jwt-auth.guard';
-import { AppointmentChatWsValidator } from '../../../presentation/web-socket/appointment-chat/validation/appointment-chat-ws.validator';
 import { PrismaAppointmentChatRepository } from '../../persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
 import { AppointmentChatRealtimeEventBus } from '../../web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import { SocketIoAppointmentChatRealtimePublisher } from '../../web-socket/appointment-chat/socket-io-appointment-chat-realtime.publisher';
@@ -34,8 +32,6 @@ import { AppointmentModule } from '../appointment/appointment.module';
     JwtModule.register({}),
   ],
   providers: [
-    AppointmentChatValidator,
-    AppointmentChatWsValidator,
     AppointmentChatGateway,
     WsJwtAuthGuard,
     {
@@ -118,8 +114,6 @@ import { AppointmentModule } from '../appointment/appointment.module';
   exports: [
     APPOINTMENT_CHAT_REPOSITORY_TOKEN,
     APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
-    AppointmentChatValidator,
-    AppointmentChatWsValidator,
     AppointmentChatGateway,
     WsJwtAuthGuard,
     GetAppointmentChatsUseCase,

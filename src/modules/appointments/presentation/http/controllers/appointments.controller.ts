@@ -1,28 +1,32 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  ForbiddenException,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { AuthenticatedUser } from 'src/modules/auth/presentation/decorators/authenticated-user.decorator';
-import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
-import { CreateAppointmentUseCase } from 'src/modules/appointments/application/use-cases/appointment/create-appointment.use-case';
-import { DeleteAppointmentByIdUseCase } from 'src/modules/appointments/application/use-cases/appointment/delete-appointment-by-id.use-case';
-import { GetAppointmentByIdUseCase } from 'src/modules/appointments/application/use-cases/appointment/get-appointment-by-id.use-case';
-import { GetAppointmentsUseCase } from 'src/modules/appointments/application/use-cases/appointment/get-appointments.use-case';
-import { GetMyAppointmentsUseCase } from 'src/modules/appointments/application/use-cases/appointment/get-my-appointments.use-case';
-import { GetMyClientsAppointmentsUseCase } from 'src/modules/appointments/application/use-cases/appointment/get-my-clients-appointments.use-case';
-import { UpdateAppointmentByIdUseCase } from 'src/modules/appointments/application/use-cases/appointment/update-appointment-by-id.use-case';
-import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-metadata';
-import type { IRawQuery } from 'src/modules/shared/domain/i-query.dto';
-import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
-import { GetMetadata } from 'src/modules/shared/presentation/decorators/get-metadata';
+import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
+import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
+import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { CreateAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/create-appointment.use-case';
+import { DeleteAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/delete-appointment-by-id.use-case';
+import { GetAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/get-appointment-by-id.use-case';
+import { GetAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-appointments.use-case';
+import { GetMyAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-appointments.use-case';
+import { GetMyClientsAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-clients-appointments.use-case';
+import { UpdateAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/update-appointment-by-id.use-case';
+import { createAppointmentPayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/create-appointment-payload.schema';
+import type { ICreateAppointmentPayload } from '@modules/appointments/presentation/http/validation/schemas/create-appointment-payload.types';
+import { getAppointmentsQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointments-query.schema';
+import type { IGetAppointmentsQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointments-query.types';
+import { getByIdQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.schema';
+import type { IGetByIdQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.types';
+import { idParamSchema } from '@modules/appointments/presentation/http/validation/schemas/id-param.schema';
+import type { IIdParamPayload } from '@modules/appointments/presentation/http/validation/schemas/id-param.types';
+import { updateAppointmentPayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/update-appointment-payload.schema';
+import type { IUpdateAppointmentPayload } from '@modules/appointments/presentation/http/validation/schemas/update-appointment-payload.types';
+import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
+import type { ISessionUser } from '@shared/domain/i-session-user';
+import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
+import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
+import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateAppointmentInput } from '../mappers/appointment/payload-to-create-appointment-input';
 import { payloadToDeleteAppointmentInput } from '../mappers/appointment/payload-to-delete-appointment-input';
 import { payloadToFindManyParams } from '../mappers/appointment/payload-to-find-many-params.mapper';
@@ -35,10 +39,9 @@ import { mapGetAppointmentByIdHttpResponse } from '../response/map-get-appointme
 import { mapCreateAppointmentHttpResponse } from '../response/map-create-appointment-response';
 import { mapUpdateAppointmentHttpResponse } from '../response/map-update-appointment-response';
 import { mapDeleteAppointmentHttpResponse } from '../response/map-delete-appointment-response';
-import { AppointmentValidator } from '../validation/appointment.validator';
 
 @Controller({ path: 'appointments', version: '1' })
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class AppointmentsController {
   constructor(
     private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
@@ -48,16 +51,22 @@ export class AppointmentsController {
     private readonly createAppointmentUseCase: CreateAppointmentUseCase,
     private readonly updateAppointmentByIdUseCase: UpdateAppointmentByIdUseCase,
     private readonly deleteAppointmentByIdUseCase: DeleteAppointmentByIdUseCase,
-    private readonly appointmentValidator: AppointmentValidator,
   ) {}
 
   @Get('me')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.read],
+  })
   async getMyAppointments(
-    @Query() query: IRawQuery,
+    @HttpQuery(getAppointmentsQuerySchema, {
+      preprocess: normalizeListQueryRaw,
+      errorMessage: 'Некорректные параметры запроса списка записей',
+    })
+    payload: IGetAppointmentsQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.appointmentValidator.validateGetAppointmentsQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const input = payloadToGetMyAppointmentsInput(params, user, metadata.isStaffUser);
     const output = await this.getMyAppointmentsUseCase.execute(input);
@@ -65,12 +74,19 @@ export class AppointmentsController {
   }
 
   @Get('my-clients')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.read],
+  })
   async getMyClientsAppointments(
-    @Query() query: IRawQuery,
+    @HttpQuery(getAppointmentsQuerySchema, {
+      preprocess: normalizeListQueryRaw,
+      errorMessage: 'Некорректные параметры запроса списка записей',
+    })
+    payload: IGetAppointmentsQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.appointmentValidator.validateGetAppointmentsQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const input = payloadToGetMyClientsAppointmentsInput(
       params,
@@ -82,30 +98,40 @@ export class AppointmentsController {
   }
 
   @Get()
+  @Authorize({ kind: 'staff-only' })
   async getAppointments(
-    @Query() query: IRawQuery,
+    @HttpQuery(getAppointmentsQuerySchema, {
+      preprocess: normalizeListQueryRaw,
+      errorMessage: 'Некорректные параметры запроса списка записей',
+    })
+    payload: IGetAppointmentsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    if (!metadata.isStaffUser) {
-      throw new ForbiddenException('Staff access required');
-    }
-    const payload = this.appointmentValidator.validateGetAppointmentsQuery(query);
     const params = payloadToFindManyParams(payload, metadata);
     const output = await this.getAppointmentsUseCase.execute(params);
     return mapGetAppointmentsHttpResponse(output, payload);
   }
 
   @Get(':id')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.read],
+  })
   async getAppointmentById(
-    @Param() params: Record<string, unknown>,
-    @Query() query: IRawQuery,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpQuery(getByIdQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса',
+    })
+    queryPayload: IGetByIdQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.appointmentValidator.validateIdParam(params);
-    const queryPayload = this.appointmentValidator.validateGetByIdQuery(query);
     const input = payloadToGetAppointmentByIdInput(
-      id,
+      params.id,
       queryPayload,
       user,
       metadata.isStaffUser,
@@ -115,12 +141,18 @@ export class AppointmentsController {
   }
 
   @Post()
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.create],
+  })
   async createAppointment(
-    @Body() body: Record<string, unknown>,
+    @HttpBody(createAppointmentPayloadSchema, {
+      errorMessage: 'Некорректный payload создания записи',
+    })
+    payload: ICreateAppointmentPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const payload = this.appointmentValidator.validateCreatePayload(body);
     const input = payloadToCreateAppointmentInput(
       payload,
       user,
@@ -131,16 +163,25 @@ export class AppointmentsController {
   }
 
   @Patch(':id')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.update],
+  })
   async updateAppointment(
-    @Param() params: Record<string, unknown>,
-    @Body() body: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(updateAppointmentPayloadSchema, {
+      errorMessage: 'Некорректный payload обновления записи',
+    })
+    payload: IUpdateAppointmentPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.appointmentValidator.validateIdParam(params);
-    const payload = this.appointmentValidator.validateUpdatePayload(body);
     const input = payloadToUpdateAppointmentInput(
-      id,
+      params.id,
       payload,
       user,
       metadata.isStaffUser,
@@ -150,14 +191,18 @@ export class AppointmentsController {
   }
 
   @Delete(':id')
+  @Authorize({ kind: 'authenticated' })
   async deleteAppointment(
-    @Param() params: Record<string, unknown>,
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const { id } = this.appointmentValidator.validateIdParam(params);
     const input = payloadToDeleteAppointmentInput(
-      id,
+      params.id,
       user,
       metadata.isStaffUser,
     );

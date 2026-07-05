@@ -10,11 +10,8 @@ import { UpdateMasterProfileByIdUseCase } from '../../../application/use-cases/m
 import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-profile/master-profile.repository.tokens';
 import { PrismaMasterProfileRepository } from '../../persistence/repositories/master-profile/prisma-master-profile.repository';
-import { MasterProfileValidator } from '../../../presentation/http/validation/master-profile.validator';
-
 @Module({
   providers: [
-    MasterProfileValidator,
     {
       provide: MASTER_PROFILE_REPOSITORY_TOKEN,
       useClass: PrismaMasterProfileRepository,
@@ -64,7 +61,6 @@ import { MasterProfileValidator } from '../../../presentation/http/validation/ma
   ],
   exports: [
     MASTER_PROFILE_REPOSITORY_TOKEN,
-    MasterProfileValidator,
     GetMasterProfilesUseCase,
     GetMasterProfileByIdUseCase,
     GetMyMasterProfileUseCase,

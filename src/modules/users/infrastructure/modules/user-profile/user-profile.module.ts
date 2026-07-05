@@ -10,11 +10,8 @@ import { UpdateUserProfileByIdUseCase } from '../../../application/use-cases/use
 import type { IUserProfileRepository } from '../../../domain/repositories/user-profile/i-user-profile.repository';
 import { USER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/user-profile/user-profile.repository.tokens';
 import { PrismaUserProfileRepository } from '../../persistence/repositories/user-profile/prisma-user-profile.repository';
-import { UserProfileValidator } from '../../../presentation/http/validation/user-profile.validator';
-
 @Module({
   providers: [
-    UserProfileValidator,
     {
       provide: USER_PROFILE_REPOSITORY_TOKEN,
       useClass: PrismaUserProfileRepository,
@@ -64,7 +61,6 @@ import { UserProfileValidator } from '../../../presentation/http/validation/user
   ],
   exports: [
     USER_PROFILE_REPOSITORY_TOKEN,
-    UserProfileValidator,
     GetUserProfilesUseCase,
     GetUserProfileByIdUseCase,
     GetMyUserProfileUseCase,

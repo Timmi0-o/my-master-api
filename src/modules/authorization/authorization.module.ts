@@ -24,7 +24,6 @@ import { PrismaRoleRepository } from './infrastructure/persistence/repositories/
 import { PermissionsController } from './presentation/http/controllers/permissions.controller';
 import { RolePermissionsController } from './presentation/http/controllers/role-permissions.controller';
 import { RolesController } from './presentation/http/controllers/roles.controller';
-import { AuthorizationValidator } from './presentation/http/validation/authorization.validator';
 import { AuthorizeGuard } from './presentation/guards/authorize.guard';
 
 @Module({
@@ -34,7 +33,6 @@ import { AuthorizeGuard } from './presentation/guards/authorize.guard';
     RolePermissionsController,
   ],
   providers: [
-    AuthorizationValidator,
     AuthorizeGuard,
     {
       provide: ROLE_REPOSITORY_TOKEN,
@@ -140,7 +138,6 @@ import { AuthorizeGuard } from './presentation/guards/authorize.guard';
   ],
   exports: [
     AuthorizeGuard,
-    AuthorizationValidator,
     ROLE_REPOSITORY_TOKEN,
     PERMISSION_REPOSITORY_TOKEN,
     ROLE_PERMISSION_REPOSITORY_TOKEN,

@@ -20,7 +20,6 @@ import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/
 import type { IAppointmentChatMessageRepository } from '../../../domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-message/appointment-chat-message.repository.tokens';
 import { PrismaAppointmentRepository } from '../../persistence/repositories/appointment/prisma-appointment.repository';
-import { AppointmentValidator } from '../../../presentation/http/validation/appointment.validator';
 import { AppointmentChatModule } from '../appointment-chat/appointment-chat.module';
 import { AppointmentChatMessageModule } from '../appointment-chat-message/appointment-chat-message.module';
 
@@ -31,7 +30,6 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
     forwardRef(() => AppointmentChatMessageModule),
   ],
   providers: [
-    AppointmentValidator,
     {
       provide: APPOINTMENT_REPOSITORY_TOKEN,
       useClass: PrismaAppointmentRepository,
@@ -128,7 +126,6 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
   ],
   exports: [
     APPOINTMENT_REPOSITORY_TOKEN,
-    AppointmentValidator,
     GetAppointmentsUseCase,
     GetMyAppointmentsUseCase,
     GetMyClientsAppointmentsUseCase,

@@ -26,7 +26,6 @@ import type { IMasterServiceRepository } from '../../../domain/repositories/mast
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service/master-service.repository.tokens';
 import type { IMasterWeeklyScheduleRepository } from '../../../domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import { MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-weekly-schedule/master-weekly-schedule.repository.tokens';
-import { MasterServiceValidator } from '../../../presentation/http/validation/master-service.validator';
 import { PrismaMasterServiceImageRepository } from '../../persistence/repositories/master-service-image/prisma-master-service-image.repository';
 import { PrismaMasterServiceRepository } from '../../persistence/repositories/master-service/prisma-master-service.repository';
 import { MasterProfileModule } from '../master-profile/master-profile.module';
@@ -42,7 +41,6 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
     forwardRef(() => AppointmentsModule),
   ],
   providers: [
-    MasterServiceValidator,
     {
       provide: MASTER_SERVICE_REPOSITORY_TOKEN,
       useClass: PrismaMasterServiceRepository,
@@ -204,7 +202,6 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
   exports: [
     MASTER_SERVICE_REPOSITORY_TOKEN,
     MASTER_SERVICE_IMAGE_REPOSITORY_TOKEN,
-    MasterServiceValidator,
     GetMasterServicesUseCase,
     GetMyServicesUseCase,
     GetMasterServiceByIdUseCase,

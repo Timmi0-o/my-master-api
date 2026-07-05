@@ -15,6 +15,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
+      "@modules/*": ["src/modules/*"],
       "@shared/*": ["src/modules/shared/*"]
     },
     "incremental": true,

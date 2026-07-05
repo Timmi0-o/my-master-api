@@ -11,13 +11,11 @@ import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/ma
 import type { IMasterWeeklyScheduleRepository } from '../../../domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import { MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-weekly-schedule/master-weekly-schedule.repository.tokens';
 import { PrismaMasterWeeklyScheduleRepository } from '../../persistence/repositories/master-weekly-schedule/prisma-master-weekly-schedule.repository';
-import { MasterWeeklyScheduleValidator } from '../../../presentation/http/validation/master-weekly-schedule.validator';
 import { MasterProfileModule } from '../master-profile/master-profile.module';
 
 @Module({
   imports: [MasterProfileModule],
   providers: [
-    MasterWeeklyScheduleValidator,
     {
       provide: MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
       useClass: PrismaMasterWeeklyScheduleRepository,
@@ -91,7 +89,6 @@ import { MasterProfileModule } from '../master-profile/master-profile.module';
   ],
   exports: [
     MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
-    MasterWeeklyScheduleValidator,
     GetMasterWeeklySchedulesUseCase,
     GetMasterWeeklyScheduleByIdUseCase,
     CreateMasterWeeklyScheduleUseCase,
