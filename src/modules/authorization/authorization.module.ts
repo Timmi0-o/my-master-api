@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
-import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
+import { AuthGuardsModule } from '@modules/auth/infrastructure/modules/auth-guards/auth-guards.module';
 import type { ITransactionManager } from '@shared/domain/transactions';
-import { GetPermissionsUseCase } from './application/use-cases/permission/get-permissions.use-case';
+import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import { AuthorizeRequestUseCase } from './application/use-cases/auth/authorize-request.use-case';
 import { FindAuthorizationContextByUserIdUseCase } from './application/use-cases/auth/find-authorization-context-by-user-id.use-case';
-import { GrantRolePermissionUseCase } from './application/use-cases/role-permission/grant-role-permission.use-case';
+import { GetPermissionsUseCase } from './application/use-cases/permission/get-permissions.use-case';
 import { GetRolePermissionsUseCase } from './application/use-cases/role-permission/get-role-permissions.use-case';
+import { GrantRolePermissionUseCase } from './application/use-cases/role-permission/grant-role-permission.use-case';
 import { RevokeRolePermissionUseCase } from './application/use-cases/role-permission/revoke-role-permission.use-case';
 import { GetRoleByIdUseCase } from './application/use-cases/role/get-role-by-id.use-case';
 import { GetRolesUseCase } from './application/use-cases/role/get-roles.use-case';
-import type { IAuthorizationContextRepository } from './domain/repositories/authorization-context/i-authorization-context.repository';
 import { AUTHORIZATION_CONTEXT_REPOSITORY_TOKEN } from './domain/repositories/authorization-context/authorization-context.repository.tokens';
+import type { IAuthorizationContextRepository } from './domain/repositories/authorization-context/i-authorization-context.repository';
 import type { IPermissionRepository } from './domain/repositories/permission/i-permission.repository';
 import { PERMISSION_REPOSITORY_TOKEN } from './domain/repositories/permission/permission.repository.tokens';
 import type { IRolePermissionRepository } from './domain/repositories/role-permission/i-role-permission.repository';
@@ -21,12 +22,13 @@ import { PrismaAuthorizationContextRepository } from './infrastructure/persisten
 import { PrismaPermissionRepository } from './infrastructure/persistence/repositories/permission/prisma-permission.repository';
 import { PrismaRolePermissionRepository } from './infrastructure/persistence/repositories/role-permission/prisma-role-permission.repository';
 import { PrismaRoleRepository } from './infrastructure/persistence/repositories/role/prisma-role.repository';
+import { AuthorizeGuard } from './presentation/guards/authorize.guard';
 import { PermissionsController } from './presentation/http/controllers/permissions.controller';
 import { RolePermissionsController } from './presentation/http/controllers/role-permissions.controller';
 import { RolesController } from './presentation/http/controllers/roles.controller';
-import { AuthorizeGuard } from './presentation/guards/authorize.guard';
 
 @Module({
+  imports: [AuthGuardsModule],
   controllers: [
     PermissionsController,
     RolesController,
@@ -73,7 +75,8 @@ import { AuthorizeGuard } from './presentation/guards/authorize.guard';
       useFactory: (
         roleRepository: IRoleRepository,
         rolePermissionRepository: IRolePermissionRepository,
-      ) => new GetRolePermissionsUseCase(roleRepository, rolePermissionRepository),
+      ) =>
+        new GetRolePermissionsUseCase(roleRepository, rolePermissionRepository),
       inject: [ROLE_REPOSITORY_TOKEN, ROLE_PERMISSION_REPOSITORY_TOKEN],
     },
     {

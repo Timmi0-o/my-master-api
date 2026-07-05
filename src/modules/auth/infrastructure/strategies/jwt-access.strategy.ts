@@ -1,9 +1,9 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { EUserStatus } from 'src/modules/users/domain/entities/user';
-import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
-import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
+import type { IUserRepository } from '@modules/users/domain/repositories/user/i-user.repository';
+import { USER_REPOSITORY_TOKEN } from '@modules/users/domain/repositories/user/user.repository.tokens';
+import { EUserStatus } from '@modules/users/domain/entities/user';
 import type { IJwtAccessPayload } from '../../domain/auth.types';
 
 @Injectable()

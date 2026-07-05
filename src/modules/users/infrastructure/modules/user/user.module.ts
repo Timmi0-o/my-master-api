@@ -1,22 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { AuthorizationModule } from '@modules/authorization/authorization.module';
 import type { IRoleRepository } from 'src/modules/authorization/domain/repositories/role/i-role.repository';
 import { ROLE_REPOSITORY_TOKEN } from 'src/modules/authorization/domain/repositories/role/role.repository.tokens';
 import { AssignUserRoleUseCase } from '../../../application/use-cases/user/assign-user-role.use-case';
+import { GetUsersUseCase } from '../../../application/use-cases/user/get-users.use-case';
 import type { IUserRepository } from '../../../domain/repositories/user/i-user.repository';
 import { USER_REPOSITORY_TOKEN } from '../../../domain/repositories/user/user.repository.tokens';
-import { GetUsersUseCase } from '../../../application/use-cases/user/get-users.use-case';
-import { PrismaUserRepository } from '../../persistence/repositories/user/prisma-user.repository';
-import { AuthorizationModule } from '@modules/authorization/authorization.module';
+import { UserRepositoryModule } from '../user-repository/user-repository.module';
 
 @Module({
-  imports: [AuthorizationModule],
+  imports: [UserRepositoryModule, AuthorizationModule],
   providers: [
-    {
-      provide: USER_REPOSITORY_TOKEN,
-      useClass: PrismaUserRepository,
-    },
     {
       provide: GetUsersUseCase,
       useFactory: (userRepository: IUserRepository) =>
@@ -43,7 +39,7 @@ import { AuthorizationModule } from '@modules/authorization/authorization.module
     },
   ],
   exports: [
-    USER_REPOSITORY_TOKEN,
+    UserRepositoryModule,
     GetUsersUseCase,
     AssignUserRoleUseCase,
   ],

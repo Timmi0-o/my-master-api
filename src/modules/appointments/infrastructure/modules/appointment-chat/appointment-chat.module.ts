@@ -4,7 +4,6 @@ import type { ITransactionManager } from '@shared/domain/transactions';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
 import { PrismaUserRepository } from 'src/modules/users/infrastructure/persistence/repositories/user/prisma-user.repository';
-import { AuthModule } from '../../../../auth/auth.module';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
@@ -28,7 +27,6 @@ import { AppointmentModule } from '../appointment/appointment.module';
   imports: [
     forwardRef(() => MastersModule),
     forwardRef(() => AppointmentModule),
-    AuthModule,
     JwtModule.register({}),
   ],
   providers: [
