@@ -22,8 +22,10 @@ export class AuthorizeGuard implements CanActivate {
       authorizedCaller?: unknown;
     }>();
 
+    const user = request.user;
+
     request.authorizedCaller = await this.authorizeRequestUseCase.execute({
-      userId: request.user?.id,
+      userId: user?.id,
       options,
     });
 

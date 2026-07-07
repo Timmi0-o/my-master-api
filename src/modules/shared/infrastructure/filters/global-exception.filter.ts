@@ -32,7 +32,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const message = this.resolveMessage(exceptionResponse, exception);
 
     this.logger.error(
-      `Unhandled exception on ${request.method} ${request.url}`,
+      `${request.method}`,
       JSON.stringify({
         statusCode: status,
         path: request.url,
