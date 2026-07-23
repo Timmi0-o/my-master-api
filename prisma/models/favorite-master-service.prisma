@@ -1,0 +1,18 @@
+model FavoriteMasterService {
+  id String @id @default(uuid())
+
+  userId          String @map("user_id")
+  masterServiceId String @map("master_service_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  masterService MasterService @relation(fields: [masterServiceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, masterServiceId])
+  @@index([masterServiceId])
+  @@index([deletedAt])
+  @@map("FavoriteMasterServices")
+}

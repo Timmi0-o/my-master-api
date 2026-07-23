@@ -27,6 +27,17 @@ import {
   MasterServiceReviewInvalidRatingError,
   MasterServiceReviewNotFoundError,
 } from 'src/modules/masters/domain/entities/master-service-review';
+import {
+  MasterSubscriptionAlreadyExistsError,
+  MasterSubscriptionCannotSubscribeToSelfError,
+  MasterSubscriptionForbiddenError,
+  MasterSubscriptionNotFoundError,
+} from 'src/modules/masters/domain/entities/master-subscription';
+import {
+  FavoriteMasterServiceAlreadyExistsError,
+  FavoriteMasterServiceForbiddenError,
+  FavoriteMasterServiceNotFoundError,
+} from 'src/modules/masters/domain/entities/favorite-master-service';
 
 export const mapMastersDomainError: DomainErrorMapper = (error) => {
   if (
@@ -35,7 +46,9 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterWeeklyScheduleNotFoundError ||
     error instanceof MasterScheduleExceptionNotFoundError ||
     error instanceof MasterServiceImageNotFoundError ||
-    error instanceof MasterServiceReviewNotFoundError
+    error instanceof MasterServiceReviewNotFoundError ||
+    error instanceof MasterSubscriptionNotFoundError ||
+    error instanceof FavoriteMasterServiceNotFoundError
   ) {
     return new NotFoundException(error.message);
   }
@@ -43,7 +56,9 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceMaxImagesCountError ||
     error instanceof MasterServiceReviewAlreadyExistsError ||
     error instanceof MasterServiceReviewAppointmentNotCompletedError ||
-    error instanceof MasterServiceReviewInvalidRatingError
+    error instanceof MasterServiceReviewInvalidRatingError ||
+    error instanceof MasterSubscriptionAlreadyExistsError ||
+    error instanceof FavoriteMasterServiceAlreadyExistsError
   ) {
     return new BadRequestException(error.message);
   }
@@ -52,7 +67,10 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceForbiddenError ||
     error instanceof MasterWeeklyScheduleForbiddenError ||
     error instanceof MasterScheduleExceptionForbiddenError ||
-    error instanceof MasterServiceReviewForbiddenError
+    error instanceof MasterServiceReviewForbiddenError ||
+    error instanceof MasterSubscriptionForbiddenError ||
+    error instanceof MasterSubscriptionCannotSubscribeToSelfError ||
+    error instanceof FavoriteMasterServiceForbiddenError
   ) {
     return new ForbiddenException(error.message);
   }

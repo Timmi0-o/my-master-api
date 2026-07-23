@@ -1,0 +1,18 @@
+model MasterSubscription {
+  id String @id @default(uuid())
+
+  userId          String @map("user_id")
+  masterProfileId String @map("master_profile_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  masterProfile MasterProfile @relation(fields: [masterProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, masterProfileId])
+  @@index([masterProfileId])
+  @@index([deletedAt])
+  @@map("MasterSubscriptions")
+}

@@ -30,6 +30,8 @@ model User {
   clientAppointments      Appointment[]            @relation("ClientAppointments")
   appointmentChatMessages AppointmentChatMessage[] @relation("AppointmentChatMessages")
   masterServiceReviews    MasterServiceReview[]
+  masterSubscriptions     MasterSubscription[]
+  favoriteMasterServices  FavoriteMasterService[]
 
   @@unique([email])
   @@unique([phone])

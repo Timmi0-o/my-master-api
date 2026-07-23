@@ -16,6 +16,8 @@ export const Permissions = {
   masterWeeklySchedules: crudActions('master-weekly-schedules'),
   masterScheduleExceptions: crudActions('master-schedule-exceptions'),
   masterServiceReviews: crudActions('master-service-reviews'),
+  masterSubscriptions: crudActions('master-subscriptions'),
+  favoriteMasterServices: crudActions('favorite-master-services'),
   appointments: crudActions('appointments'),
   appointmentChats: crudActions('appointment-chats'),
   appointmentChatMessages: crudActions('appointment-chat-messages'),
