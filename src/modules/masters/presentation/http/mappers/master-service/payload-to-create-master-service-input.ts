@@ -14,6 +14,7 @@ export function payloadToCreateMasterServiceInput(
     description: payload.description,
     price: payload.price,
     durationMinutes: payload.durationMinutes,
+    category: payload.category,
     actor: toMasterActor(sessionUser, isStaffUser),
   };
 }

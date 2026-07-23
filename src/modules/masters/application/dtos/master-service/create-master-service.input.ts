@@ -1,3 +1,4 @@
+import type { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterActorInput } from '../common/i-master-actor.input';
 
 export interface ICreateMasterServiceApplicationInput {
@@ -6,5 +7,6 @@ export interface ICreateMasterServiceApplicationInput {
   description: string;
   price: number;
   durationMinutes?: number;
+  category?: EMasterServiceCategory;
   actor: IMasterActorInput;
 }

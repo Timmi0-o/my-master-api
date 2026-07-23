@@ -15,7 +15,14 @@ type MasterServiceSelectOptions = SelectOptions<
 const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
   {
     MINIMAL: {
-      select: ['id', 'masterProfileId', 'name', 'price', 'durationMinutes'],
+      select: [
+        'id',
+        'masterProfileId',
+        'name',
+        'price',
+        'durationMinutes',
+        'category',
+      ],
     },
     SHORT: {
       select: [
@@ -25,6 +32,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
         'description',
         'price',
         'durationMinutes',
+        'category',
         'createdAt',
         'updatedAt',
       ],
@@ -37,6 +45,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
         'description',
         'price',
         'durationMinutes',
+        'category',
         'createdAt',
         'updatedAt',
         'deletedAt',

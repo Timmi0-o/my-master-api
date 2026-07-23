@@ -11,6 +11,7 @@ const PATCHABLE_KEYS = [
   'description',
   'price',
   'durationMinutes',
+  'category',
 ] as const satisfies readonly (keyof IUpdateMasterServiceInput)[];
 
 export function payloadToUpdateMasterServiceInput(

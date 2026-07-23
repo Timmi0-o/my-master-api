@@ -1,9 +1,12 @@
+import type { EMasterServiceCategory } from './master-service-category.enum';
+
 export interface IMasterServiceEntity {
   id: string;
   name: string;
   description: string;
   price: number;
   durationMinutes: number;
+  category: EMasterServiceCategory;
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;

@@ -4,6 +4,7 @@ import { AuthorizationModule } from './modules/authorization/authorization.modul
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { FilesModule } from './modules/files/files.module';
 import { MastersModule } from './modules/masters/masters.module';
+import { SearchModule } from './modules/search/search.module';
 import { CoreModule } from './modules/shared/infrastructure/modules/core.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -16,6 +17,7 @@ import { UsersModule } from './modules/users/users.module';
     MastersModule,
     AppointmentsModule,
     FilesModule,
+    SearchModule,
   ],
 })
 export class AppModule {}

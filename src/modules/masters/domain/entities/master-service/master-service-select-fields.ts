@@ -7,6 +7,7 @@ export const MASTER_SERVICE_SELECT_FIELDS = [
   'description',
   'price',
   'durationMinutes',
+  'category',
   'createdAt',
   'updatedAt',
   'deletedAt',

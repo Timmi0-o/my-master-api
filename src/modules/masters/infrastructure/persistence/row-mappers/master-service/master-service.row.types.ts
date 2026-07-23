@@ -1,4 +1,5 @@
 import type { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile/master-profile-booking.enum';
+import type { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service/master-service-category.enum';
 
 export type MasterProfileRelationRow = {
   id: string;
@@ -24,6 +25,7 @@ export type MasterServiceRelationRow = {
   description: string;
   price: number;
   durationMinutes: number;
+  category: EMasterServiceCategory;
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +60,7 @@ export type MasterServiceRow = {
   description: string;
   price: number;
   durationMinutes: number;
+  category: EMasterServiceCategory;
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
