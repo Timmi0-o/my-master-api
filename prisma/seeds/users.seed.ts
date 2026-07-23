@@ -4,7 +4,7 @@ import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities
 import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
 import type { SeedRunner } from './index';
 
-const USERS_COUNT = 30;
+const USERS_COUNT = 180;
 const SEED_PASSWORD = 'password';
 const SEED_BCRYPT_ROUNDS = 10;
 
