@@ -40,6 +40,11 @@ export const PERMISSIONS_CATALOG: readonly TPermissionCatalogItem[] = [
     Permissions.masterServiceReviews,
     EPermissionCategory.MASTER,
   ),
+  ...catalogForResource(
+    'master service review reactions',
+    Permissions.masterServiceReviewReactions,
+    EPermissionCategory.MASTER,
+  ),
   ...catalogForResource('appointments', Permissions.appointments, EPermissionCategory.APPOINTMENT),
   ...catalogForResource(
     'appointment chats',

@@ -1,7 +1,4 @@
-import type {
-  IMasterServiceReviewPublicEntity,
-  IMasterServiceReviewRelations,
-} from 'src/modules/masters/domain/entities/master-service-review';
+import type { IMasterServiceReviewWithReactionStats } from 'src/modules/masters/application/helpers/attach-reaction-stats-to-reviews';
 
 export type IGetMasterServiceReviewByIdApplicationOutput =
-  IMasterServiceReviewPublicEntity & Partial<IMasterServiceReviewRelations>;
+  IMasterServiceReviewWithReactionStats;

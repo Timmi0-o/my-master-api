@@ -9,12 +9,18 @@ import { DeleteMasterServiceReviewByIdUseCase } from '../../../application/use-c
 import { GetMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/get-master-service-review-by-id.use-case';
 import { GetMasterServiceReviewsUseCase } from '../../../application/use-cases/master-service-review/get-master-service-reviews.use-case';
 import { UpdateMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/update-master-service-review-by-id.use-case';
+import type { IMasterServiceReviewReactionRepository } from '../../../domain/repositories/master-service-review-reaction/i-master-service-review-reaction.repository';
+import { MASTER_SERVICE_REVIEW_REACTION_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service-review-reaction/master-service-review-reaction.repository.tokens';
 import type { IMasterServiceReviewRepository } from '../../../domain/repositories/master-service-review/i-master-service-review.repository';
 import { MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service-review/master-service-review.repository.tokens';
 import { PrismaMasterServiceReviewRepository } from '../../persistence/repositories/master-service-review/prisma-master-service-review.repository';
+import { MasterServiceReviewReactionModule } from '../master-service-review-reaction/master-service-review-reaction.module';
 
 @Module({
-  imports: [forwardRef(() => AppointmentsModule)],
+  imports: [
+    forwardRef(() => AppointmentsModule),
+    forwardRef(() => MasterServiceReviewReactionModule),
+  ],
   providers: [
     {
       provide: MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
@@ -22,15 +28,25 @@ import { PrismaMasterServiceReviewRepository } from '../../persistence/repositor
     },
     {
       provide: GetMasterServiceReviewsUseCase,
-      useFactory: (repo: IMasterServiceReviewRepository) =>
-        new GetMasterServiceReviewsUseCase(repo),
-      inject: [MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN],
+      useFactory: (
+        reviewRepo: IMasterServiceReviewRepository,
+        reactionRepo: IMasterServiceReviewReactionRepository,
+      ) => new GetMasterServiceReviewsUseCase(reviewRepo, reactionRepo),
+      inject: [
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REVIEW_REACTION_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: GetMasterServiceReviewByIdUseCase,
-      useFactory: (repo: IMasterServiceReviewRepository) =>
-        new GetMasterServiceReviewByIdUseCase(repo),
-      inject: [MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN],
+      useFactory: (
+        reviewRepo: IMasterServiceReviewRepository,
+        reactionRepo: IMasterServiceReviewReactionRepository,
+      ) => new GetMasterServiceReviewByIdUseCase(reviewRepo, reactionRepo),
+      inject: [
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REVIEW_REACTION_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: CreateMasterServiceReviewUseCase,

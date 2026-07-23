@@ -69,6 +69,17 @@ export class PrismaAppointmentRepository
     return row ? mapAppointmentRow(row as AppointmentRow) : null;
   }
 
+  async existsByClientUserIdAndMasterServiceId(
+    clientUserId: string,
+    masterServiceId: string,
+    scope?: TransactionScope,
+  ): Promise<boolean> {
+    const count = await this.getDelegate(scope).count({
+      where: { clientUserId, masterServiceId, deletedAt: null },
+    });
+    return count > 0;
+  }
+
   async create(
     input: ICreateAppointmentInput,
     scope: TransactionScope,

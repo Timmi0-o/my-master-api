@@ -39,6 +39,11 @@ import {
   FavoriteMasterServiceForbiddenError,
   FavoriteMasterServiceNotFoundError,
 } from 'src/modules/masters/domain/entities/favorite-master-service';
+import {
+  MasterServiceReviewReactionAlreadyExistsError,
+  MasterServiceReviewReactionForbiddenError,
+  MasterServiceReviewReactionNotFoundError,
+} from 'src/modules/masters/domain/entities/master-service-review-reaction';
 
 export const mapMastersDomainError: DomainErrorMapper = (error) => {
   if (
@@ -48,6 +53,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterScheduleExceptionNotFoundError ||
     error instanceof MasterServiceImageNotFoundError ||
     error instanceof MasterServiceReviewNotFoundError ||
+    error instanceof MasterServiceReviewReactionNotFoundError ||
     error instanceof MasterSubscriptionNotFoundError ||
     error instanceof FavoriteMasterServiceNotFoundError
   ) {
@@ -59,6 +65,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceReviewAlreadyExistsError ||
     error instanceof MasterServiceReviewAppointmentNotCompletedError ||
     error instanceof MasterServiceReviewInvalidRatingError ||
+    error instanceof MasterServiceReviewReactionAlreadyExistsError ||
     error instanceof MasterSubscriptionAlreadyExistsError ||
     error instanceof FavoriteMasterServiceAlreadyExistsError
   ) {
@@ -70,6 +77,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterWeeklyScheduleForbiddenError ||
     error instanceof MasterScheduleExceptionForbiddenError ||
     error instanceof MasterServiceReviewForbiddenError ||
+    error instanceof MasterServiceReviewReactionForbiddenError ||
     error instanceof MasterSubscriptionForbiddenError ||
     error instanceof MasterSubscriptionCannotSubscribeToSelfError ||
     error instanceof FavoriteMasterServiceForbiddenError

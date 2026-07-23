@@ -1,0 +1,22 @@
+---
+description: Controllers не вызывают репозитории — только use-cases
+globs: src/**/presentation/**/*.ts
+alwaysApply: false
+---
+
+# Controllers без репозиториев
+
+## Запрещено
+
+- Инжектить `*Repository` / `*_REPOSITORY_TOKEN` в controllers.
+- Вызывать методы репозитория из presentation-слоя (даже одну строку).
+
+## Разрешено
+
+- Inject только use-cases.
+- Flow: HTTP payload → `payload-to-*-input` → `useCase.execute` → HTTP response mapper.
+- Несколько use-case подряд в одном handler (оркестрация), без репозиториев между ними.
+
+## Куда переносить логику
+
+Любой доступ к данным (stats, exists, count, find) — в соответствующий use-case через порты репозиториев в конструкторе use-case. Use-case может зависеть от нескольких репозиториев.

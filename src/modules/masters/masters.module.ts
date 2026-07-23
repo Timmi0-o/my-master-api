@@ -6,6 +6,7 @@ import { FilesModule } from '../files/files.module';
 import { FavoriteMasterServiceModule } from './infrastructure/modules/favorite-master-service/favorite-master-service.module';
 import { MasterProfileModule } from './infrastructure/modules/master-profile/master-profile.module';
 import { MasterScheduleExceptionModule } from './infrastructure/modules/master-schedule-exception/master-schedule-exception.module';
+import { MasterServiceReviewReactionModule } from './infrastructure/modules/master-service-review-reaction/master-service-review-reaction.module';
 import { MasterServiceReviewModule } from './infrastructure/modules/master-service-review/master-service-review.module';
 import { MasterServiceModule } from './infrastructure/modules/master-service/master-service.module';
 import { MasterSubscriptionModule } from './infrastructure/modules/master-subscription/master-subscription.module';
@@ -13,6 +14,7 @@ import { MasterWeeklyScheduleModule } from './infrastructure/modules/master-week
 import { FavoriteMasterServicesController } from './presentation/http/controllers/favorite-master-services.controller';
 import { MasterProfilesController } from './presentation/http/controllers/master-profiles.controller';
 import { MasterScheduleExceptionsController } from './presentation/http/controllers/master-schedule-exceptions.controller';
+import { MasterServiceReviewReactionsController } from './presentation/http/controllers/master-service-review-reactions.controller';
 import { MasterServiceReviewsController } from './presentation/http/controllers/master-service-reviews.controller';
 import { MasterServicesController } from './presentation/http/controllers/master-services.controller';
 import { MasterSubscriptionsController } from './presentation/http/controllers/master-subscriptions.controller';
@@ -29,6 +31,7 @@ import { MasterWeeklySchedulesController } from './presentation/http/controllers
     MasterWeeklyScheduleModule,
     MasterScheduleExceptionModule,
     MasterServiceReviewModule,
+    MasterServiceReviewReactionModule,
     MasterSubscriptionModule,
     FavoriteMasterServiceModule,
   ],
@@ -36,6 +39,7 @@ import { MasterWeeklySchedulesController } from './presentation/http/controllers
     MasterProfilesController,
     MasterServicesController,
     MasterServiceReviewsController,
+    MasterServiceReviewReactionsController,
     MasterWeeklySchedulesController,
     MasterScheduleExceptionsController,
     MasterSubscriptionsController,
@@ -47,6 +51,7 @@ import { MasterWeeklySchedulesController } from './presentation/http/controllers
     MasterWeeklyScheduleModule,
     MasterScheduleExceptionModule,
     MasterServiceReviewModule,
+    MasterServiceReviewReactionModule,
     MasterSubscriptionModule,
     FavoriteMasterServiceModule,
   ],

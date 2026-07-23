@@ -25,4 +25,9 @@ export type IAppointmentRepository = IReadRepository<
       id: string,
       scope?: TransactionScope,
     ): Promise<IAppointmentEntity | null>;
+    existsByClientUserIdAndMasterServiceId(
+      clientUserId: string,
+      masterServiceId: string,
+      scope?: TransactionScope,
+    ): Promise<boolean>;
   };
