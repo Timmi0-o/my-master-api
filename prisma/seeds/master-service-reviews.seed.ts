@@ -11,6 +11,10 @@ const REVIEW_TEXTS_BY_RATING: Record<number, readonly string[]> = {
     'Качество на высоте, цена адекватная. Буду записываться снова.',
     'Внимание к деталям и хорошие рекомендации по уходу после услуги.',
     'Лучший опыт за последнее время, сервис на уровне.',
+    'Супер! Всё четко, чисто и по делу.',
+    'Мастер объяснил каждый шаг, результат именно как хотел.',
+    'Пять звёзд без сомнений — рекомендую.',
+    'Быстро, аккуратно и с отличным настроением.',
   ],
   4: [
     'В целом всё понравилось, небольшая задержка по времени, но результат хороший.',
@@ -19,23 +23,33 @@ const REVIEW_TEXTS_BY_RATING: Record<number, readonly string[]> = {
     'Услуга выполнена хорошо, чуть дольше, чем ожидал, но это не критично.',
     'Приятное обслуживание и достойный результат за свои деньги.',
     'Почти идеально — одна деталь могла бы быть лучше, но я доволен.',
+    'Хороший опыт, буду рекомендовать друзьям.',
+    'Всё ок, небольшие замечания по коммуникации.',
   ],
   3: [
     'Нормально, без восторга. Средний опыт, ничего особенного.',
     'Результат приемлемый, но ожидал чуть большего за эту цену.',
     'Справились с задачей, но сервис мог бы быть внимательнее.',
     'Средне: не плохо, но есть куда расти по коммуникации.',
+    'Нейтрально — сделали, но без вау-эффекта.',
+    'Ожидал чуть более персонального подхода.',
   ],
   2: [
     'Ожидания не оправдались, пришлось уточнять детали по ходу работы.',
     'Результат слабоват, придётся искать другого мастера.',
     'Долго ждал начала, качество ниже заявленного уровня.',
+    'Есть претензии к итогу, но частично задачу закрыли.',
+    'Коммуникация хромала, результат средний минус.',
   ],
   1: [
     'Очень разочарован, пришлось переделывать у другого специалиста.',
     'Не рекомендую — сервис и результат не соответствуют описанию.',
+    'Плохой опыт: опоздание и слабый результат.',
+    'Не совпало с ожиданиями совсем.',
   ],
 } as const;
+
+const CREATE_BATCH_SIZE = 100;
 
 const pickRating = (index: number): number => {
   const bucket = index % 20;
@@ -51,7 +65,13 @@ const pickReviewText = (rating: number, index: number): string => {
   return texts[index % texts.length];
 };
 
-const shouldSkipReview = (index: number): boolean => index % 7 === 0;
+const chunkArray = <T>(items: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+};
 
 export const masterServiceReviewsSeed: SeedRunner = async (
   prisma: PrismaClient,
@@ -78,32 +98,41 @@ export const masterServiceReviewsSeed: SeedRunner = async (
     );
   }
 
-  let created = 0;
-
-  for (const [index, appointment] of completedAppointments.entries()) {
-    if (shouldSkipReview(index)) {
-      continue;
-    }
-
+  const reviewRows = completedAppointments.map((appointment, index) => {
     const rating = pickRating(index);
     const text = pickReviewText(rating, index);
 
-    await prisma.masterServiceReview.create({
-      data: {
-        clientUserId: appointment.clientUserId,
-        masterServiceId: appointment.masterServiceId,
-        appointmentId: appointment.id,
-        rating,
-        text: `${text} (услуга: ${appointment.serviceName})`,
-      },
-    });
+    return {
+      clientUserId: appointment.clientUserId,
+      masterServiceId: appointment.masterServiceId,
+      appointmentId: appointment.id,
+      rating,
+      text: `${text} (услуга: ${appointment.serviceName})`,
+    };
+  });
 
-    created += 1;
+  let created = 0;
+
+  for (const batch of chunkArray(reviewRows, CREATE_BATCH_SIZE)) {
+    const result = await prisma.masterServiceReview.createMany({
+      data: batch,
+      skipDuplicates: true,
+    });
+    created += result.count;
   }
 
-  const reviewCount = await prisma.masterServiceReview.count();
+  const [reviewCount, servicesWithReviews, totalServices] = await Promise.all([
+    prisma.masterServiceReview.count(),
+    prisma.masterServiceReview
+      .groupBy({
+        by: ['masterServiceId'],
+        where: { deletedAt: null },
+      })
+      .then((rows) => rows.length),
+    prisma.masterService.count({ where: { deletedAt: null } }),
+  ]);
 
   console.log(
-    `master-service-reviews seed: ${reviewCount} reviews (created ${created} from ${completedAppointments.length} completed appointments)`,
+    `master-service-reviews seed: ${reviewCount} reviews (created ${created} from ${completedAppointments.length} completed appointments; services with reviews ${servicesWithReviews}/${totalServices})`,
   );
 };
