@@ -5,6 +5,7 @@ model MasterService {
   price           Float                 @map("price")
   durationMinutes Int                   @default(60) @map("duration_minutes")
   category        MasterServiceCategory @default(SERVICES) @map("category")
+  tags            String[]              @default([]) @map("tags")
 
   masterProfileId String @map("master_profile_id")
 

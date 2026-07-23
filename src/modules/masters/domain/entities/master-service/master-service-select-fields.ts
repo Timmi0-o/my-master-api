@@ -8,6 +8,7 @@ export const MASTER_SERVICE_SELECT_FIELDS = [
   'price',
   'durationMinutes',
   'category',
+  'tags',
   'createdAt',
   'updatedAt',
   'deletedAt',

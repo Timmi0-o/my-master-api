@@ -7,7 +7,16 @@ export type { IUpdateMasterServiceInput } from './i-update-master-service.input'
 export type { IMasterServiceRelations } from './i-master-service-relations';
 export { EMasterServiceCategory } from './master-service-category.enum';
 export {
+  MASTER_SERVICE_TAGS_MIN_COUNT,
+  MASTER_SERVICE_TAGS_MAX_COUNT,
+  MASTER_SERVICE_TAG_MAX_LENGTH,
+} from './master-service-tags.constants';
+export {
   MasterServiceNotFoundError,
   MasterServiceForbiddenError,
+  MasterServiceInvalidTagsError,
 } from './errors';
-export { ensureMasterServiceExists } from './policies';
+export {
+  ensureMasterServiceExists,
+  ensureMasterServiceTagsValid,
+} from './policies';

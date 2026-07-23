@@ -1,7 +1,10 @@
 import type { ICreateMasterServiceApplicationInput } from '../../dtos/master-service/create-master-service.input';
 import type { ICreateMasterServiceApplicationOutput } from '../../dtos/master-service/create-master-service.output';
 import type { ICreateMasterServiceInput } from 'src/modules/masters/domain/entities/master-service';
-import { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service';
+import {
+  EMasterServiceCategory,
+  ensureMasterServiceTagsValid,
+} from 'src/modules/masters/domain/entities/master-service';
 import {
   ensureMasterProfileAccessible,
   ensureMasterProfileExists,
@@ -26,6 +29,8 @@ export class CreateMasterServiceUseCase {
     ensureMasterProfileExists(profile, input.masterProfileId);
     ensureMasterProfileAccessible(profile, input.actor);
 
+    const tags = ensureMasterServiceTagsValid(input.tags);
+
     const createInput: ICreateMasterServiceInput = {
       masterProfileId: input.masterProfileId,
       name: input.name,
@@ -33,6 +38,7 @@ export class CreateMasterServiceUseCase {
       price: input.price,
       durationMinutes: input.durationMinutes ?? 60,
       category: input.category ?? EMasterServiceCategory.SERVICES,
+      tags,
     };
 
     return this.transactionManager.runInTransaction((scope) =>

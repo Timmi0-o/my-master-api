@@ -1,6 +1,9 @@
 import type { IUpdateMasterServiceApplicationInput } from '../../dtos/master-service/update-master-service.input';
 import type { IUpdateMasterServiceApplicationOutput } from '../../dtos/master-service/update-master-service.output';
-import { ensureMasterServiceExists } from 'src/modules/masters/domain/entities/master-service';
+import {
+  ensureMasterServiceExists,
+  ensureMasterServiceTagsValid,
+} from 'src/modules/masters/domain/entities/master-service';
 import {
   ensureMasterProfileAccessible,
   ensureMasterProfileExists,
@@ -28,8 +31,16 @@ export class UpdateMasterServiceByIdUseCase {
     ensureMasterProfileExists(profile, existing.masterProfileId);
     ensureMasterProfileAccessible(profile, input.actor);
 
+    const patch =
+      input.patch.tags != null
+        ? {
+            ...input.patch,
+            tags: ensureMasterServiceTagsValid(input.patch.tags),
+          }
+        : input.patch;
+
     return this.transactionManager.runInTransaction((scope) =>
-      this.masterServiceRepository.update(input.id, input.patch, scope),
+      this.masterServiceRepository.update(input.id, patch, scope),
     );
   }
 }

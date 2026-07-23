@@ -6,6 +6,7 @@ import {
 } from 'src/modules/masters/domain/entities/master-profile';
 import {
   MasterServiceForbiddenError,
+  MasterServiceInvalidTagsError,
   MasterServiceNotFoundError,
 } from 'src/modules/masters/domain/entities/master-service';
 import {
@@ -54,6 +55,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
   }
   if (
     error instanceof MasterServiceMaxImagesCountError ||
+    error instanceof MasterServiceInvalidTagsError ||
     error instanceof MasterServiceReviewAlreadyExistsError ||
     error instanceof MasterServiceReviewAppointmentNotCompletedError ||
     error instanceof MasterServiceReviewInvalidRatingError ||

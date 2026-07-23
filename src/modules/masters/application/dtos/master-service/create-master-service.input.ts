@@ -8,5 +8,6 @@ export interface ICreateMasterServiceApplicationInput {
   price: number;
   durationMinutes?: number;
   category?: EMasterServiceCategory;
+  tags: string[];
   actor: IMasterActorInput;
 }

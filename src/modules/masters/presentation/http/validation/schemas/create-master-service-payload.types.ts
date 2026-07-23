@@ -7,4 +7,5 @@ export interface ICreateMasterServicePayload {
   price: number;
   durationMinutes?: number;
   category?: EMasterServiceCategory;
+  tags: string[];
 }

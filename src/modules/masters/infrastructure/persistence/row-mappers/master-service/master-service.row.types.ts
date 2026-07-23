@@ -26,6 +26,7 @@ export type MasterServiceRelationRow = {
   price: number;
   durationMinutes: number;
   category: EMasterServiceCategory;
+  tags: string[];
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -61,6 +62,7 @@ export type MasterServiceRow = {
   price: number;
   durationMinutes: number;
   category: EMasterServiceCategory;
+  tags: string[];
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;

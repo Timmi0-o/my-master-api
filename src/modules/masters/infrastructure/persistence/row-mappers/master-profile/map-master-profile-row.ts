@@ -23,6 +23,7 @@ function mapMasterServiceRelationRow(
       price: row.price,
       durationMinutes: row.durationMinutes,
       category: row.category,
+      tags: row.tags ?? [],
       masterProfileId: row.masterProfileId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

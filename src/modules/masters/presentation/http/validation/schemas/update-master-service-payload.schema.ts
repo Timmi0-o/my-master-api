@@ -1,5 +1,10 @@
 import { JSONSchemaType } from 'ajv';
-import { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service';
+import {
+  EMasterServiceCategory,
+  MASTER_SERVICE_TAG_MAX_LENGTH,
+  MASTER_SERVICE_TAGS_MAX_COUNT,
+  MASTER_SERVICE_TAGS_MIN_COUNT,
+} from 'src/modules/masters/domain/entities/master-service';
 import type { IUpdateMasterServicePayload } from './update-master-service-payload.types';
 
 export const updateMasterServicePayloadSchema: JSONSchemaType<IUpdateMasterServicePayload> =
@@ -23,6 +28,17 @@ export const updateMasterServicePayloadSchema: JSONSchemaType<IUpdateMasterServi
       category: {
         type: 'string',
         enum: Object.values(EMasterServiceCategory),
+        nullable: true,
+      },
+      tags: {
+        type: 'array',
+        items: {
+          type: 'string',
+          minLength: 1,
+          maxLength: MASTER_SERVICE_TAG_MAX_LENGTH,
+        },
+        minItems: MASTER_SERVICE_TAGS_MIN_COUNT,
+        maxItems: MASTER_SERVICE_TAGS_MAX_COUNT,
         nullable: true,
       },
     },

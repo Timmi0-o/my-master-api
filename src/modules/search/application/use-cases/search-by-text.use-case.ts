@@ -1,8 +1,5 @@
-import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile';
-import type { IMasterServicePublicEntity } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service';
-import { mapSearchByFields } from 'src/modules/shared/presentation/http/mappers/filter/map-search-by-fields';
 import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
 import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/mappers/master-profile/preset-to-select-options.mapper';
 import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/mappers/master-service/preset-to-select-options.mapper';
@@ -12,6 +9,92 @@ import type {
 } from '../dtos/search-by-text.dto';
 
 const DEFAULT_SEARCH_LIMIT = 20;
+
+function buildServiceTextSearchOr(q: string): Record<string, unknown>[] {
+  return [
+    { name: { containsInsensitive: q } },
+    { description: { containsInsensitive: q } },
+    { tags: { has: q.trim().toLowerCase() } },
+  ];
+}
+
+function buildMasterWhere(
+  q: string | undefined,
+  category: ISearchByTextApplicationInput['category'],
+): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    deletedAt: { isNull: true },
+  };
+
+  if (!q && category == null) {
+    return base;
+  }
+
+  if (!q && category != null) {
+    return {
+      ...base,
+      services: {
+        some: {
+          category,
+          deletedAt: { isNull: true },
+        },
+      },
+    };
+  }
+
+  const serviceTextOr = buildServiceTextSearchOr(q!);
+
+  if (category == null) {
+    return {
+      ...base,
+      or: [
+        { displayName: { containsInsensitive: q } },
+        { description: { containsInsensitive: q } },
+        {
+          services: {
+            some: {
+              deletedAt: { isNull: true },
+              or: serviceTextOr,
+            },
+          },
+        },
+      ],
+    };
+  }
+
+  return {
+    ...base,
+    or: [
+      {
+        and: [
+          {
+            or: [
+              { displayName: { containsInsensitive: q } },
+              { description: { containsInsensitive: q } },
+            ],
+          },
+          {
+            services: {
+              some: {
+                category,
+                deletedAt: { isNull: true },
+              },
+            },
+          },
+        ],
+      },
+      {
+        services: {
+          some: {
+            category,
+            deletedAt: { isNull: true },
+            or: serviceTextOr,
+          },
+        },
+      },
+    ],
+  };
+}
 
 export class SearchByTextUseCase {
   constructor(
@@ -27,45 +110,17 @@ export class SearchByTextUseCase {
     const limit = input.limit ?? DEFAULT_SEARCH_LIMIT;
     const slice = mapPaginationToSlice({ page: 1, limit });
 
-    const masterSearchWhere = q
-      ? mapSearchByFields<IMasterProfilePublicEntity>(
-          q,
-          ['displayName', 'description'],
-          'PARTIAL',
-        )
-      : undefined;
-    const serviceSearchWhere = q
-      ? mapSearchByFields<IMasterServicePublicEntity>(
-          q,
-          ['name', 'description'],
-          'PARTIAL',
-        )
-      : undefined;
-
-    const masterWhere: Record<string, unknown> = {
-      deletedAt: { isNull: true },
-      ...(masterSearchWhere ?? {}),
-      ...(category != null
-        ? {
-            services: {
-              some: {
-                category,
-                deletedAt: { isNull: true },
-              },
-            },
-          }
-        : {}),
-    };
+    const serviceTextOr = q ? buildServiceTextSearchOr(q) : undefined;
 
     const serviceWhere: Record<string, unknown> = {
       deletedAt: { isNull: true },
-      ...(serviceSearchWhere ?? {}),
+      ...(serviceTextOr ? { or: serviceTextOr } : {}),
       ...(category != null ? { category } : {}),
     };
 
     const [masters, services] = await Promise.all([
       this.masterProfileRepository.findMany({
-        where: masterWhere,
+        where: buildMasterWhere(q, category),
         slice,
         selectOptions: masterProfilePresetToSelectOptions('BASE', false),
       }),

@@ -6,4 +6,5 @@ export interface IUpdateMasterServicePayload {
   price?: number;
   durationMinutes?: number;
   category?: EMasterServiceCategory;
+  tags?: string[];
 }

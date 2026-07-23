@@ -7,6 +7,7 @@ export interface IMasterServiceEntity {
   price: number;
   durationMinutes: number;
   category: EMasterServiceCategory;
+  tags: string[];
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
