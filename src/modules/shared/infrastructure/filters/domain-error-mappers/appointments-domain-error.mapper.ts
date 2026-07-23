@@ -3,6 +3,7 @@ import type { DomainErrorMapper } from './domain-error-mapper.types';
 import {
   AppointmentForbiddenError,
   AppointmentNotAvailableError,
+  AppointmentNotCompletableError,
   AppointmentNotFoundError,
 } from 'src/modules/appointments/domain/entities/appointment';
 import {
@@ -29,7 +30,10 @@ export const mapAppointmentsDomainError: DomainErrorMapper = (error) => {
   ) {
     return new ForbiddenException(error.message);
   }
-  if (error instanceof AppointmentNotAvailableError) {
+  if (
+    error instanceof AppointmentNotAvailableError ||
+    error instanceof AppointmentNotCompletableError
+  ) {
     return new ConflictException(error.message);
   }
   return null;

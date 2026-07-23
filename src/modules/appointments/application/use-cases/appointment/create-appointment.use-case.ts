@@ -76,6 +76,8 @@ export class CreateAppointmentUseCase {
       cancelledAt: null,
       cancelledBy: null,
       cancelReason: null,
+      isEarlyCompletionByMaster: false,
+      isEarlyCompletionByClient: false,
     };
 
     return this.transactionManager.runInTransaction(async (scope) => {

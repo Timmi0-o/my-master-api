@@ -27,6 +27,8 @@ export function mapAppointmentRow(
     cancelledAt: row.cancelledAt,
     cancelledBy: row.cancelledBy,
     cancelReason: row.cancelReason,
+    isEarlyCompletionByMaster: row.isEarlyCompletionByMaster,
+    isEarlyCompletionByClient: row.isEarlyCompletionByClient,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt ?? null,

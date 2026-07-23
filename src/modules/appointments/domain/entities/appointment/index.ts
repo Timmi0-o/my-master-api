@@ -7,9 +7,12 @@ export {
   AppointmentNotAvailableError,
   AppointmentNotFoundError,
   AppointmentForbiddenError,
+  AppointmentNotCompletableError,
 } from './errors';
 export {
   ensureAppointmentExists,
   ensureAppointmentAccessible,
+  ensureAppointmentCompletable,
+  isAppointmentEarlyCompletion,
   type IAppointmentActor,
 } from './policies';

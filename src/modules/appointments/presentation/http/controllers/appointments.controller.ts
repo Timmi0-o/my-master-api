@@ -5,6 +5,7 @@ import { Permissions } from '@modules/authorization/domain/permissions/permissio
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { CreateAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/create-appointment.use-case';
+import { CompleteAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/complete-appointment.use-case';
 import { DeleteAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/delete-appointment-by-id.use-case';
 import { GetAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/get-appointment-by-id.use-case';
 import { GetAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-appointments.use-case';
@@ -27,6 +28,7 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
+import { payloadToCompleteAppointmentInput } from '../mappers/appointment/payload-to-complete-appointment-input';
 import { payloadToCreateAppointmentInput } from '../mappers/appointment/payload-to-create-appointment-input';
 import { payloadToDeleteAppointmentInput } from '../mappers/appointment/payload-to-delete-appointment-input';
 import { payloadToFindManyParams } from '../mappers/appointment/payload-to-find-many-params.mapper';
@@ -37,6 +39,7 @@ import { payloadToUpdateAppointmentInput } from '../mappers/appointment/payload-
 import { mapGetAppointmentsHttpResponse } from '../response/map-get-appointments-response';
 import { mapGetAppointmentByIdHttpResponse } from '../response/map-get-appointment-by-id-response';
 import { mapCreateAppointmentHttpResponse } from '../response/map-create-appointment-response';
+import { mapCompleteAppointmentHttpResponse } from '../response/map-complete-appointment-response';
 import { mapUpdateAppointmentHttpResponse } from '../response/map-update-appointment-response';
 import { mapDeleteAppointmentHttpResponse } from '../response/map-delete-appointment-response';
 
@@ -49,6 +52,7 @@ export class AppointmentsController {
     private readonly getMyClientsAppointmentsUseCase: GetMyClientsAppointmentsUseCase,
     private readonly getAppointmentByIdUseCase: GetAppointmentByIdUseCase,
     private readonly createAppointmentUseCase: CreateAppointmentUseCase,
+    private readonly completeAppointmentUseCase: CompleteAppointmentUseCase,
     private readonly updateAppointmentByIdUseCase: UpdateAppointmentByIdUseCase,
     private readonly deleteAppointmentByIdUseCase: DeleteAppointmentByIdUseCase,
   ) {}
@@ -160,6 +164,26 @@ export class AppointmentsController {
     );
     const output = await this.createAppointmentUseCase.execute(input);
     return mapCreateAppointmentHttpResponse(output);
+  }
+
+  @Post(':id/complete')
+  @Authorize({ kind: 'authenticated' })
+  async completeAppointment(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToCompleteAppointmentInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.completeAppointmentUseCase.execute(input);
+    return mapCompleteAppointmentHttpResponse(output);
   }
 
   @Patch(':id')

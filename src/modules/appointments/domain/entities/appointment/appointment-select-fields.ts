@@ -13,6 +13,8 @@ export const APPOINTMENT_SELECT_FIELDS = [
   'cancelledAt',
   'cancelledBy',
   'cancelReason',
+  'isEarlyCompletionByMaster',
+  'isEarlyCompletionByClient',
   'createdAt',
   'updatedAt',
   'deletedAt',

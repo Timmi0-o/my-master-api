@@ -38,6 +38,8 @@ export type AppointmentRow = {
   cancelledAt: Date | null;
   cancelledBy: EAppointmentCancelledBy | null;
   cancelReason: string | null;
+  isEarlyCompletionByMaster: boolean;
+  isEarlyCompletionByClient: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

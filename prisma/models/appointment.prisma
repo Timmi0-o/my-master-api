@@ -18,6 +18,9 @@ model Appointment {
   cancelledBy  AppointmentCancelledBy? @map("cancelled_by")
   cancelReason String?                 @map("cancel_reason")
 
+  isEarlyCompletionByMaster Boolean @default(false) @map("is_early_completion_by_master")
+  isEarlyCompletionByClient Boolean @default(false) @map("is_early_completion_by_client")
+
   masterProfile MasterProfile    @relation(fields: [masterProfileId], references: [id])
   masterService MasterService    @relation(fields: [masterServiceId], references: [id])
   clientUser    User             @relation("ClientAppointments", fields: [clientUserId], references: [id])

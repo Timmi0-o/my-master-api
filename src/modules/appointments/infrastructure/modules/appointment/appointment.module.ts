@@ -7,6 +7,7 @@ import type { IMasterServiceRepository } from '../../../../masters/domain/reposi
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-service/master-service.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/appointment/create-appointment.use-case';
+import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
 import { DeleteAppointmentByIdUseCase } from '../../../application/use-cases/appointment/delete-appointment-by-id.use-case';
 import { GetAppointmentByIdUseCase } from '../../../application/use-cases/appointment/get-appointment-by-id.use-case';
 import { GetAppointmentsUseCase } from '../../../application/use-cases/appointment/get-appointments.use-case';
@@ -88,6 +89,24 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
       ],
     },
     {
+      provide: CompleteAppointmentUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        appointmentRepo: IAppointmentRepository,
+        profileRepo: IMasterProfileRepository,
+      ) =>
+        new CompleteAppointmentUseCase(
+          transactionManager,
+          appointmentRepo,
+          profileRepo,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+      ],
+    },
+    {
       provide: UpdateAppointmentByIdUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
@@ -131,6 +150,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
     GetMyClientsAppointmentsUseCase,
     GetAppointmentByIdUseCase,
     CreateAppointmentUseCase,
+    CompleteAppointmentUseCase,
     UpdateAppointmentByIdUseCase,
     DeleteAppointmentByIdUseCase,
   ],
