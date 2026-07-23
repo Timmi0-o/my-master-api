@@ -1,4 +1,7 @@
-import type { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment';
+import type {
+  EAppointmentCancelledBy,
+  EAppointmentStatus,
+} from 'src/modules/appointments/domain/entities/appointment';
 import type { MasterProfileRelationRow } from '../master-service/master-service.row.types';
 import type { MasterServiceRow } from '../master-service/master-service.row.types';
 
@@ -21,7 +24,10 @@ export type MasterServiceReviewAppointmentRow = {
   totalPrice: number;
   serviceName: string;
   cancelledAt: Date | null;
+  cancelledBy: EAppointmentCancelledBy | null;
   cancelReason: string | null;
+  isEarlyCompletionByMaster: boolean;
+  isEarlyCompletionByClient: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
