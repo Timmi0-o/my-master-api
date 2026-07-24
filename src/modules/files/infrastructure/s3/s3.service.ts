@@ -19,7 +19,6 @@ import { loadS3Config } from '../config/s3.config';
 export class S3Service implements OnModuleInit {
   private readonly logger = new Logger(S3Service.name);
   private readonly s3Client: NodeJsClient<S3Client>;
-  private readonly s3PublicClient: NodeJsClient<S3Client>;
   private readonly s3PresignClient: NodeJsClient<S3Client>;
   private readonly defaultBucket: string;
 
@@ -38,10 +37,6 @@ export class S3Service implements OnModuleInit {
     };
 
     this.s3Client = new S3Client(clientConfig);
-    this.s3PublicClient = new S3Client({
-      ...clientConfig,
-      endpoint: config.publicEndpoint,
-    });
     this.s3PresignClient = new S3Client({
       endpoint: config.publicEndpoint,
       region: config.region,
@@ -116,7 +111,7 @@ export class S3Service implements OnModuleInit {
   }
 
   async getObject(objectName: string, bucketName: string, range?: string) {
-    return this.s3PublicClient.send(
+    return this.s3Client.send(
       new GetObjectCommand({
         Bucket: bucketName,
         Key: objectName,
