@@ -7,6 +7,7 @@ import { PrismaUserRepository } from 'src/modules/users/infrastructure/persisten
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
+import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
 import { AssertAppointmentChatAccessUseCase } from '../../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
 import { DeleteAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
@@ -26,6 +27,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
 @Module({
   imports: [
     forwardRef(() => MastersModule),
+    forwardRef(() => ImageModule),
     forwardRef(() => AppointmentModule),
     JwtModule.register({}),
   ],

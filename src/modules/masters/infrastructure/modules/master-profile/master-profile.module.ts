@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { CreateMasterProfileUseCase } from '../../../application/use-cases/master-profile/create-master-profile.use-case';
@@ -13,7 +13,7 @@ import { PrismaMasterProfileRepository } from '../../persistence/repositories/ma
 import { ImageModule } from '../image/image.module';
 
 @Module({
-  imports: [ImageModule],
+  imports: [forwardRef(() => ImageModule)],
   providers: [
     {
       provide: MASTER_PROFILE_REPOSITORY_TOKEN,
@@ -70,6 +70,7 @@ import { ImageModule } from '../image/image.module';
     CreateMasterProfileUseCase,
     UpdateMasterProfileByIdUseCase,
     DeleteMasterProfileByIdUseCase,
+    forwardRef(() => ImageModule),
   ],
 })
 export class MasterProfileModule {}

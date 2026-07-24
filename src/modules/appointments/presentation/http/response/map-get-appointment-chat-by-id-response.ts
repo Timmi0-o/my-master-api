@@ -1,8 +1,23 @@
 import { mapEntityHttpResponse } from 'src/modules/shared/presentation/http/response/map-entity-http-response';
-import type { IAppointmentChatPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat';
+import { mapAppointmentPeerAvatarsToHttpResponse } from './map-appointment-peer-avatars-http-response';
 
-export type IGetAppointmentChatByIdHttpResponse = ReturnType<typeof mapGetAppointmentChatByIdHttpResponse>;
+export type IGetAppointmentChatByIdHttpResponse = ReturnType<
+  typeof mapGetAppointmentChatByIdHttpResponse
+>;
 
-export function mapGetAppointmentChatByIdHttpResponse(output: IAppointmentChatPublicEntity) {
-  return mapEntityHttpResponse(output);
+export function mapGetAppointmentChatByIdHttpResponse<T extends object>(
+  output: T,
+) {
+  const withAppointment = output as T & { appointment?: unknown };
+
+  if (withAppointment.appointment == null) {
+    return mapEntityHttpResponse(output);
+  }
+
+  return mapEntityHttpResponse({
+    ...withAppointment,
+    appointment: mapAppointmentPeerAvatarsToHttpResponse(
+      withAppointment.appointment,
+    ),
+  });
 }

@@ -1,4 +1,7 @@
-import type { IUserProfilePublicEntity } from 'src/modules/users/domain/entities/user-profile';
+import type {
+  IUserProfilePublicEntity,
+  IUserProfileRelations,
+} from 'src/modules/users/domain/entities/user-profile';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
   mapMultiDateRangeFilter,
@@ -12,14 +15,14 @@ import type { IUserProfileFiltersPreset } from '../../validation/types/user-prof
 export function extractUserProfileFilter(
   filter: IUserProfileFiltersPreset | undefined,
   isStaffUser: boolean,
-): WhereFilter<IUserProfilePublicEntity, Record<never, never>> | undefined {
+): WhereFilter<IUserProfilePublicEntity, IUserProfileRelations> | undefined {
   const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
 
   if (!sanitized) {
     return undefined;
   }
 
-  const parts: WhereFilter<IUserProfilePublicEntity, Record<never, never>>[] =
+  const parts: WhereFilter<IUserProfilePublicEntity, IUserProfileRelations>[] =
     [];
 
   if (sanitized.search?.value) {

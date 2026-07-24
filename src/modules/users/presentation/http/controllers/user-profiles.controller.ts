@@ -5,6 +5,8 @@ import { Permissions } from '@modules/authorization/domain/permissions/permissio
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { CreateRootFolderUseCase } from '@modules/files/application/use-cases/folder/create-root-folder.use-case';
+import { DeleteImagesUseCase } from '@modules/masters/application/use-cases/image/delete-images.use-case';
+import { PresignImagesUseCase } from '@modules/masters/application/use-cases/image/presign-images.use-case';
 import { CreateUserProfileUseCase } from '@modules/users/application/use-cases/user-profile/create-user-profile.use-case';
 import { DeleteUserProfileByIdUseCase } from '@modules/users/application/use-cases/user-profile/delete-user-profile-by-id.use-case';
 import { GetMyUserProfileUseCase } from '@modules/users/application/use-cases/user-profile/get-my-user-profile.use-case';
@@ -13,12 +15,16 @@ import { GetUserProfilesUseCase } from '@modules/users/application/use-cases/use
 import { UpdateUserProfileByIdUseCase } from '@modules/users/application/use-cases/user-profile/update-user-profile-by-id.use-case';
 import { createUserProfilePayloadSchema } from '@modules/users/presentation/http/validation/schemas/create-user-profile-payload.schema';
 import type { ICreateUserProfilePayload } from '@modules/users/presentation/http/validation/schemas/create-user-profile-payload.types';
+import { deleteUserProfileImagesPayloadSchema } from '@modules/users/presentation/http/validation/schemas/delete-user-profile-images-payload.schema';
+import type { IDeleteUserProfileImagesPayload } from '@modules/users/presentation/http/validation/schemas/delete-user-profile-images-payload.types';
 import { getByIdQuerySchema } from '@modules/users/presentation/http/validation/schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from '@modules/users/presentation/http/validation/schemas/get-by-id-query.types';
 import { getUserProfilesQuerySchema } from '@modules/users/presentation/http/validation/schemas/get-user-profiles-query.schema';
 import type { IGetUserProfilesQueryPayload } from '@modules/users/presentation/http/validation/schemas/get-user-profiles-query.types';
 import { idParamSchema } from '@modules/users/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/users/presentation/http/validation/schemas/id-param.types';
+import { presignUserProfileImagesPayloadSchema } from '@modules/users/presentation/http/validation/schemas/presign-user-profile-images-payload.schema';
+import type { IPresignUserProfileImagesPayload } from '@modules/users/presentation/http/validation/schemas/presign-user-profile-images-payload.types';
 import { updateUserProfilePayloadSchema } from '@modules/users/presentation/http/validation/schemas/update-user-profile-payload.schema';
 import type { IUpdateUserProfilePayload } from '@modules/users/presentation/http/validation/schemas/update-user-profile-payload.types';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
@@ -29,16 +35,20 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { outputCreateUserProfileToCreateRootFolderInput } from '../mappers/user-profile/output-create-user-profile-to-create-root-folder-input';
 import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload-to-create-user-profile-input';
+import { payloadToDeleteUserProfileImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-images-input';
 import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
 import { payloadToFindManyParams } from '../mappers/user-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMyUserProfileInput } from '../mappers/user-profile/payload-to-get-my-user-profile-input';
 import { payloadToGetUserProfileByIdInput } from '../mappers/user-profile/payload-to-get-user-profile-by-id-input';
+import { payloadToPresignUserProfileImagesInput } from '../mappers/user-profile/payload-to-presign-user-profile-images-input';
 import { payloadToUpdateUserProfileInput } from '../mappers/user-profile/payload-to-update-user-profile-input';
 import { mapCreateUserProfileHttpResponse } from '../response/map-create-user-profile-response';
 import { mapDeleteUserProfileHttpResponse } from '../response/map-delete-user-profile-response';
+import { mapDeleteUserProfileImagesHttpResponse } from '../response/map-delete-user-profile-images-response';
 import { mapGetMyUserProfileHttpResponse } from '../response/map-get-my-user-profile-response';
 import { mapGetUserProfileByIdHttpResponse } from '../response/map-get-user-profile-by-id-response';
 import { mapGetUserProfilesHttpResponse } from '../response/map-get-user-profiles-response';
+import { mapPresignUserProfileImagesHttpResponse } from '../response/map-presign-user-profile-images-response';
 import { mapUpdateUserProfileHttpResponse } from '../response/map-update-user-profile-response';
 
 @Controller({ path: 'user-profiles', version: '1' })
@@ -52,6 +62,8 @@ export class UserProfilesController {
     private readonly createRootFolderUseCase: CreateRootFolderUseCase,
     private readonly updateUserProfileByIdUseCase: UpdateUserProfileByIdUseCase,
     private readonly deleteUserProfileByIdUseCase: DeleteUserProfileByIdUseCase,
+    private readonly presignImagesUseCase: PresignImagesUseCase,
+    private readonly deleteImagesUseCase: DeleteImagesUseCase,
   ) {}
 
   @Get()
@@ -143,6 +155,56 @@ export class UserProfilesController {
       outputCreateUserProfileToCreateRootFolderInput(output, input),
     );
     return mapCreateUserProfileHttpResponse(output);
+  }
+
+  @Post(':id/images/presign')
+  @Authorize({ kind: 'authenticated' })
+  async presignUserProfileImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(presignUserProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload presign аватара профиля пользователя',
+    })
+    payload: IPresignUserProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToPresignUserProfileImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.presignImagesUseCase.execute(input);
+    return mapPresignUserProfileImagesHttpResponse(output);
+  }
+
+  @Delete(':id/images')
+  @Authorize({ kind: 'authenticated' })
+  async deleteUserProfileImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(deleteUserProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload удаления аватара профиля пользователя',
+    })
+    payload: IDeleteUserProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToDeleteUserProfileImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.deleteImagesUseCase.execute(input);
+    return mapDeleteUserProfileImagesHttpResponse(output);
   }
 
   @Patch(':id')

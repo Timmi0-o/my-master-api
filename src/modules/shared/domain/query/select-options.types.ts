@@ -9,7 +9,10 @@ export type NestedIncludeOptionFor<V> =
   | true
   | {
       select: readonly (keyof ReadResultEntity<UnwrapRelationValue<V>> & string)[];
-      include?: never;
+      include?: QueryInclude<
+        ReadResultEntity<UnwrapRelationValue<V>>,
+        ReadResultRelations<UnwrapRelationValue<V>>
+      >;
     }
   | {
       include: QueryInclude<
@@ -21,7 +24,10 @@ export type NestedIncludeOptionFor<V> =
 
 export type NestedIncludeOption =
   | true
-  | { select: readonly string[]; include?: never }
+  | {
+      select: readonly string[];
+      include?: Record<string, NestedIncludeOption>;
+    }
   | { include: Record<string, NestedIncludeOption>; select?: never };
 
 export type QueryInclude<_T, R> = {

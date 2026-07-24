@@ -3,6 +3,7 @@ import type {
   IMasterProfileRelations,
 } from 'src/modules/masters/domain/entities/master-profile';
 import { MASTER_PROFILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-profile/master-profile-select-fields';
+import { IMAGE_FILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/image';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import type { SelectOptions } from 'src/modules/shared/domain/query';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -18,10 +19,21 @@ type MasterProfileSelectOptions = SelectOptions<
   IMasterProfileRelations
 >;
 
+const AVATAR_INCLUDE = {
+  avatar: {
+    include: {
+      file: {
+        select: [...IMAGE_FILE_SELECT_FIELDS],
+      },
+    },
+  },
+} as const;
+
 const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfileSelectOptions> =
   {
     MINIMAL: {
       select: ['id', 'userId', 'displayName', 'rating'],
+      include: AVATAR_INCLUDE,
     },
     SHORT: {
       select: [
@@ -36,6 +48,7 @@ const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfileSelectOptions> =
         'createdAt',
         'updatedAt',
       ],
+      include: AVATAR_INCLUDE,
     },
     BASE: {
       select: [
@@ -56,24 +69,13 @@ const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfileSelectOptions> =
         'deletedAt',
       ],
       include: {
+        ...AVATAR_INCLUDE,
         services: {
           include: {
             images: {
               include: {
                 file: {
-                  select: [
-                    'id',
-                    'fileUrl',
-                    'originalName',
-                    'mimeType',
-                    'fileType',
-                    'purpose',
-                    'accessLevel',
-                    'status',
-                    'fileSize',
-                    'createdAt',
-                    'updatedAt',
-                  ] as const,
+                  select: [...IMAGE_FILE_SELECT_FIELDS],
                 },
               },
             },

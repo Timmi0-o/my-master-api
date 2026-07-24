@@ -5,7 +5,6 @@ import type {
   IAppointmentRelations,
 } from 'src/modules/appointments/domain/entities/appointment';
 import { APPOINTMENT_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment/appointment-select-fields';
-import type { IAppointmentChatPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import type { SelectOptions } from 'src/modules/shared/domain/query';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
@@ -15,6 +14,16 @@ type AppointmentSelectOptions = SelectOptions<
   IAppointmentPublicEntity,
   IAppointmentRelations
 >;
+
+const AVATAR_INCLUDE = {
+  avatar: true as const,
+} as const;
+
+const CLIENT_USER_PROFILE_AVATAR_INCLUDE = {
+  userProfile: {
+    select: ['id', 'userId', 'displayName'] as const,
+  },
+} as const;
 
 const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
   MINIMAL: {
@@ -56,6 +65,7 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
           'updatedAt',
           'deletedAt',
         ] as (keyof IMasterProfilePublicEntity)[],
+        include: AVATAR_INCLUDE,
       },
       masterService: {
         select: [
@@ -86,6 +96,7 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
           'updatedAt',
           'deletedAt',
         ] as (keyof IUserPublicEntity)[],
+        include: CLIENT_USER_PROFILE_AVATAR_INCLUDE,
       },
       chat: {
         include: {

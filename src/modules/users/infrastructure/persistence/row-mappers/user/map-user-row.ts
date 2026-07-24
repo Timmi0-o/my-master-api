@@ -2,7 +2,13 @@ import type {
   IUserEntity,
   IUserPublicEntity,
 } from 'src/modules/users/domain/entities/user';
+import type { IUserProfilePublicEntity } from 'src/modules/users/domain/entities/user-profile';
+import { mapUserProfileRow } from '../user-profile/map-user-profile-row';
 import type { UserEntityRow, UserRow } from './user.row.types';
+
+export type IUserRowMapped = IUserPublicEntity & {
+  userProfile?: IUserProfilePublicEntity;
+};
 
 function mapUserBase(row: UserRow): IUserPublicEntity {
   return {
@@ -22,8 +28,14 @@ function mapUserBase(row: UserRow): IUserPublicEntity {
   };
 }
 
-export function mapUserRow(row: UserRow): IUserPublicEntity {
-  return mapUserBase(row);
+export function mapUserRow(row: UserRow): IUserRowMapped {
+  const entity: IUserRowMapped = mapUserBase(row);
+
+  if (row.userProfile != null) {
+    entity.userProfile = mapUserProfileRow(row.userProfile);
+  }
+
+  return entity;
 }
 
 export function mapUserEntityRow(row: UserEntityRow): IUserEntity {

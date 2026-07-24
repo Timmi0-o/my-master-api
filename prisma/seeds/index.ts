@@ -4,6 +4,7 @@ import { masterSchedulesSeed } from './master-schedules.seed';
 import { masterServiceImagesSeed } from './master-service-images.seed';
 import { masterServiceReviewsSeed } from './master-service-reviews.seed';
 import { mastersSeed } from './masters.seed';
+import { profileAvatarsSeed } from './profile-avatars.seed';
 import { rbacSeed } from './rbac.seed';
 import { userProfilesSeed } from './user-profiles.seed';
 import { usersSeed } from './users.seed';
@@ -16,6 +17,7 @@ export const seeds: SeedRunner[] = [
   userProfilesSeed,
   mastersSeed,
   masterServiceImagesSeed,
+  profileAvatarsSeed,
   masterSchedulesSeed,
   appointmentsSeed,
   masterServiceReviewsSeed,

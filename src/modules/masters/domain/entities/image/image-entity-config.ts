@@ -32,6 +32,14 @@ export const IMAGE_ENTITY_CONFIG: Record<ImageEntityType, ImageEntityConfig> = {
     purpose: FilePurpose.MASTER_PROFILE_PHOTO,
     fileType: FileType.IMAGE,
   },
+  [ImageEntityType.CLIENT_PROFILE_AVATAR]: {
+    maxCount: 1,
+    ownerKind: 'user-profile',
+    ownerType: FileOwnerType.USER,
+    accessLevel: FileAccessLevel.PUBLIC,
+    purpose: FilePurpose.PROFILE_PHOTO,
+    fileType: FileType.IMAGE,
+  },
 };
 
 export const IMAGE_FILE_SELECT_FIELDS = [

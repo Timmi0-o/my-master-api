@@ -1,4 +1,5 @@
 import type { EUserLanguage, EUserStatus } from 'src/modules/users/domain/entities/user/user.enum';
+import type { UserProfileRow } from '../user-profile/user-profile.row.types';
 
 export type UserRow = {
   id: string;
@@ -15,6 +16,7 @@ export type UserRow = {
   updatedAt: Date;
   deletedAt: Date | null;
   passwordHash?: string;
+  userProfile?: UserProfileRow | null;
 };
 
 export type UserEntityRow = UserRow & { passwordHash: string };

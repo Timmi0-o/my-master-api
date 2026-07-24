@@ -1,4 +1,6 @@
 import type { IFilePublicEntity } from 'src/modules/files/domain/entities/file';
+import type { ReadResult } from 'src/modules/shared/domain/query';
+import type { IProfileAvatarView } from '../image';
 import type { IMasterProfilePublicEntity } from '../master-profile';
 
 /**
@@ -14,7 +16,16 @@ export type IMasterServiceImageView = {
   file?: IFilePublicEntity;
 };
 
+export type IMasterServiceMasterProfileRelations = {
+  avatar?: IProfileAvatarView | null;
+};
+
+export type IMasterServiceMasterProfileView = ReadResult<
+  IMasterProfilePublicEntity,
+  IMasterServiceMasterProfileRelations
+>;
+
 export type IMasterServiceRelations = {
-  masterProfile: IMasterProfilePublicEntity;
+  masterProfile: IMasterServiceMasterProfileView;
   images?: IMasterServiceImageView[];
 };

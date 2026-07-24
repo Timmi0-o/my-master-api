@@ -8,6 +8,17 @@ import type { TPresetType } from 'src/modules/shared/application/presets/common/
 import type { SelectOptions } from 'src/modules/shared/domain/query';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
+/** Marker only — hydrate always loads avatar.file; keep depth ≤ 3 under appointment. */
+const AVATAR_INCLUDE = {
+  avatar: true as const,
+} as const;
+
+const CLIENT_USER_PROFILE_AVATAR_INCLUDE = {
+  userProfile: {
+    select: ['id', 'userId', 'displayName'] as const,
+  },
+} as const;
+
 const PRESETS: Record<
   TPresetType,
   SelectOptions<IAppointmentChatPublicEntity, IAppointmentChatRelations>
@@ -21,9 +32,11 @@ const PRESETS: Record<
         include: {
           masterProfile: {
             select: ['id', 'userId', 'displayName', 'description', 'rating'],
+            include: AVATAR_INCLUDE,
           },
           clientUser: {
             select: ['id', 'name', 'surname', 'patronymic'],
+            include: CLIENT_USER_PROFILE_AVATAR_INCLUDE,
           },
         },
       },

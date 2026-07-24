@@ -4,6 +4,8 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { CreateRootFolderUseCase } from '@modules/files/application/use-cases/folder/create-root-folder.use-case';
+import { DeleteImagesUseCase } from '@modules/masters/application/use-cases/image/delete-images.use-case';
+import { PresignImagesUseCase } from '@modules/masters/application/use-cases/image/presign-images.use-case';
 import { CreateMasterProfileUseCase } from '@modules/masters/application/use-cases/master-profile/create-master-profile.use-case';
 import { DeleteMasterProfileByIdUseCase } from '@modules/masters/application/use-cases/master-profile/delete-master-profile-by-id.use-case';
 import { GetMasterProfileByIdUseCase } from '@modules/masters/application/use-cases/master-profile/get-master-profile-by-id.use-case';
@@ -12,12 +14,16 @@ import { GetMyMasterProfileUseCase } from '@modules/masters/application/use-case
 import { UpdateMasterProfileByIdUseCase } from '@modules/masters/application/use-cases/master-profile/update-master-profile-by-id.use-case';
 import { createMasterProfilePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/create-master-profile-payload.schema';
 import type { ICreateMasterProfilePayload } from '@modules/masters/presentation/http/validation/schemas/create-master-profile-payload.types';
+import { deleteMasterProfileImagesPayloadSchema } from '@modules/masters/presentation/http/validation/schemas/delete-master-profile-images-payload.schema';
+import type { IDeleteMasterProfileImagesPayload } from '@modules/masters/presentation/http/validation/schemas/delete-master-profile-images-payload.types';
 import { getByIdQuerySchema } from '@modules/masters/presentation/http/validation/schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-by-id-query.types';
 import { getMasterProfilesQuerySchema } from '@modules/masters/presentation/http/validation/schemas/get-master-profiles-query.schema';
 import type { IGetMasterProfilesQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-master-profiles-query.types';
 import { idParamSchema } from '@modules/masters/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/masters/presentation/http/validation/schemas/id-param.types';
+import { presignMasterProfileImagesPayloadSchema } from '@modules/masters/presentation/http/validation/schemas/presign-master-profile-images-payload.schema';
+import type { IPresignMasterProfileImagesPayload } from '@modules/masters/presentation/http/validation/schemas/presign-master-profile-images-payload.types';
 import { updateMasterProfilePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/update-master-profile-payload.schema';
 import type { IUpdateMasterProfilePayload } from '@modules/masters/presentation/http/validation/schemas/update-master-profile-payload.types';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
@@ -29,16 +35,20 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
 import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
+import { payloadToDeleteMasterProfileImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-images-input';
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
 import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
 import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
+import { payloadToPresignMasterProfileImagesInput } from '../mappers/master-profile/payload-to-presign-master-profile-images-input';
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
 import { mapCreateMasterProfileHttpResponse } from '../response/map-create-master-profile-response';
 import { mapDeleteMasterProfileHttpResponse } from '../response/map-delete-master-profile-response';
+import { mapDeleteMasterProfileImagesHttpResponse } from '../response/map-delete-master-profile-images-response';
 import { mapGetMasterProfileByIdHttpResponse } from '../response/map-get-master-profile-by-id-response';
 import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
 import { mapGetMyMasterProfileHttpResponse } from '../response/map-get-my-master-profile-response';
+import { mapPresignMasterProfileImagesHttpResponse } from '../response/map-presign-master-profile-images-response';
 import { mapUpdateMasterProfileHttpResponse } from '../response/map-update-master-profile-response';
 
 @Controller({ path: 'master-profiles', version: '1' })
@@ -51,6 +61,8 @@ export class MasterProfilesController {
     private readonly createRootFolderUseCase: CreateRootFolderUseCase,
     private readonly updateMasterProfileByIdUseCase: UpdateMasterProfileByIdUseCase,
     private readonly deleteMasterProfileByIdUseCase: DeleteMasterProfileByIdUseCase,
+    private readonly presignImagesUseCase: PresignImagesUseCase,
+    private readonly deleteImagesUseCase: DeleteImagesUseCase,
   ) {}
 
   @Get()
@@ -130,6 +142,58 @@ export class MasterProfilesController {
     );
 
     return mapCreateMasterProfileHttpResponse(output);
+  }
+
+  @Post(':id/images/presign')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
+  async presignMasterProfileImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(presignMasterProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload presign аватара профиля мастера',
+    })
+    payload: IPresignMasterProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToPresignMasterProfileImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.presignImagesUseCase.execute(input);
+    return mapPresignMasterProfileImagesHttpResponse(output);
+  }
+
+  @Delete(':id/images')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
+  async deleteMasterProfileImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(deleteMasterProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload удаления аватара профиля мастера',
+    })
+    payload: IDeleteMasterProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToDeleteMasterProfileImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.deleteImagesUseCase.execute(input);
+    return mapDeleteMasterProfileImagesHttpResponse(output);
   }
 
   @Patch(':id')

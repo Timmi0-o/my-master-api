@@ -10,6 +10,15 @@ import {
 import type { RelationConfig } from 'src/modules/shared/infrastructure/persistence/repositories/base/config/relation.config';
 
 export const MASTER_PROFILE_RELATIONS: Record<string, RelationConfig> = {
+  avatar: {
+    virtual: true,
+    allowedSelectFields: [...IMAGE_SELECT_FIELDS],
+    nested: {
+      file: {
+        allowedSelectFields: [...IMAGE_FILE_SELECT_FIELDS],
+      },
+    },
+  },
   services: {
     allowedSelectFields: [
       'id',

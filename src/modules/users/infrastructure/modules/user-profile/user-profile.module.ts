@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { ImageModule } from 'src/modules/masters/infrastructure/modules/image/image.module';
 import { CreateUserProfileUseCase } from '../../../application/use-cases/user-profile/create-user-profile.use-case';
 import { DeleteUserProfileByIdUseCase } from '../../../application/use-cases/user-profile/delete-user-profile-by-id.use-case';
 import { GetUserProfileByIdUseCase } from '../../../application/use-cases/user-profile/get-user-profile-by-id.use-case';
@@ -10,7 +11,9 @@ import { UpdateUserProfileByIdUseCase } from '../../../application/use-cases/use
 import type { IUserProfileRepository } from '../../../domain/repositories/user-profile/i-user-profile.repository';
 import { USER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/user-profile/user-profile.repository.tokens';
 import { PrismaUserProfileRepository } from '../../persistence/repositories/user-profile/prisma-user-profile.repository';
+
 @Module({
+  imports: [forwardRef(() => ImageModule)],
   providers: [
     {
       provide: USER_PROFILE_REPOSITORY_TOKEN,
@@ -67,6 +70,7 @@ import { PrismaUserProfileRepository } from '../../persistence/repositories/user
     CreateUserProfileUseCase,
     UpdateUserProfileByIdUseCase,
     DeleteUserProfileByIdUseCase,
+    forwardRef(() => ImageModule),
   ],
 })
 export class UserProfileModule {}

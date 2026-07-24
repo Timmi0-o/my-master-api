@@ -3,6 +3,7 @@ import { PresignedUploadUseCase } from 'src/modules/files/application/use-cases/
 import {
   ensureImageMaxCount,
   ImageEntityType,
+  UnsupportedImageEntityTypeError,
 } from 'src/modules/masters/domain/entities/image';
 import {
   ensureMasterProfileAccessible,
@@ -12,6 +13,11 @@ import { ensureMasterServiceExists } from 'src/modules/masters/domain/entities/m
 import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
+import {
+  ensureUserProfileAccessible,
+  ensureUserProfileExists,
+} from 'src/modules/users/domain/entities/user-profile';
+import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
 import type { IPresignImagesApplicationInput } from '../../dtos/image/presign-images.input';
 import type { IPresignImagesApplicationOutput } from '../../dtos/image/presign-images.output';
 import { toPresignedUploadFilesForEntityImages } from '../../mappers/image/to-presigned-upload-files-for-entity-images';
@@ -21,6 +27,7 @@ export class PresignImagesUseCase {
     private readonly transactionManager: ITransactionManager,
     private readonly masterServiceRepository: IMasterServiceRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly userProfileRepository: IUserProfileRepository,
     private readonly imageRepository: IImageRepository,
     private readonly presignedUploadUseCase: PresignedUploadUseCase,
   ) {}
@@ -78,26 +85,39 @@ export class PresignImagesUseCase {
   private async ensureEntityAccessible(
     input: IPresignImagesApplicationInput,
   ): Promise<void> {
-    if (input.entityType === ImageEntityType.MASTER_SERVICE) {
-      const service = await this.masterServiceRepository.findEntityById(
-        input.entityId,
-      );
-      ensureMasterServiceExists(service, input.entityId);
+    switch (input.entityType) {
+      case ImageEntityType.MASTER_SERVICE: {
+        const service = await this.masterServiceRepository.findEntityById(
+          input.entityId,
+        );
+        ensureMasterServiceExists(service, input.entityId);
 
-      const profile = await this.masterProfileRepository.findEntityById(
-        service.masterProfileId,
-      );
-      ensureMasterProfileExists(profile, service.masterProfileId);
-      ensureMasterProfileAccessible(profile, input.actor);
-      return;
-    }
-
-    if (input.entityType === ImageEntityType.MASTER_PROFILE_AVATAR) {
-      const profile = await this.masterProfileRepository.findEntityById(
-        input.entityId,
-      );
-      ensureMasterProfileExists(profile, input.entityId);
-      ensureMasterProfileAccessible(profile, input.actor);
+        const profile = await this.masterProfileRepository.findEntityById(
+          service.masterProfileId,
+        );
+        ensureMasterProfileExists(profile, service.masterProfileId);
+        ensureMasterProfileAccessible(profile, input.actor);
+        return;
+      }
+      case ImageEntityType.MASTER_PROFILE_AVATAR: {
+        const profile = await this.masterProfileRepository.findEntityById(
+          input.entityId,
+        );
+        ensureMasterProfileExists(profile, input.entityId);
+        ensureMasterProfileAccessible(profile, input.actor);
+        return;
+      }
+      case ImageEntityType.CLIENT_PROFILE_AVATAR: {
+        const profile = await this.userProfileRepository.findEntityById(
+          input.entityId,
+        );
+        ensureUserProfileExists(profile, input.entityId);
+        ensureUserProfileAccessible(profile, input.actor);
+        return;
+      }
+      default: {
+        throw new UnsupportedImageEntityTypeError(String(input.entityType));
+      }
     }
   }
 }

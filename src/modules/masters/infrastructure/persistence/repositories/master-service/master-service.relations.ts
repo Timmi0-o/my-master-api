@@ -28,6 +28,17 @@ export const MASTER_SERVICE_RELATIONS: Record<string, RelationConfig> = {
       'updatedAt',
       'deletedAt',
     ],
+    nested: {
+      avatar: {
+        virtual: true,
+        allowedSelectFields: [...IMAGE_SELECT_FIELDS],
+        nested: {
+          file: {
+            allowedSelectFields: [...IMAGE_FILE_SELECT_FIELDS],
+          },
+        },
+      },
+    },
   },
   images: {
     virtual: true,

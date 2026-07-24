@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ImageEntityType" ADD VALUE 'CLIENT_PROFILE_AVATAR';

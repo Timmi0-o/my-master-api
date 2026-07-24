@@ -1,9 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
-import { DeleteFilesUseCase } from 'src/modules/files/application/use-cases/file/delete-files.use-case';
-import { PresignedUploadUseCase } from 'src/modules/files/application/use-cases/file/presigned-upload.use-case';
-import { FilesModule } from 'src/modules/files/files.module';
 import { AppointmentsModule } from '../../../../appointments/appointments.module';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../../appointments/domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../../appointments/domain/repositories/appointment/i-appointment.repository';
@@ -13,11 +10,7 @@ import { GetMasterServiceAvailableSlotsUseCase } from '../../../application/use-
 import { GetMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServicesUseCase } from '../../../application/use-cases/master-service/get-master-services.use-case';
 import { GetMyServicesUseCase } from '../../../application/use-cases/master-service/get-my-services.use-case';
-import { DeleteImagesUseCase } from '../../../application/use-cases/image/delete-images.use-case';
-import { PresignImagesUseCase } from '../../../application/use-cases/image/presign-images.use-case';
 import { UpdateMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/update-master-service-by-id.use-case';
-import type { IImageRepository } from '../../../domain/repositories/image/i-image.repository';
-import { IMAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/image/image.repository.tokens';
 import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-profile/master-profile.repository.tokens';
 import type { IMasterScheduleExceptionRepository } from '../../../domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
@@ -34,8 +27,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
 
 @Module({
   imports: [
-    FilesModule,
-    ImageModule,
+    forwardRef(() => ImageModule),
     MasterProfileModule,
     MasterWeeklyScheduleModule,
     MasterScheduleExceptionModule,
@@ -147,54 +139,6 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
         MASTER_PROFILE_REPOSITORY_TOKEN,
       ],
     },
-    {
-      provide: PresignImagesUseCase,
-      useFactory: (
-        transactionManager: ITransactionManager,
-        serviceRepo: IMasterServiceRepository,
-        profileRepo: IMasterProfileRepository,
-        imageRepo: IImageRepository,
-        presignedUploadUseCase: PresignedUploadUseCase,
-      ) =>
-        new PresignImagesUseCase(
-          transactionManager,
-          serviceRepo,
-          profileRepo,
-          imageRepo,
-          presignedUploadUseCase,
-        ),
-      inject: [
-        TRANSACTION_MANAGER_TOKEN,
-        MASTER_SERVICE_REPOSITORY_TOKEN,
-        MASTER_PROFILE_REPOSITORY_TOKEN,
-        IMAGE_REPOSITORY_TOKEN,
-        PresignedUploadUseCase,
-      ],
-    },
-    {
-      provide: DeleteImagesUseCase,
-      useFactory: (
-        transactionManager: ITransactionManager,
-        serviceRepo: IMasterServiceRepository,
-        profileRepo: IMasterProfileRepository,
-        imageRepo: IImageRepository,
-        deleteFilesUseCase: DeleteFilesUseCase,
-      ) =>
-        new DeleteImagesUseCase(
-          transactionManager,
-          serviceRepo,
-          profileRepo,
-          imageRepo,
-          deleteFilesUseCase,
-        ),
-      inject: [
-        TRANSACTION_MANAGER_TOKEN,
-        MASTER_SERVICE_REPOSITORY_TOKEN,
-        MASTER_PROFILE_REPOSITORY_TOKEN,
-        IMAGE_REPOSITORY_TOKEN,
-        DeleteFilesUseCase,
-      ],
-    },
   ],
   exports: [
     MASTER_SERVICE_REPOSITORY_TOKEN,
@@ -205,8 +149,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
     CreateMasterServiceUseCase,
     UpdateMasterServiceByIdUseCase,
     DeleteMasterServiceByIdUseCase,
-    PresignImagesUseCase,
-    DeleteImagesUseCase,
+    forwardRef(() => ImageModule),
   ],
 })
 export class MasterServiceModule {}

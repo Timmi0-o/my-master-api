@@ -2,7 +2,10 @@ import type { IGetMetadata } from 'src/modules/shared/domain/decorators/i-get-me
 import type { FindManyParams } from 'src/modules/shared/domain/query';
 import { mapOrderBy } from 'src/modules/shared/presentation/http/query/map-order-by';
 import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
-import type { IUserProfilePublicEntity } from 'src/modules/users/domain/entities/user-profile';
+import type {
+  IUserProfilePublicEntity,
+  IUserProfileRelations,
+} from 'src/modules/users/domain/entities/user-profile';
 import type { IGetUserProfilesQueryPayload } from '../../validation/schemas/get-user-profiles-query.types';
 import { extractUserProfileFilter } from './extract-user-profile-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
@@ -10,7 +13,7 @@ import { presetToSelectOptions } from './preset-to-select-options.mapper';
 export function payloadToFindManyParams(
   payload: IGetUserProfilesQueryPayload,
   metadata: IGetMetadata,
-): FindManyParams<IUserProfilePublicEntity, Record<never, never>> {
+): FindManyParams<IUserProfilePublicEntity, IUserProfileRelations> {
   const filterWhere = extractUserProfileFilter(
     payload.filter,
     metadata.isStaffUser,

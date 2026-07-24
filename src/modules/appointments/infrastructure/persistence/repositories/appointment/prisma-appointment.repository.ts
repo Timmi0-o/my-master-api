@@ -1,4 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type {
+  FindManyParams,
+  FindOneParams,
+  ReadResult,
+} from '@shared/domain/query';
 import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
 import type { TransactionScope } from '@shared/domain/transactions';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
@@ -10,7 +15,14 @@ import type {
   IUpdateAppointmentInput,
 } from 'src/modules/appointments/domain/entities/appointment';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
-import type { ReadResult } from '@shared/domain/query';
+import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/image/image.repository.tokens';
+import {
+  groupAvatarsByEntityId,
+  wantsNestedClientUserProfileAvatarInclude,
+  wantsNestedMasterProfileAvatarInclude,
+} from 'src/modules/masters/infrastructure/persistence/helpers/hydrate-profile-avatar.helper';
 import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
 import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
@@ -38,6 +50,8 @@ export class PrismaAppointmentRepository
 
   constructor(
     private readonly prismaService: PrismaService,
+    @Inject(IMAGE_REPOSITORY_TOKEN)
+    private readonly imageRepository: IImageRepository,
     @Inject(LOGGER_TOKEN) logger: ILogger,
   ) {
     super(logger);
@@ -57,6 +71,153 @@ export class PrismaAppointmentRepository
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
     return { id };
+  }
+
+  async findOne(
+    id: string,
+    params?: FindOneParams<IAppointmentPublicEntity, IAppointmentRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IAppointmentPublicEntity,
+    IAppointmentRelations
+  > | null> {
+    const result = await super.findOne(id, params, scope);
+    if (result == null) {
+      return null;
+    }
+
+    const [hydrated] = await this.hydratePeerAvatars(
+      [result],
+      params?.selectOptions?.include,
+      scope,
+    );
+    return hydrated ?? null;
+  }
+
+  async findMany(
+    params?: FindManyParams<IAppointmentPublicEntity, IAppointmentRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<IAppointmentPublicEntity, IAppointmentRelations>[]> {
+    const results = await super.findMany(params, scope);
+    return this.hydratePeerAvatars(
+      results,
+      params?.selectOptions?.include,
+      scope,
+    );
+  }
+
+  private async hydratePeerAvatars(
+    appointments: ReadResult<
+      IAppointmentPublicEntity,
+      IAppointmentRelations
+    >[],
+    include: unknown,
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IAppointmentPublicEntity, IAppointmentRelations>[]
+  > {
+    let next = appointments;
+
+    if (wantsNestedMasterProfileAvatarInclude(include)) {
+      next = await this.hydrateMasterProfileAvatars(next, scope);
+    }
+
+    if (wantsNestedClientUserProfileAvatarInclude(include)) {
+      next = await this.hydrateClientUserProfileAvatars(next, scope);
+    }
+
+    return next;
+  }
+
+  private async hydrateMasterProfileAvatars(
+    appointments: ReadResult<
+      IAppointmentPublicEntity,
+      IAppointmentRelations
+    >[],
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IAppointmentPublicEntity, IAppointmentRelations>[]
+  > {
+    const profileIds = [
+      ...new Set(
+        appointments
+          .map((appointment) => appointment.masterProfile?.id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    ];
+
+    if (profileIds.length === 0) {
+      return appointments;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.MASTER_PROFILE_AVATAR,
+      profileIds,
+      { includeFile: true },
+      scope,
+    );
+    const byProfileId = groupAvatarsByEntityId(images);
+
+    return appointments.map((appointment) => {
+      if (appointment.masterProfile == null) {
+        return appointment;
+      }
+
+      return {
+        ...appointment,
+        masterProfile: {
+          ...appointment.masterProfile,
+          avatar: byProfileId.get(appointment.masterProfile.id) ?? null,
+        },
+      };
+    });
+  }
+
+  private async hydrateClientUserProfileAvatars(
+    appointments: ReadResult<
+      IAppointmentPublicEntity,
+      IAppointmentRelations
+    >[],
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IAppointmentPublicEntity, IAppointmentRelations>[]
+  > {
+    const profileIds = [
+      ...new Set(
+        appointments
+          .map((appointment) => appointment.clientUser?.userProfile?.id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    ];
+
+    if (profileIds.length === 0) {
+      return appointments;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.CLIENT_PROFILE_AVATAR,
+      profileIds,
+      { includeFile: true },
+      scope,
+    );
+    const byProfileId = groupAvatarsByEntityId(images);
+
+    return appointments.map((appointment) => {
+      if (appointment.clientUser?.userProfile == null) {
+        return appointment;
+      }
+
+      return {
+        ...appointment,
+        clientUser: {
+          ...appointment.clientUser,
+          userProfile: {
+            ...appointment.clientUser.userProfile,
+            avatar: byProfileId.get(appointment.clientUser.userProfile.id) ?? null,
+          },
+        },
+      };
+    });
   }
 
   async findEntityById(
@@ -90,7 +251,9 @@ export class PrismaAppointmentRepository
       const row = await tx.appointment.create({ data: input });
       return mapAppointmentRow(row as AppointmentRow);
     } catch (error) {
-      throw mapAppointmentWriteError(error, { masterProfileId: input.masterProfileId });
+      throw mapAppointmentWriteError(error, {
+        masterProfileId: input.masterProfileId,
+      });
     }
   }
 
@@ -111,7 +274,9 @@ export class PrismaAppointmentRepository
       return rows.map((row) => mapAppointmentRow(row as AppointmentRow));
     } catch (error) {
       const first = inputs[0];
-      throw mapAppointmentWriteError(error, { masterProfileId: first.masterProfileId });
+      throw mapAppointmentWriteError(error, {
+        masterProfileId: first.masterProfileId,
+      });
     }
   }
 

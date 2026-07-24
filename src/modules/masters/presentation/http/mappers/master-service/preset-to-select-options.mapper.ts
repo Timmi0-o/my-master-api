@@ -1,3 +1,4 @@
+import { IMAGE_FILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/image';
 import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
@@ -11,6 +12,16 @@ type MasterServiceSelectOptions = SelectOptions<
   IMasterServicePublicEntity,
   IMasterServiceRelations
 >;
+
+const AVATAR_INCLUDE = {
+  avatar: {
+    include: {
+      file: {
+        select: [...IMAGE_FILE_SELECT_FIELDS],
+      },
+    },
+  },
+} as const;
 
 const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
   {
@@ -72,23 +83,12 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
             'updatedAt',
             'deletedAt',
           ] as const,
+          include: AVATAR_INCLUDE,
         },
         images: {
           include: {
             file: {
-              select: [
-                'id',
-                'fileUrl',
-                'originalName',
-                'mimeType',
-                'fileType',
-                'purpose',
-                'accessLevel',
-                'status',
-                'fileSize',
-                'createdAt',
-                'updatedAt',
-              ] as const,
+              select: [...IMAGE_FILE_SELECT_FIELDS],
             },
           },
         },

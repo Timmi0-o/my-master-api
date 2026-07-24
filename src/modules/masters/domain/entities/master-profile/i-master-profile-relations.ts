@@ -1,4 +1,5 @@
 import type { ReadResult } from 'src/modules/shared/domain/query';
+import type { IProfileAvatarView } from '../image';
 import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
@@ -6,4 +7,5 @@ import type {
 
 export type IMasterProfileRelations = {
   services: ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[];
+  avatar?: IProfileAvatarView | null;
 };

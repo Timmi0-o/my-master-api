@@ -1,9 +1,3 @@
-import { Controller, Delete, Get, UseGuards } from '@nestjs/common';
-import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
-import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
-import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
-import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
-import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { DeleteAppointmentChatByIdUseCase } from '@modules/appointments/application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
 import { GetAppointmentChatsUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chats.use-case';
@@ -13,6 +7,12 @@ import { getByIdQuerySchema } from '@modules/appointments/presentation/http/vali
 import type { IGetByIdQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.types';
 import { idParamSchema } from '@modules/appointments/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/appointments/presentation/http/validation/schemas/id-param.types';
+import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
+import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
+import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { Controller, Delete, Get, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
@@ -22,9 +22,9 @@ import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normali
 import { payloadToDeleteAppointmentChatInput } from '../mappers/appointment-chat/payload-to-delete-appointment-chat-input';
 import { payloadToFindManyParams } from '../mappers/appointment-chat/payload-to-find-many-params.mapper';
 import { payloadToGetAppointmentChatByIdInput } from '../mappers/appointment-chat/payload-to-get-appointment-chat-by-id-input';
-import { mapGetAppointmentChatsHttpResponse } from '../response/map-get-appointment-chats-response';
-import { mapGetAppointmentChatByIdHttpResponse } from '../response/map-get-appointment-chat-by-id-response';
 import { mapDeleteAppointmentChatHttpResponse } from '../response/map-delete-appointment-chat-response';
+import { mapGetAppointmentChatByIdHttpResponse } from '../response/map-get-appointment-chat-by-id-response';
+import { mapGetAppointmentChatsHttpResponse } from '../response/map-get-appointment-chats-response';
 
 @Controller({ path: 'appointment-chats', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)

@@ -1,6 +1,7 @@
 enum ImageEntityType {
   MASTER_SERVICE
   MASTER_PROFILE_AVATAR
+  CLIENT_PROFILE_AVATAR
 }
 
 model Image {

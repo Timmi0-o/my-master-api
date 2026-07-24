@@ -21,6 +21,10 @@ import type {
 import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
 import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
+  groupAvatarsByEntityId,
+  wantsNestedMasterProfileAvatarInclude,
+} from '../../helpers/hydrate-profile-avatar.helper';
+import {
   groupImagesByEntityId,
   wantsImagesInclude,
 } from '../../helpers/hydrate-service-images.helper';
@@ -81,11 +85,15 @@ export class PrismaMasterServiceRepository
     IMasterServiceRelations
   > | null> {
     const result = await super.findOne(id, params, scope);
-    if (result == null || !wantsImagesInclude(params?.selectOptions?.include)) {
-      return result;
+    if (result == null) {
+      return null;
     }
 
-    const [hydrated] = await this.hydrateImages([result], scope);
+    const [hydrated] = await this.hydrateRelations(
+      [result],
+      params?.selectOptions?.include,
+      scope,
+    );
     return hydrated ?? null;
   }
 
@@ -97,11 +105,31 @@ export class PrismaMasterServiceRepository
     scope?: TransactionScope,
   ): Promise<ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[]> {
     const results = await super.findMany(params, scope);
-    if (!wantsImagesInclude(params?.selectOptions?.include)) {
-      return results;
+    return this.hydrateRelations(
+      results,
+      params?.selectOptions?.include,
+      scope,
+    );
+  }
+
+  private async hydrateRelations(
+    services: ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[],
+    include: unknown,
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[]
+  > {
+    let next = services;
+
+    if (wantsImagesInclude(include)) {
+      next = await this.hydrateImages(next, scope);
     }
 
-    return this.hydrateImages(results, scope);
+    if (wantsNestedMasterProfileAvatarInclude(include)) {
+      next = await this.hydrateMasterProfileAvatars(next, scope);
+    }
+
+    return next;
   }
 
   private async hydrateImages(
@@ -114,19 +142,59 @@ export class PrismaMasterServiceRepository
       return services;
     }
 
-    const images =
-      await this.imageRepository.findByEntityTypeAndEntityIds(
-        ImageEntityType.MASTER_SERVICE,
-        services.map((service) => service.id),
-        { includeFile: true },
-        scope,
-      );
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.MASTER_SERVICE,
+      services.map((service) => service.id),
+      { includeFile: true },
+      scope,
+    );
     const byServiceId = groupImagesByEntityId(images);
 
     return services.map((service) => ({
       ...service,
       images: byServiceId.get(service.id) ?? [],
     }));
+  }
+
+  private async hydrateMasterProfileAvatars(
+    services: ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[],
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[]
+  > {
+    const profileIds = [
+      ...new Set(
+        services
+          .map((service) => service.masterProfile?.id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    ];
+
+    if (profileIds.length === 0) {
+      return services;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.MASTER_PROFILE_AVATAR,
+      profileIds,
+      { includeFile: true },
+      scope,
+    );
+    const byProfileId = groupAvatarsByEntityId(images);
+
+    return services.map((service) => {
+      if (service.masterProfile == null) {
+        return service;
+      }
+
+      return {
+        ...service,
+        masterProfile: {
+          ...service.masterProfile,
+          avatar: byProfileId.get(service.masterProfile.id) ?? null,
+        },
+      };
+    });
   }
 
   async findEntityById(

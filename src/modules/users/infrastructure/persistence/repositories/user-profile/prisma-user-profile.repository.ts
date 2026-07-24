@@ -2,14 +2,26 @@ import { Inject, Injectable } from '@nestjs/common';
 import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
 import type { TransactionScope } from '@shared/domain/transactions';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
+import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/image/image.repository.tokens';
+import {
+  groupAvatarsByEntityId,
+  wantsAvatarInclude,
+} from 'src/modules/masters/infrastructure/persistence/helpers/hydrate-profile-avatar.helper';
 import type {
   ICreateUserProfileInput,
   IUserProfileEntity,
   IUserProfilePublicEntity,
+  IUserProfileRelations,
   IUpdateUserProfileInput,
 } from 'src/modules/users/domain/entities/user-profile';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
-import type { ReadResult } from '@shared/domain/query';
+import type {
+  FindManyParams,
+  FindOneParams,
+  ReadResult,
+} from '@shared/domain/query';
 import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
 import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
@@ -27,7 +39,7 @@ export class PrismaUserProfileRepository
   extends PrismaReadRepository<
     IUserProfilePublicEntity,
     string,
-    Record<never, never>,
+    IUserProfileRelations,
     UserProfileRow
   >
   implements IUserProfileRepository
@@ -37,6 +49,8 @@ export class PrismaUserProfileRepository
 
   constructor(
     private readonly prismaService: PrismaService,
+    @Inject(IMAGE_REPOSITORY_TOKEN)
+    private readonly imageRepository: IImageRepository,
     @Inject(LOGGER_TOKEN) logger: ILogger,
   ) {
     super(logger);
@@ -50,12 +64,63 @@ export class PrismaUserProfileRepository
 
   protected mapRow(
     row: UserProfileRow,
-  ): ReadResult<IUserProfilePublicEntity, Record<never, never>> {
+  ): ReadResult<IUserProfilePublicEntity, IUserProfileRelations> {
     return mapUserProfileRow(row);
   }
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
     return { id };
+  }
+
+  async findOne(
+    id: string,
+    params?: FindOneParams<IUserProfilePublicEntity, IUserProfileRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IUserProfilePublicEntity,
+    IUserProfileRelations
+  > | null> {
+    const result = await super.findOne(id, params, scope);
+    if (result == null || !wantsAvatarInclude(params?.selectOptions?.include)) {
+      return result;
+    }
+
+    const [hydrated] = await this.hydrateAvatars([result], scope);
+    return hydrated ?? null;
+  }
+
+  async findMany(
+    params?: FindManyParams<IUserProfilePublicEntity, IUserProfileRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[]> {
+    const results = await super.findMany(params, scope);
+    if (!wantsAvatarInclude(params?.selectOptions?.include)) {
+      return results;
+    }
+
+    return this.hydrateAvatars(results, scope);
+  }
+
+  private async hydrateAvatars(
+    profiles: ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[],
+    scope?: TransactionScope,
+  ): Promise<ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[]> {
+    if (profiles.length === 0) {
+      return profiles;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.CLIENT_PROFILE_AVATAR,
+      profiles.map((profile) => profile.id),
+      { includeFile: true },
+      scope,
+    );
+    const byProfileId = groupAvatarsByEntityId(images);
+
+    return profiles.map((profile) => ({
+      ...profile,
+      avatar: byProfileId.get(profile.id) ?? null,
+    }));
   }
 
   async findEntityById(

@@ -12,6 +12,7 @@ import {
 import {
   ImageMaxCountError,
   ImageNotFoundError,
+  UnsupportedImageEntityTypeError,
 } from 'src/modules/masters/domain/entities/image';
 import {
   MasterWeeklyScheduleForbiddenError,
@@ -61,6 +62,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
   }
   if (
     error instanceof ImageMaxCountError ||
+    error instanceof UnsupportedImageEntityTypeError ||
     error instanceof MasterServiceInvalidTagsError ||
     error instanceof MasterServiceReviewAlreadyExistsError ||
     error instanceof MasterServiceReviewAppointmentNotCompletedError ||

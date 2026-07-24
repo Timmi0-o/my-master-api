@@ -2,6 +2,7 @@ import { DeleteFilesUseCase } from 'src/modules/files/application/use-cases/file
 import {
   ImageEntityType,
   ImageNotFoundError,
+  UnsupportedImageEntityTypeError,
 } from 'src/modules/masters/domain/entities/image';
 import {
   ensureMasterProfileAccessible,
@@ -11,6 +12,11 @@ import { ensureMasterServiceExists } from 'src/modules/masters/domain/entities/m
 import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
+import {
+  ensureUserProfileAccessible,
+  ensureUserProfileExists,
+} from 'src/modules/users/domain/entities/user-profile';
+import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import type { IDeleteImagesApplicationInput } from '../../dtos/image/delete-images.input';
 import type { IDeleteImagesApplicationOutput } from '../../dtos/image/delete-images.output';
@@ -20,6 +26,7 @@ export class DeleteImagesUseCase {
     private readonly transactionManager: ITransactionManager,
     private readonly masterServiceRepository: IMasterServiceRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly userProfileRepository: IUserProfileRepository,
     private readonly imageRepository: IImageRepository,
     private readonly deleteFilesUseCase: DeleteFilesUseCase,
   ) {}
@@ -73,26 +80,39 @@ export class DeleteImagesUseCase {
   private async ensureEntityAccessible(
     input: IDeleteImagesApplicationInput,
   ): Promise<void> {
-    if (input.entityType === ImageEntityType.MASTER_SERVICE) {
-      const service = await this.masterServiceRepository.findEntityById(
-        input.entityId,
-      );
-      ensureMasterServiceExists(service, input.entityId);
+    switch (input.entityType) {
+      case ImageEntityType.MASTER_SERVICE: {
+        const service = await this.masterServiceRepository.findEntityById(
+          input.entityId,
+        );
+        ensureMasterServiceExists(service, input.entityId);
 
-      const profile = await this.masterProfileRepository.findEntityById(
-        service.masterProfileId,
-      );
-      ensureMasterProfileExists(profile, service.masterProfileId);
-      ensureMasterProfileAccessible(profile, input.actor);
-      return;
-    }
-
-    if (input.entityType === ImageEntityType.MASTER_PROFILE_AVATAR) {
-      const profile = await this.masterProfileRepository.findEntityById(
-        input.entityId,
-      );
-      ensureMasterProfileExists(profile, input.entityId);
-      ensureMasterProfileAccessible(profile, input.actor);
+        const profile = await this.masterProfileRepository.findEntityById(
+          service.masterProfileId,
+        );
+        ensureMasterProfileExists(profile, service.masterProfileId);
+        ensureMasterProfileAccessible(profile, input.actor);
+        return;
+      }
+      case ImageEntityType.MASTER_PROFILE_AVATAR: {
+        const profile = await this.masterProfileRepository.findEntityById(
+          input.entityId,
+        );
+        ensureMasterProfileExists(profile, input.entityId);
+        ensureMasterProfileAccessible(profile, input.actor);
+        return;
+      }
+      case ImageEntityType.CLIENT_PROFILE_AVATAR: {
+        const profile = await this.userProfileRepository.findEntityById(
+          input.entityId,
+        );
+        ensureUserProfileExists(profile, input.entityId);
+        ensureUserProfileAccessible(profile, input.actor);
+        return;
+      }
+      default: {
+        throw new UnsupportedImageEntityTypeError(String(input.entityType));
+      }
     }
   }
 }

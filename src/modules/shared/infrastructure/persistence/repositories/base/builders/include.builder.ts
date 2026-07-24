@@ -24,7 +24,13 @@ function buildNestedIncludeOption(
     const nested = buildIncludeFromRecord(option.include, relationConfig);
 
     if (nested) {
-      result.include = nested;
+      // Prisma forbids nested `select` + `include` together — merge relations into select
+      // (same approach as top-level buildSelection).
+      if (result.select) {
+        Object.assign(result.select as Record<string, unknown>, nested);
+      } else {
+        result.include = nested;
+      }
     }
   }
 

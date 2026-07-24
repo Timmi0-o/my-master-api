@@ -1,3 +1,5 @@
+import { mapFileToHttpResponse } from 'src/modules/files/presentation/http/response/map-file-response';
+import type { IProfileAvatarView } from 'src/modules/masters/domain/entities/image';
 import type {
   IMasterProfilePublicEntity,
   IMasterProfileRelations,
@@ -7,16 +9,43 @@ import { mapMasterServicesToHttpResponse } from './map-master-service-http-respo
 type MasterProfileWithRelations = IMasterProfilePublicEntity &
   Partial<IMasterProfileRelations>;
 
-export function mapMasterProfileToHttpResponse(
-  profile: MasterProfileWithRelations,
-): MasterProfileWithRelations {
-  if (profile.services == null) {
-    return profile;
+function mapAvatarToHttpResponse(
+  avatar: IProfileAvatarView | null | undefined,
+): IProfileAvatarView | null | undefined {
+  if (avatar == null) {
+    return avatar;
   }
 
   return {
-    ...profile,
-    services: mapMasterServicesToHttpResponse(profile.services),
+    ...avatar,
+    ...(avatar.file != null
+      ? {
+          file: mapFileToHttpResponse(avatar.file) as unknown as NonNullable<
+            IProfileAvatarView['file']
+          >,
+        }
+      : {}),
+  };
+}
+
+export function mapMasterProfileToHttpResponse(
+  profile: MasterProfileWithRelations,
+): MasterProfileWithRelations {
+  const withAvatar =
+    profile.avatar !== undefined
+      ? {
+          ...profile,
+          avatar: mapAvatarToHttpResponse(profile.avatar),
+        }
+      : profile;
+
+  if (withAvatar.services == null) {
+    return withAvatar;
+  }
+
+  return {
+    ...withAvatar,
+    services: mapMasterServicesToHttpResponse(withAvatar.services),
   };
 }
 

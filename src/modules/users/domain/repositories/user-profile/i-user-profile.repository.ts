@@ -10,12 +10,13 @@ import type {
   IUpdateUserProfileInput,
   IUserProfileEntity,
   IUserProfilePublicEntity,
+  IUserProfileRelations,
 } from '../../entities/user-profile';
 
 export type IUserProfileRepository = IReadRepository<
   IUserProfilePublicEntity,
   string,
-  Record<never, never>
+  IUserProfileRelations
 > &
   ICreateRepository<IUserProfileEntity, ICreateUserProfileInput> &
   IUpdateRepository<IUserProfileEntity, string, IUpdateUserProfileInput> &

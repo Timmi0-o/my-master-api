@@ -5,6 +5,7 @@ import type { IMasterProfileRepository } from '../../../../masters/domain/reposi
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import type { IMasterServiceRepository } from '../../../../masters/domain/repositories/master-service/i-master-service.repository';
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-service/master-service.repository.tokens';
+import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { MastersModule } from '../../../../masters/masters.module';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/appointment/create-appointment.use-case';
 import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
@@ -27,6 +28,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
 @Module({
   imports: [
     forwardRef(() => MastersModule),
+    forwardRef(() => ImageModule),
     forwardRef(() => AppointmentChatModule),
     forwardRef(() => AppointmentChatMessageModule),
   ],
