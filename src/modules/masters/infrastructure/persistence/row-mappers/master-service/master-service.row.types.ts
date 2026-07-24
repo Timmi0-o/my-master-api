@@ -1,5 +1,6 @@
 import type { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile/master-profile-booking.enum';
 import type { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service/master-service-category.enum';
+import type { IMasterServiceImageView } from 'src/modules/masters/domain/entities/master-service';
 
 export type MasterProfileRelationRow = {
   id: string;
@@ -30,29 +31,7 @@ export type MasterServiceRelationRow = {
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;
-  images?: MasterServiceImageRelationRow[] | null;
-};
-
-export type MasterServiceImageFileRelationRow = {
-  id: string;
-  fileUrl: string;
-  originalName: string;
-  mimeType: string;
-  fileType: string;
-  purpose: string;
-  status: string;
-  fileSize: bigint;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type MasterServiceImageRelationRow = {
-  id: string;
-  masterServiceId: string;
-  fileId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  file?: MasterServiceImageFileRelationRow | null;
+  images?: IMasterServiceImageView[] | null;
 };
 
 export type MasterServiceRow = {
@@ -68,5 +47,5 @@ export type MasterServiceRow = {
   updatedAt: Date;
   deletedAt: Date | null;
   masterProfile?: MasterProfileRelationRow | null;
-  images?: MasterServiceImageRelationRow[] | null;
+  images?: IMasterServiceImageView[] | null;
 };

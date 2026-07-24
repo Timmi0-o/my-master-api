@@ -4,7 +4,7 @@ export type {
 } from './i-master-service.entity';
 export type { ICreateMasterServiceInput } from './i-create-master-service.input';
 export type { IUpdateMasterServiceInput } from './i-update-master-service.input';
-export type { IMasterServiceRelations } from './i-master-service-relations';
+export type { IMasterServiceRelations, IMasterServiceImageView } from './i-master-service-relations';
 export { EMasterServiceCategory } from './master-service-category.enum';
 export {
   MASTER_SERVICE_TAGS_MIN_COUNT,

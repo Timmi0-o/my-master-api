@@ -1,4 +1,5 @@
-import type { IDeleteMasterServiceImagesApplicationInput } from 'src/modules/masters/application/dtos/master-service/delete-master-service-images.input';
+import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
+import type { IDeleteImagesApplicationInput } from 'src/modules/masters/application/dtos/image/delete-images.input';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import type { IDeleteMasterServiceImagesPayload } from '../../validation/schemas/delete-master-service-images-payload.types';
 import { toMasterActor } from '../shared/to-master-actor';
@@ -8,9 +9,10 @@ export function payloadToDeleteMasterServiceImagesInput(
   payload: IDeleteMasterServiceImagesPayload,
   sessionUser: ISessionUser,
   isStaffUser: boolean,
-): IDeleteMasterServiceImagesApplicationInput {
+): IDeleteImagesApplicationInput {
   return {
-    masterServiceId,
+    entityType: ImageEntityType.MASTER_SERVICE,
+    entityId: masterServiceId,
     fileIds: payload.fileIds,
     actor: toMasterActor(sessionUser, isStaffUser),
   };

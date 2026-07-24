@@ -43,6 +43,10 @@ function buildIncludeFromRecord(
     }
 
     const cfg = relationConfig[key];
+    if (cfg?.virtual) {
+      continue;
+    }
+
     const prismaKey = cfg?.prismaName ?? key;
     const nestedConfig = cfg?.nested ?? {};
 

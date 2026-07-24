@@ -10,7 +10,10 @@ import { UpdateMasterProfileByIdUseCase } from '../../../application/use-cases/m
 import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-profile/master-profile.repository.tokens';
 import { PrismaMasterProfileRepository } from '../../persistence/repositories/master-profile/prisma-master-profile.repository';
+import { ImageModule } from '../image/image.module';
+
 @Module({
+  imports: [ImageModule],
   providers: [
     {
       provide: MASTER_PROFILE_REPOSITORY_TOKEN,

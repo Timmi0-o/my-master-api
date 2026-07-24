@@ -11,7 +11,6 @@ model MasterService {
 
   masterProfile MasterProfile           @relation(fields: [masterProfileId], references: [id])
   appointments  Appointment[]
-  images        MasterServiceImage[]
   reviews       MasterServiceReview[]
   favorites     FavoriteMasterService[]
 

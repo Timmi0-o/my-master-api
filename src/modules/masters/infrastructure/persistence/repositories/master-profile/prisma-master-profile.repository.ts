@@ -9,10 +9,21 @@ import type {
   IMasterProfileRelations,
   IUpdateMasterProfileInput,
 } from 'src/modules/masters/domain/entities/master-profile';
+import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/image/image.repository.tokens';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import type { ReadResult } from '@shared/domain/query';
+import type {
+  FindManyParams,
+  FindOneParams,
+  ReadResult,
+} from '@shared/domain/query';
 import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
 import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import {
+  groupImagesByEntityId,
+  wantsNestedServiceImagesInclude,
+} from '../../helpers/hydrate-service-images.helper';
 import {
   mapMasterProfileRow,
   type MasterProfileRow,
@@ -38,6 +49,8 @@ export class PrismaMasterProfileRepository
 
   constructor(
     private readonly prismaService: PrismaService,
+    @Inject(IMAGE_REPOSITORY_TOKEN)
+    private readonly imageRepository: IImageRepository,
     @Inject(LOGGER_TOKEN) logger: ILogger,
   ) {
     super(logger);
@@ -57,6 +70,83 @@ export class PrismaMasterProfileRepository
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
     return { id };
+  }
+
+  async findOne(
+    id: string,
+    params?: FindOneParams<IMasterProfilePublicEntity, IMasterProfileRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IMasterProfilePublicEntity,
+    IMasterProfileRelations
+  > | null> {
+    const result = await super.findOne(id, params, scope);
+    if (
+      result == null ||
+      !wantsNestedServiceImagesInclude(params?.selectOptions?.include)
+    ) {
+      return result;
+    }
+
+    const [hydrated] = await this.hydrateServiceImages([result], scope);
+    return hydrated ?? null;
+  }
+
+  async findMany(
+    params?: FindManyParams<
+      IMasterProfilePublicEntity,
+      IMasterProfileRelations
+    >,
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IMasterProfilePublicEntity, IMasterProfileRelations>[]
+  > {
+    const results = await super.findMany(params, scope);
+    if (!wantsNestedServiceImagesInclude(params?.selectOptions?.include)) {
+      return results;
+    }
+
+    return this.hydrateServiceImages(results, scope);
+  }
+
+  private async hydrateServiceImages(
+    profiles: ReadResult<
+      IMasterProfilePublicEntity,
+      IMasterProfileRelations
+    >[],
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IMasterProfilePublicEntity, IMasterProfileRelations>[]
+  > {
+    const serviceIds = profiles.flatMap((profile) =>
+      (profile.services ?? []).map((service) => service.id),
+    );
+
+    if (serviceIds.length === 0) {
+      return profiles;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.MASTER_SERVICE,
+      serviceIds,
+      { includeFile: true },
+      scope,
+    );
+    const byServiceId = groupImagesByEntityId(images);
+
+    return profiles.map((profile) => {
+      if (profile.services == null) {
+        return profile;
+      }
+
+      return {
+        ...profile,
+        services: profile.services.map((service) => ({
+          ...service,
+          images: byServiceId.get(service.id) ?? [],
+        })),
+      };
+    });
   }
 
   async findEntityById(

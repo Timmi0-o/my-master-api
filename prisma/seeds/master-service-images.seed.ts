@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import type { PrismaClient } from '@prisma/client';
-import { MASTER_SERVICE_IMAGE_FILE_DEFAULTS } from '../../src/modules/masters/domain/entities/master-service-image/master-service-image-upload.constants';
+import {
+  IMAGE_ENTITY_CONFIG,
+  ImageEntityType,
+} from '../../src/modules/masters/domain/entities/image';
 import type { SeedRunner } from './index';
 import { createSeedS3Client, type SeedS3Client } from './utils/seed-s3-client';
 import {
@@ -13,6 +16,8 @@ import {
 const IMAGES_PER_SERVICE = 5;
 const UPLOAD_CONCURRENCY = 8;
 const DELETE_CONCURRENCY = 12;
+const ENTITY_TYPE = ImageEntityType.MASTER_SERVICE;
+const FILE_DEFAULTS = IMAGE_ENTITY_CONFIG[ENTITY_TYPE];
 
 const S3_FILE_URL_PATTERN = /^s3:\/\/([^/]+)\/(.+)$/;
 
@@ -35,8 +40,11 @@ const clearExistingServiceImages = async (
     return 0;
   }
 
-  const existingImages = await prisma.masterServiceImage.findMany({
-    where: { masterServiceId: { in: serviceIds } },
+  const existingImages = await prisma.image.findMany({
+    where: {
+      entityType: ENTITY_TYPE,
+      entityId: { in: serviceIds },
+    },
     select: {
       id: true,
       fileId: true,
@@ -69,7 +77,7 @@ const clearExistingServiceImages = async (
 
   const fileIds = existingImages.map((image) => image.fileId);
 
-  await prisma.masterServiceImage.deleteMany({
+  await prisma.image.deleteMany({
     where: { id: { in: existingImages.map((image) => image.id) } },
   });
 
@@ -93,9 +101,6 @@ export const masterServiceImagesSeed: SeedRunner = async (
       masterProfile: {
         select: { userId: true },
       },
-      images: {
-        select: { id: true },
-      },
     },
     orderBy: [{ category: 'asc' }, { name: 'asc' }],
   });
@@ -106,6 +111,18 @@ export const masterServiceImagesSeed: SeedRunner = async (
     );
     return;
   }
+
+  const imageCounts = await prisma.image.groupBy({
+    by: ['entityId'],
+    where: {
+      entityType: ENTITY_TYPE,
+      entityId: { in: services.map((service) => service.id) },
+    },
+    _count: { _all: true },
+  });
+  const countByServiceId = new Map(
+    imageCounts.map((row) => [row.entityId, row._count._all]),
+  );
 
   const s3 = createSeedS3Client();
   await s3.ensureBucket();
@@ -126,7 +143,7 @@ export const masterServiceImagesSeed: SeedRunner = async (
   let uploadedFiles = 0;
 
   const servicesNeedingImages = services.filter((service) => {
-    const existingCount = force ? 0 : service.images.length;
+    const existingCount = force ? 0 : (countByServiceId.get(service.id) ?? 0);
     if (existingCount >= IMAGES_PER_SERVICE) {
       skippedServices += 1;
       return false;
@@ -144,7 +161,7 @@ export const masterServiceImagesSeed: SeedRunner = async (
   const jobs: UploadJob[] = [];
 
   for (const service of servicesNeedingImages) {
-    const existingCount = force ? 0 : service.images.length;
+    const existingCount = force ? 0 : (countByServiceId.get(service.id) ?? 0);
     for (
       let imageIndex = existingCount;
       imageIndex < IMAGES_PER_SERVICE;
@@ -191,18 +208,19 @@ export const masterServiceImagesSeed: SeedRunner = async (
         fileSize: BigInt(asset.fileSize),
         fileUrl,
         status: 'UPLOADED',
-        fileType: MASTER_SERVICE_IMAGE_FILE_DEFAULTS.fileType,
-        ownerType: MASTER_SERVICE_IMAGE_FILE_DEFAULTS.ownerType,
-        ownerKind: MASTER_SERVICE_IMAGE_FILE_DEFAULTS.ownerKind,
+        fileType: FILE_DEFAULTS.fileType,
+        ownerType: FILE_DEFAULTS.ownerType,
+        ownerKind: FILE_DEFAULTS.ownerKind,
         ownerId: job.serviceId,
-        accessLevel: MASTER_SERVICE_IMAGE_FILE_DEFAULTS.accessLevel,
-        purpose: MASTER_SERVICE_IMAGE_FILE_DEFAULTS.purpose,
+        accessLevel: FILE_DEFAULTS.accessLevel,
+        purpose: FILE_DEFAULTS.purpose,
       },
     });
 
-    await prisma.masterServiceImage.create({
+    await prisma.image.create({
       data: {
-        masterServiceId: job.serviceId,
+        entityType: ENTITY_TYPE,
+        entityId: job.serviceId,
         fileId,
       },
     });

@@ -3,8 +3,6 @@ import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
-import { mapFileRow } from 'src/modules/files/infrastructure/persistence/row-mappers/file/file.row-mapper';
-import type { FileRow } from 'src/modules/files/infrastructure/persistence/row-mappers/file/file.row-mapper';
 import type { MasterServiceRow } from './master-service.row.types';
 
 export function mapMasterServiceRow(
@@ -46,16 +44,7 @@ export function mapMasterServiceRow(
   }
 
   if (row.images != null) {
-    entity.images = row.images.map((image) => ({
-      id: image.id,
-      masterServiceId: image.masterServiceId,
-      fileId: image.fileId,
-      createdAt: image.createdAt,
-      updatedAt: image.updatedAt,
-      ...(image.file != null
-        ? { file: mapFileRow(image.file as FileRow) }
-        : {}),
-    }));
+    entity.images = row.images;
   }
 
   return entity;

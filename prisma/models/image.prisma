@@ -1,0 +1,22 @@
+enum ImageEntityType {
+  MASTER_SERVICE
+  MASTER_PROFILE_AVATAR
+}
+
+model Image {
+  id String @id @default(uuid())
+
+  entityType ImageEntityType @map("entity_type")
+  entityId   String          @map("entity_id")
+  fileId     String          @map("file_id")
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([entityType, entityId, fileId])
+  @@index([entityType, entityId])
+  @@index([fileId])
+  @@map("Images")
+}

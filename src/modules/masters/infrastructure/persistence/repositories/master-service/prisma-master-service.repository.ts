@@ -9,10 +9,21 @@ import type {
   IMasterServiceRelations,
   IUpdateMasterServiceInput,
 } from 'src/modules/masters/domain/entities/master-service';
+import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/image/image.repository.tokens';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
-import type { ReadResult } from '@shared/domain/query';
+import type {
+  FindManyParams,
+  FindOneParams,
+  ReadResult,
+} from '@shared/domain/query';
 import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
 import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
+import {
+  groupImagesByEntityId,
+  wantsImagesInclude,
+} from '../../helpers/hydrate-service-images.helper';
 import {
   mapMasterServiceRow,
   type MasterServiceRow,
@@ -38,6 +49,8 @@ export class PrismaMasterServiceRepository
 
   constructor(
     private readonly prismaService: PrismaService,
+    @Inject(IMAGE_REPOSITORY_TOKEN)
+    private readonly imageRepository: IImageRepository,
     @Inject(LOGGER_TOKEN) logger: ILogger,
   ) {
     super(logger);
@@ -57,6 +70,63 @@ export class PrismaMasterServiceRepository
 
   protected toPrismaWhereUnique(id: string): Record<string, unknown> {
     return { id };
+  }
+
+  async findOne(
+    id: string,
+    params?: FindOneParams<IMasterServicePublicEntity, IMasterServiceRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IMasterServicePublicEntity,
+    IMasterServiceRelations
+  > | null> {
+    const result = await super.findOne(id, params, scope);
+    if (result == null || !wantsImagesInclude(params?.selectOptions?.include)) {
+      return result;
+    }
+
+    const [hydrated] = await this.hydrateImages([result], scope);
+    return hydrated ?? null;
+  }
+
+  async findMany(
+    params?: FindManyParams<
+      IMasterServicePublicEntity,
+      IMasterServiceRelations
+    >,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[]> {
+    const results = await super.findMany(params, scope);
+    if (!wantsImagesInclude(params?.selectOptions?.include)) {
+      return results;
+    }
+
+    return this.hydrateImages(results, scope);
+  }
+
+  private async hydrateImages(
+    services: ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[],
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[]
+  > {
+    if (services.length === 0) {
+      return services;
+    }
+
+    const images =
+      await this.imageRepository.findByEntityTypeAndEntityIds(
+        ImageEntityType.MASTER_SERVICE,
+        services.map((service) => service.id),
+        { includeFile: true },
+        scope,
+      );
+    const byServiceId = groupImagesByEntityId(images);
+
+    return services.map((service) => ({
+      ...service,
+      images: byServiceId.get(service.id) ?? [],
+    }));
   }
 
   async findEntityById(
@@ -79,7 +149,9 @@ export class PrismaMasterServiceRepository
       const row = await tx.masterService.create({ data: input });
       return mapMasterServiceRow(row as MasterServiceRow);
     } catch (error) {
-      throw mapMasterServiceWriteError(error, { masterProfileId: input.masterProfileId });
+      throw mapMasterServiceWriteError(error, {
+        masterProfileId: input.masterProfileId,
+      });
     }
   }
 
@@ -100,7 +172,9 @@ export class PrismaMasterServiceRepository
       return rows.map((row) => mapMasterServiceRow(row as MasterServiceRow));
     } catch (error) {
       const first = inputs[0];
-      throw mapMasterServiceWriteError(error, { masterProfileId: first.masterProfileId });
+      throw mapMasterServiceWriteError(error, {
+        masterProfileId: first.masterProfileId,
+      });
     }
   }
 

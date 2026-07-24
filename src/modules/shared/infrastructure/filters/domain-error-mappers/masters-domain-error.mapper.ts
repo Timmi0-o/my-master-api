@@ -10,9 +10,9 @@ import {
   MasterServiceNotFoundError,
 } from 'src/modules/masters/domain/entities/master-service';
 import {
-  MasterServiceImageNotFoundError,
-  MasterServiceMaxImagesCountError,
-} from 'src/modules/masters/domain/entities/master-service-image';
+  ImageMaxCountError,
+  ImageNotFoundError,
+} from 'src/modules/masters/domain/entities/image';
 import {
   MasterWeeklyScheduleForbiddenError,
   MasterWeeklyScheduleNotFoundError,
@@ -51,7 +51,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceNotFoundError ||
     error instanceof MasterWeeklyScheduleNotFoundError ||
     error instanceof MasterScheduleExceptionNotFoundError ||
-    error instanceof MasterServiceImageNotFoundError ||
+    error instanceof ImageNotFoundError ||
     error instanceof MasterServiceReviewNotFoundError ||
     error instanceof MasterServiceReviewReactionNotFoundError ||
     error instanceof MasterSubscriptionNotFoundError ||
@@ -60,7 +60,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     return new NotFoundException(error.message);
   }
   if (
-    error instanceof MasterServiceMaxImagesCountError ||
+    error instanceof ImageMaxCountError ||
     error instanceof MasterServiceInvalidTagsError ||
     error instanceof MasterServiceReviewAlreadyExistsError ||
     error instanceof MasterServiceReviewAppointmentNotCompletedError ||

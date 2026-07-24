@@ -1,5 +1,3 @@
-import type { FileRow } from 'src/modules/files/infrastructure/persistence/row-mappers/file/file.row-mapper';
-import { mapFileRow } from 'src/modules/files/infrastructure/persistence/row-mappers/file/file.row-mapper';
 import type {
   IMasterProfileEntity,
   IMasterProfilePublicEntity,
@@ -31,16 +29,7 @@ function mapMasterServiceRelationRow(
     };
 
   if (row.images != null) {
-    entity.images = row.images.map((image) => ({
-      id: image.id,
-      masterServiceId: image.masterServiceId,
-      fileId: image.fileId,
-      createdAt: image.createdAt,
-      updatedAt: image.updatedAt,
-      ...(image.file != null
-        ? { file: mapFileRow(image.file as FileRow) }
-        : {}),
-    }));
+    entity.images = row.images;
   }
 
   return entity;

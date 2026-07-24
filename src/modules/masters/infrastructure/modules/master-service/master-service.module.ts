@@ -8,26 +8,26 @@ import { AppointmentsModule } from '../../../../appointments/appointments.module
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../../appointments/domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../../appointments/domain/repositories/appointment/i-appointment.repository';
 import { CreateMasterServiceUseCase } from '../../../application/use-cases/master-service/create-master-service.use-case';
-import { DeleteMasterServiceImagesUseCase } from '../../../application/use-cases/master-service/delete-master-service-images.use-case';
 import { DeleteMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/delete-master-service-by-id.use-case';
 import { GetMasterServiceAvailableSlotsUseCase } from '../../../application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServicesUseCase } from '../../../application/use-cases/master-service/get-master-services.use-case';
 import { GetMyServicesUseCase } from '../../../application/use-cases/master-service/get-my-services.use-case';
-import { PresignMasterServiceImagesUseCase } from '../../../application/use-cases/master-service/presign-master-service-images.use-case';
+import { DeleteImagesUseCase } from '../../../application/use-cases/image/delete-images.use-case';
+import { PresignImagesUseCase } from '../../../application/use-cases/image/presign-images.use-case';
 import { UpdateMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/update-master-service-by-id.use-case';
+import type { IImageRepository } from '../../../domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/image/image.repository.tokens';
 import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-profile/master-profile.repository.tokens';
 import type { IMasterScheduleExceptionRepository } from '../../../domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
 import { MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN } from '../../../domain/repositories/master-schedule-exception/master-schedule-exception.repository.tokens';
-import type { IMasterServiceImageRepository } from '../../../domain/repositories/master-service-image/i-master-service-image.repository';
-import { MASTER_SERVICE_IMAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service-image/master-service-image.repository.tokens';
 import type { IMasterServiceRepository } from '../../../domain/repositories/master-service/i-master-service.repository';
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service/master-service.repository.tokens';
 import type { IMasterWeeklyScheduleRepository } from '../../../domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import { MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-weekly-schedule/master-weekly-schedule.repository.tokens';
-import { PrismaMasterServiceImageRepository } from '../../persistence/repositories/master-service-image/prisma-master-service-image.repository';
 import { PrismaMasterServiceRepository } from '../../persistence/repositories/master-service/prisma-master-service.repository';
+import { ImageModule } from '../image/image.module';
 import { MasterProfileModule } from '../master-profile/master-profile.module';
 import { MasterScheduleExceptionModule } from '../master-schedule-exception/master-schedule-exception.module';
 import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-weekly-schedule.module';
@@ -35,6 +35,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
 @Module({
   imports: [
     FilesModule,
+    ImageModule,
     MasterProfileModule,
     MasterWeeklyScheduleModule,
     MasterScheduleExceptionModule,
@@ -44,10 +45,6 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
     {
       provide: MASTER_SERVICE_REPOSITORY_TOKEN,
       useClass: PrismaMasterServiceRepository,
-    },
-    {
-      provide: MASTER_SERVICE_IMAGE_REPOSITORY_TOKEN,
-      useClass: PrismaMasterServiceImageRepository,
     },
     {
       provide: GetMasterServicesUseCase,
@@ -151,15 +148,15 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
       ],
     },
     {
-      provide: PresignMasterServiceImagesUseCase,
+      provide: PresignImagesUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
         serviceRepo: IMasterServiceRepository,
         profileRepo: IMasterProfileRepository,
-        imageRepo: IMasterServiceImageRepository,
+        imageRepo: IImageRepository,
         presignedUploadUseCase: PresignedUploadUseCase,
       ) =>
-        new PresignMasterServiceImagesUseCase(
+        new PresignImagesUseCase(
           transactionManager,
           serviceRepo,
           profileRepo,
@@ -170,20 +167,20 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
         TRANSACTION_MANAGER_TOKEN,
         MASTER_SERVICE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
-        MASTER_SERVICE_IMAGE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
         PresignedUploadUseCase,
       ],
     },
     {
-      provide: DeleteMasterServiceImagesUseCase,
+      provide: DeleteImagesUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
         serviceRepo: IMasterServiceRepository,
         profileRepo: IMasterProfileRepository,
-        imageRepo: IMasterServiceImageRepository,
+        imageRepo: IImageRepository,
         deleteFilesUseCase: DeleteFilesUseCase,
       ) =>
-        new DeleteMasterServiceImagesUseCase(
+        new DeleteImagesUseCase(
           transactionManager,
           serviceRepo,
           profileRepo,
@@ -194,14 +191,13 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
         TRANSACTION_MANAGER_TOKEN,
         MASTER_SERVICE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
-        MASTER_SERVICE_IMAGE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
         DeleteFilesUseCase,
       ],
     },
   ],
   exports: [
     MASTER_SERVICE_REPOSITORY_TOKEN,
-    MASTER_SERVICE_IMAGE_REPOSITORY_TOKEN,
     GetMasterServicesUseCase,
     GetMyServicesUseCase,
     GetMasterServiceByIdUseCase,
@@ -209,8 +205,8 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
     CreateMasterServiceUseCase,
     UpdateMasterServiceByIdUseCase,
     DeleteMasterServiceByIdUseCase,
-    PresignMasterServiceImagesUseCase,
-    DeleteMasterServiceImagesUseCase,
+    PresignImagesUseCase,
+    DeleteImagesUseCase,
   ],
 })
 export class MasterServiceModule {}

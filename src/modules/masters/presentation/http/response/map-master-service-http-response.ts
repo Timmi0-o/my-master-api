@@ -1,6 +1,6 @@
 import { mapFileToHttpResponse } from 'src/modules/files/presentation/http/response/map-file-response';
-import type { IMasterServiceImagePublicEntity } from 'src/modules/masters/domain/entities/master-service-image';
 import type {
+  IMasterServiceImageView,
   IMasterServicePublicEntity,
   IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
@@ -18,12 +18,12 @@ export function mapMasterServiceToHttpResponse(
   return {
     ...service,
     images: service.images.map(
-      (image): IMasterServiceImagePublicEntity => ({
+      (image): IMasterServiceImageView => ({
         ...image,
         ...(image.file != null
           ? {
               file: mapFileToHttpResponse(image.file) as unknown as NonNullable<
-                IMasterServiceImagePublicEntity['file']
+                IMasterServiceImageView['file']
               >,
             }
           : {}),

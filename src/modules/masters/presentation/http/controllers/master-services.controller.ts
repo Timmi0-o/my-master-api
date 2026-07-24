@@ -4,13 +4,13 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { CreateMasterServiceUseCase } from '@modules/masters/application/use-cases/master-service/create-master-service.use-case';
+import { DeleteImagesUseCase } from '@modules/masters/application/use-cases/image/delete-images.use-case';
 import { DeleteMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/delete-master-service-by-id.use-case';
-import { DeleteMasterServiceImagesUseCase } from '@modules/masters/application/use-cases/master-service/delete-master-service-images.use-case';
 import { GetMasterServiceAvailableSlotsUseCase } from '@modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServicesUseCase } from '@modules/masters/application/use-cases/master-service/get-master-services.use-case';
 import { GetMyServicesUseCase } from '@modules/masters/application/use-cases/master-service/get-my-services.use-case';
-import { PresignMasterServiceImagesUseCase } from '@modules/masters/application/use-cases/master-service/presign-master-service-images.use-case';
+import { PresignImagesUseCase } from '@modules/masters/application/use-cases/image/presign-images.use-case';
 import { UpdateMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
 import { createMasterServicePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/create-master-service-payload.schema';
 import type { ICreateMasterServicePayload } from '@modules/masters/presentation/http/validation/schemas/create-master-service-payload.types';
@@ -66,8 +66,8 @@ export class MasterServicesController {
     private readonly deleteMasterServiceByIdUseCase: DeleteMasterServiceByIdUseCase,
     private readonly getMasterServiceAvailableSlotsUseCase: GetMasterServiceAvailableSlotsUseCase,
     private readonly getMyServicesUseCase: GetMyServicesUseCase,
-    private readonly presignMasterServiceImagesUseCase: PresignMasterServiceImagesUseCase,
-    private readonly deleteMasterServiceImagesUseCase: DeleteMasterServiceImagesUseCase,
+    private readonly presignImagesUseCase: PresignImagesUseCase,
+    private readonly deleteImagesUseCase: DeleteImagesUseCase,
   ) {}
 
   @Get()
@@ -196,7 +196,7 @@ export class MasterServicesController {
       user,
       metadata.isStaffUser,
     );
-    const output = await this.presignMasterServiceImagesUseCase.execute(input);
+    const output = await this.presignImagesUseCase.execute(input);
     return mapPresignMasterServiceImagesHttpResponse(output);
   }
 
@@ -222,7 +222,7 @@ export class MasterServicesController {
       user,
       metadata.isStaffUser,
     );
-    const output = await this.deleteMasterServiceImagesUseCase.execute(input);
+    const output = await this.deleteImagesUseCase.execute(input);
     return mapDeleteMasterServiceImagesHttpResponse(output);
   }
 
