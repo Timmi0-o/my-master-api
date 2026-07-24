@@ -9,14 +9,18 @@ const IMAGE_WIDTH = 512;
 const IMAGE_HEIGHT = 512;
 const DOWNLOAD_CONCURRENCY = 6;
 const DOWNLOAD_MAX_ATTEMPTS = 3;
+const PORTRAIT_INDEX_MAX = 99;
 const USER_AGENT =
   'my-master-seed/1.0 (+https://localhost; profile-avatar-assets)';
 
-/** Bump when search strategy changes so stale random caches are not reused. */
-const CACHE_VERSION = 'avatar-portrait-v1';
-const FLICKR_TAGS = 'portrait,face,person';
+/**
+ * Bump when source/strategy changes so costume LoremFlickr caches are not reused.
+ * v2: randomuser.me headshots + gender from display name.
+ */
+const CACHE_VERSION = 'avatar-headshot-v2';
 
 export type ProfileAvatarKind = 'master' | 'client';
+export type ProfileAvatarGender = 'male' | 'female';
 
 export type ProfileAvatarAssetRequest = {
   kind: ProfileAvatarKind;
@@ -32,6 +36,42 @@ export type ProfileAvatarAsset = {
   originalName: string;
   fileName: string;
 };
+
+const FEMALE_FIRST_NAMES = new Set([
+  'анна',
+  'мария',
+  'ольга',
+  'елена',
+  'наталья',
+  'ксения',
+  'виктория',
+  'дарья',
+  'алина',
+  'ирина',
+  'татьяна',
+  'юлия',
+  'екатерина',
+  'софия',
+  'полина',
+]);
+
+const MALE_FIRST_NAMES = new Set([
+  'иван',
+  'сергей',
+  'дмитрий',
+  'алексей',
+  'павел',
+  'артём',
+  'артем',
+  'никита',
+  'максим',
+  'андрей',
+  'михаил',
+  'кирилл',
+  'роман',
+  'евгений',
+  'владимир',
+]);
 
 const slugify = (value: string): string => {
   const translitMap: Record<string, string> = {
@@ -88,21 +128,59 @@ const slugify = (value: string): string => {
   );
 };
 
+const normalizeNameToken = (value: string): string =>
+  value.trim().toLowerCase().replace(/ё/g, 'е');
+
+export const inferProfileAvatarGender = (
+  displayName: string,
+  profileId: string,
+): ProfileAvatarGender => {
+  const tokens = displayName
+    .split(/[\s/_.,\-]+/)
+    .map(normalizeNameToken)
+    .filter(Boolean);
+
+  for (const token of tokens) {
+    if (FEMALE_FIRST_NAMES.has(token)) {
+      return 'female';
+    }
+    if (MALE_FIRST_NAMES.has(token)) {
+      return 'male';
+    }
+  }
+
+  // Stable fallback when name is synthetic (e.g. Name01).
+  const digest = createHash('sha1').update(profileId).digest();
+  return digest[0] % 2 === 0 ? 'female' : 'male';
+};
+
+const portraitFolder = (gender: ProfileAvatarGender): 'women' | 'men' =>
+  gender === 'female' ? 'women' : 'men';
+
+const portraitIndexFromCacheKey = (cacheKey: string): number => {
+  const digest = createHash('sha1').update(cacheKey).digest();
+  return digest.readUInt32BE(0) % (PORTRAIT_INDEX_MAX + 1);
+};
+
 export const buildProfileAvatarCacheKey = (
   request: ProfileAvatarAssetRequest,
-): string =>
-  [CACHE_VERSION, request.kind, request.profileId, FLICKR_TAGS.replace(/,/g, '-')].join(
-    '_',
+): string => {
+  const gender = inferProfileAvatarGender(
+    request.displayName,
+    request.profileId,
   );
+  return [
+    CACHE_VERSION,
+    request.kind,
+    gender,
+    request.profileId,
+    slugify(request.displayName),
+  ].join('_');
+};
 
 const cacheFilePath = (cacheKey: string): string => {
   const hash = createHash('sha1').update(cacheKey).digest('hex').slice(0, 16);
   return path.join(ASSETS_ROOT, `${hash}.jpg`);
-};
-
-const lockIdFromCacheKey = (cacheKey: string): number => {
-  const digest = createHash('sha1').update(cacheKey).digest();
-  return digest.readUInt32BE(0) % 1_000_000_000;
 };
 
 const sleep = (ms: number): Promise<void> =>
@@ -141,16 +219,20 @@ const fetchImageBuffer = async (url: string): Promise<Buffer> => {
   return buffer;
 };
 
-const buildLoremFlickrUrl = (cacheKey: string): string => {
-  const lock = lockIdFromCacheKey(cacheKey);
-  return `https://loremflickr.com/${IMAGE_WIDTH}/${IMAGE_HEIGHT}/${FLICKR_TAGS}?lock=${lock}`;
+const buildRandomUserPortraitUrl = (
+  gender: ProfileAvatarGender,
+  cacheKey: string,
+): string => {
+  const index = portraitIndexFromCacheKey(cacheKey);
+  return `https://randomuser.me/api/portraits/${portraitFolder(gender)}/${index}.jpg`;
 };
 
+/** Secondary source: deterministic professional-looking stub if randomuser is down. */
 const buildPlaceholdUrl = (cacheKey: string, label: string): string => {
   const digest = createHash('sha1').update(cacheKey).digest('hex');
   const bg = digest.slice(0, 6);
   const fg = digest.slice(6, 12);
-  const text = encodeURIComponent(label.slice(0, 40));
+  const text = encodeURIComponent(label.slice(0, 24));
   return `https://placehold.co/${IMAGE_WIDTH}x${IMAGE_HEIGHT}/${bg}/${fg}/jpg?text=${text}`;
 };
 
@@ -158,9 +240,16 @@ const downloadImage = async (
   request: ProfileAvatarAssetRequest,
   cacheKey: string,
 ): Promise<Buffer> => {
-  const primaryUrl = buildLoremFlickrUrl(cacheKey);
+  const gender = inferProfileAvatarGender(
+    request.displayName,
+    request.profileId,
+  );
+  const primaryUrl = buildRandomUserPortraitUrl(gender, cacheKey);
+  // Try a nearby portrait index if the first one fails.
+  const altIndex = (portraitIndexFromCacheKey(cacheKey) + 17) % (PORTRAIT_INDEX_MAX + 1);
+  const secondaryUrl = `https://randomuser.me/api/portraits/${portraitFolder(gender)}/${altIndex}.jpg`;
   const fallbackUrl = buildPlaceholdUrl(cacheKey, request.displayName);
-  const urls = [primaryUrl, fallbackUrl];
+  const urls = [primaryUrl, secondaryUrl, fallbackUrl];
   const errors: string[] = [];
 
   for (const url of urls) {
