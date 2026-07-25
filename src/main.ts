@@ -14,6 +14,19 @@ async function bootstrap() {
 
   app.useWebSocketAdapter(new IoAdapter(app));
 
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://tima53419.fvds.ru:3000',
+      'http://tima53419.fvds.ru',
+      'https://tima53419.fvds.ru',
+      'http://localhost:3001',
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   const logger = app.get<ILoggerService>(ILoggerSymbol);
 
   app.enableVersioning({
