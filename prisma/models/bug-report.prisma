@@ -1,0 +1,40 @@
+enum BugReportDeviceType {
+  DESKTOP
+  MOBILE
+}
+
+enum BugReportStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  WONT_FIX
+}
+
+model BugReport {
+  id String @id @default(uuid())
+
+  reporterUserId String? @map("reporter_user_id")
+
+  replyEmail  String?             @map("reply_email")
+  title       String
+  description String
+  deviceType  BugReportDeviceType @map("device_type")
+
+  pageUrl    String  @map("page_url")
+  appVersion String  @map("app_version")
+  locale     String?
+
+  deviceInfo Json @map("device_info")
+
+  status BugReportStatus @default(NEW)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  reporterUser User? @relation(fields: [reporterUserId], references: [id], onDelete: SetNull)
+
+  @@index([reporterUserId])
+  @@index([status, createdAt])
+  @@map("BugReports")
+}

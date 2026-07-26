@@ -40,6 +40,14 @@ export const IMAGE_ENTITY_CONFIG: Record<ImageEntityType, ImageEntityConfig> = {
     purpose: FilePurpose.PROFILE_PHOTO,
     fileType: FileType.IMAGE,
   },
+  [ImageEntityType.BUG_REPORT]: {
+    maxCount: 5,
+    ownerKind: 'bug-report',
+    ownerType: FileOwnerType.SYSTEM,
+    accessLevel: FileAccessLevel.INTERNAL,
+    purpose: FilePurpose.BUG_REPORT_ATTACHMENT,
+    fileType: FileType.IMAGE,
+  },
 };
 
 export const IMAGE_FILE_SELECT_FIELDS = [
