@@ -61,7 +61,7 @@ export class RegisterUseCase {
 
     const user = await this.transactionManager.runInTransaction(
       async (scope) => {
-        await this.userRepository.create(
+        const createdUser = await this.userRepository.create(
           {
             email: input.email,
             username: input.username,
@@ -79,8 +79,8 @@ export class RegisterUseCase {
 
         const createMasterProfileInput: ICreateMasterProfileInput = {
           rating: 0,
-          userId: user.id,
-          displayName: user.email,
+          userId: createdUser.id,
+          displayName: createdUser.email,
           description: '',
         };
 
@@ -90,14 +90,14 @@ export class RegisterUseCase {
         );
 
         const createUserProfileInput: ICreateUserProfileInput = {
-          userId: user.id,
-          displayName: user.email,
+          userId: createdUser.id,
+          displayName: createdUser.email,
           rating: 0,
         };
 
         await this.userProfileRepository.create(createUserProfileInput, scope);
 
-        return user;
+        return createdUser;
       },
     );
 
