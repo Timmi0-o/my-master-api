@@ -28,7 +28,9 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
 @Module({
   imports: [
     forwardRef(() => ImageModule),
-    MasterProfileModule,
+    // ImageModule ↔ MasterProfileModule ↔ MasterServiceModule — without forwardRef
+    // MasterProfileModule is undefined while the cycle is resolving.
+    forwardRef(() => MasterProfileModule),
     MasterWeeklyScheduleModule,
     MasterScheduleExceptionModule,
     forwardRef(() => AppointmentsModule),

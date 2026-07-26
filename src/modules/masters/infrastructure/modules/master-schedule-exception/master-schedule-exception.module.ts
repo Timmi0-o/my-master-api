@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { CreateMasterScheduleExceptionUseCase } from '../../../application/use-cases/master-schedule-exception/create-master-schedule-exception.use-case';
@@ -14,7 +14,7 @@ import { PrismaMasterScheduleExceptionRepository } from '../../persistence/repos
 import { MasterProfileModule } from '../master-profile/master-profile.module';
 
 @Module({
-  imports: [MasterProfileModule],
+  imports: [forwardRef(() => MasterProfileModule)],
   providers: [
     {
       provide: MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { CreateFavoriteMasterServiceUseCase } from '../../../application/use-cases/favorite-master-service/create-favorite-master-service.use-case';
@@ -13,7 +13,7 @@ import { PrismaFavoriteMasterServiceRepository } from '../../persistence/reposit
 import { MasterServiceModule } from '../master-service/master-service.module';
 
 @Module({
-  imports: [MasterServiceModule],
+  imports: [forwardRef(() => MasterServiceModule)],
   providers: [
     {
       provide: FAVORITE_MASTER_SERVICE_REPOSITORY_TOKEN,

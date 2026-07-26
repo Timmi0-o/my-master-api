@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { CreateMasterSubscriptionUseCase } from '../../../application/use-cases/master-subscription/create-master-subscription.use-case';
@@ -13,7 +13,7 @@ import { PrismaMasterSubscriptionRepository } from '../../persistence/repositori
 import { MasterProfileModule } from '../master-profile/master-profile.module';
 
 @Module({
-  imports: [MasterProfileModule],
+  imports: [forwardRef(() => MasterProfileModule)],
   providers: [
     {
       provide: MASTER_SUBSCRIPTION_REPOSITORY_TOKEN,

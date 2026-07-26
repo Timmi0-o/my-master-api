@@ -1,4 +1,12 @@
-import { Module } from '@nestjs/common';
+import {
+  IMasterProfileRepository,
+  MASTER_PROFILE_REPOSITORY_TOKEN,
+} from '@modules/masters/domain/repositories';
+import { MasterProfileModule } from '@modules/masters/infrastructure/modules/master-profile/master-profile.module';
+import { IUserProfileRepository } from '@modules/users/domain/repositories';
+import { USER_PROFILE_REPOSITORY_TOKEN } from '@modules/users/domain/repositories/user-profile/user-profile.repository.tokens';
+import { UserProfileModule } from '@modules/users/infrastructure/modules/user-profile/user-profile.module';
+import { Module, forwardRef } from '@nestjs/common';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { IUserRepository } from '../users/domain/repositories/user/i-user.repository';
@@ -24,7 +32,12 @@ import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { AuthController } from './presentation/http/controllers/auth.controller';
 
 @Module({
-  imports: [UserModule, AuthGuardsModule],
+  imports: [
+    UserModule,
+    AuthGuardsModule,
+    forwardRef(() => MasterProfileModule),
+    forwardRef(() => UserProfileModule),
+  ],
   controllers: [AuthController],
   providers: [
     TokenService,
@@ -72,9 +85,23 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         transactionManager: ITransactionManager,
         userRepository: IUserRepository,
         loginUseCase: LoginUseCase,
+        masterProfileRepository: IMasterProfileRepository,
+        userProfileRepository: IUserProfileRepository,
       ) =>
-        new RegisterUseCase(transactionManager, userRepository, loginUseCase),
-      inject: [TRANSACTION_MANAGER_TOKEN, USER_REPOSITORY_TOKEN, LoginUseCase],
+        new RegisterUseCase(
+          transactionManager,
+          userRepository,
+          loginUseCase,
+          masterProfileRepository,
+          userProfileRepository,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        USER_REPOSITORY_TOKEN,
+        LoginUseCase,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_PROFILE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: RefreshUseCase,
