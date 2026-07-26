@@ -31,6 +31,7 @@ import {
 } from 'src/modules/masters/domain/entities/master-service-review';
 import {
   MasterSubscriptionAlreadyExistsError,
+  MasterSubscriptionBlockedUserError,
   MasterSubscriptionCannotSubscribeToSelfError,
   MasterSubscriptionForbiddenError,
   MasterSubscriptionNotFoundError,
@@ -82,6 +83,7 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceReviewReactionForbiddenError ||
     error instanceof MasterSubscriptionForbiddenError ||
     error instanceof MasterSubscriptionCannotSubscribeToSelfError ||
+    error instanceof MasterSubscriptionBlockedUserError ||
     error instanceof FavoriteMasterServiceForbiddenError
   ) {
     return new ForbiddenException(error.message);

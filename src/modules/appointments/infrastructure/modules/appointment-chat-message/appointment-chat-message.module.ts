@@ -4,6 +4,9 @@ import type { ITransactionManager } from '@shared/domain/transactions';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
+import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
+import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
+import { UsersModule } from '../../../../users/users.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
 import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { CreateAppointmentChatMessageUseCase } from '../../../application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
@@ -23,6 +26,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
 @Module({
   imports: [
     forwardRef(() => MastersModule),
+    UsersModule,
     forwardRef(() => AppointmentModule),
     forwardRef(() => AppointmentChatModule),
   ],
@@ -67,6 +71,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
+        userBlockRepo: IUserBlockRepository,
       ) =>
         new CreateAppointmentChatMessageUseCase(
           transactionManager,
@@ -75,6 +80,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
           appointmentRepo,
           profileRepo,
           realtimePublisher,
+          userBlockRepo,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -83,6 +89,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+        USER_BLOCK_REPOSITORY_TOKEN,
       ],
     },
     {

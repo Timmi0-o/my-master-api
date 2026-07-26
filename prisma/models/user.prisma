@@ -33,6 +33,8 @@ model User {
   masterServiceReviewReactions   MasterServiceReviewReaction[]
   masterSubscriptions            MasterSubscription[]
   favoriteMasterServices         FavoriteMasterService[]
+  userBlocksCreated              UserBlock[]             @relation("UserBlocksCreated")
+  userBlocksReceived             UserBlock[]             @relation("UserBlocksReceived")
 
   @@unique([email])
   @@unique([phone])

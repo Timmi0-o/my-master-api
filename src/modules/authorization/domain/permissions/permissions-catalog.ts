@@ -22,6 +22,7 @@ function catalogForResource(
 export const PERMISSIONS_CATALOG: readonly TPermissionCatalogItem[] = [
   ...catalogForResource('users', Permissions.users, EPermissionCategory.USER),
   ...catalogForResource('user profiles', Permissions.userProfiles, EPermissionCategory.USER),
+  ...catalogForResource('user blocks', Permissions.userBlocks, EPermissionCategory.USER),
   ...catalogForResource('masters', Permissions.masters, EPermissionCategory.MASTER),
   ...catalogForResource('master profiles', Permissions.masterProfiles, EPermissionCategory.MASTER),
   ...catalogForResource('master services', Permissions.masterServices, EPermissionCategory.MASTER),

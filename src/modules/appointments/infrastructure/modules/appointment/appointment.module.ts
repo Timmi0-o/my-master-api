@@ -7,6 +7,9 @@ import type { IMasterServiceRepository } from '../../../../masters/domain/reposi
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-service/master-service.repository.tokens';
 import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { MastersModule } from '../../../../masters/masters.module';
+import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
+import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
+import { UsersModule } from '../../../../users/users.module';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/appointment/create-appointment.use-case';
 import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
 import { DeleteAppointmentByIdUseCase } from '../../../application/use-cases/appointment/delete-appointment-by-id.use-case';
@@ -28,6 +31,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
 @Module({
   imports: [
     forwardRef(() => MastersModule),
+    UsersModule,
     forwardRef(() => ImageModule),
     forwardRef(() => AppointmentChatModule),
     forwardRef(() => AppointmentChatMessageModule),
@@ -72,6 +76,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
         messageRepo: IAppointmentChatMessageRepository,
         profileRepo: IMasterProfileRepository,
         serviceRepo: IMasterServiceRepository,
+        userBlockRepo: IUserBlockRepository,
       ) =>
         new CreateAppointmentUseCase(
           transactionManager,
@@ -80,6 +85,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
           messageRepo,
           profileRepo,
           serviceRepo,
+          userBlockRepo,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -88,6 +94,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         MASTER_SERVICE_REPOSITORY_TOKEN,
+        USER_BLOCK_REPOSITORY_TOKEN,
       ],
     },
     {

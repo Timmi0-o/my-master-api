@@ -12,10 +12,12 @@ export {
   MasterSubscriptionForbiddenError,
   MasterSubscriptionAlreadyExistsError,
   MasterSubscriptionCannotSubscribeToSelfError,
+  MasterSubscriptionBlockedUserError,
 } from './errors';
 export {
   ensureMasterSubscriptionExists,
   ensureMasterSubscriptionModifiable,
   ensureCanSubscribeToMaster,
+  ensureActorHasNotBlockedMaster,
 } from './policies';
 export type { IMasterSubscriptionActor } from './policies';

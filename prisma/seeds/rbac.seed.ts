@@ -9,6 +9,9 @@ const USER_PERMISSIONS = [
   Permissions.userProfiles.read,
   Permissions.userProfiles.create,
   Permissions.userProfiles.update,
+  Permissions.userBlocks.read,
+  Permissions.userBlocks.create,
+  Permissions.userBlocks.delete,
   Permissions.masters.read,
   Permissions.masterProfiles.read,
   Permissions.masterServices.read,
@@ -27,6 +30,7 @@ const USER_PERMISSIONS = [
 const ADMIN_PERMISSIONS = [
   ...Object.values(Permissions.users),
   ...Object.values(Permissions.userProfiles),
+  ...Object.values(Permissions.userBlocks),
   ...Object.values(Permissions.masters),
   ...Object.values(Permissions.masterProfiles),
   ...Object.values(Permissions.masterServices),

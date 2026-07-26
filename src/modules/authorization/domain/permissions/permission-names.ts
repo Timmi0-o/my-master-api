@@ -10,6 +10,7 @@ function crudActions(resource: string) {
 export const Permissions = {
   users: crudActions('users'),
   userProfiles: crudActions('user-profiles'),
+  userBlocks: crudActions('user-blocks'),
   masters: crudActions('masters'),
   masterProfiles: crudActions('master-profiles'),
   masterServices: crudActions('master-services'),

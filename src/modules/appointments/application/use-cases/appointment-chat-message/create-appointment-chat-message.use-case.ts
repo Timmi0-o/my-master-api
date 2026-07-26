@@ -9,6 +9,8 @@ import type { IAppointmentChatRepository } from 'src/modules/appointments/domain
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
+import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
+import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
 import type { ICreateAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.input';
 import type { ICreateAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.output';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
@@ -21,6 +23,7 @@ export class CreateAppointmentChatMessageUseCase {
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly realtimePublisher: IAppointmentChatRealtimePublisher,
+    private readonly userBlockRepository: IUserBlockRepository,
   ) {}
 
   async execute(
@@ -48,6 +51,12 @@ export class CreateAppointmentChatMessageUseCase {
     if (!input.actor.isStaffUser && !isClient && !isMaster) {
       throw new AppointmentChatMessageForbiddenError(input.chatId);
     }
+
+    await ensureUsersNotBlocked(
+      this.userBlockRepository,
+      appointment.clientUserId,
+      profile.userId,
+    );
 
     const createInput: ICreateAppointmentChatMessageInput = {
       chatId: input.chatId,

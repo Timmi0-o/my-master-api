@@ -12,6 +12,8 @@ import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/m
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
+import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
+import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
 import type { ICreateAppointmentApplicationInput } from '../../dtos/appointment/create-appointment.input';
 import type { ICreateAppointmentApplicationOutput } from '../../dtos/appointment/create-appointment.output';
 
@@ -23,6 +25,7 @@ export class CreateAppointmentUseCase {
     private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly masterServiceRepository: IMasterServiceRepository,
+    private readonly userBlockRepository: IUserBlockRepository,
   ) {}
 
   async execute(
@@ -40,6 +43,12 @@ export class CreateAppointmentUseCase {
     ensureMasterProfileExists(profile, input.masterProfileId);
 
     ensureMasterProfileIsDifferent(profile, input.actor);
+
+    await ensureUsersNotBlocked(
+      this.userBlockRepository,
+      clientUserId,
+      profile.userId,
+    );
 
     const service = await this.masterServiceRepository.findEntityById(
       input.masterServiceId,
