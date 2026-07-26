@@ -1,7 +1,11 @@
+import { ICreateMasterProfileInput } from '@modules/masters/domain/entities';
+import { IMasterProfileRepository } from '@modules/masters/domain/repositories';
+import { ICreateUserProfileInput } from '@modules/users/domain/entities';
+import { IUserProfileRepository } from '@modules/users/domain/repositories';
+import type { ITransactionManager } from '@shared/domain/transactions';
 import * as bcrypt from 'bcrypt';
-import type { LoginUseCase } from './login.use-case';
-import { SYSTEM_ROLE_IDS } from 'src/modules/authorization/domain/entities/role/system-role-ids';
 import { ERoleIdentifier } from 'src/modules/authorization/domain/entities/role/role.enum';
+import { SYSTEM_ROLE_IDS } from 'src/modules/authorization/domain/entities/role/system-role-ids';
 import {
   EUserLanguage,
   EUserStatus,
@@ -9,7 +13,7 @@ import {
 } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IAuthResponse } from '../../domain/auth.types';
-import type { ITransactionManager } from '@shared/domain/transactions';
+import type { LoginUseCase } from './login.use-case';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -29,6 +33,8 @@ export class RegisterUseCase {
     private readonly transactionManager: ITransactionManager,
     private readonly userRepository: IUserRepository,
     private readonly loginUseCase: LoginUseCase,
+    private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly userProfileRepository: IUserProfileRepository,
   ) {}
 
   async execute(
@@ -53,22 +59,46 @@ export class RegisterUseCase {
 
     const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
 
-    const user = await this.transactionManager.runInTransaction((scope) =>
-      this.userRepository.create(
-        {
-          email: input.email,
-          username: input.username,
-          passwordHash,
-          roleId: SYSTEM_ROLE_IDS[ERoleIdentifier.USER],
-          status: EUserStatus.ACTIVE,
-          name: input.username,
-          surname: input.username,
-          language: EUserLanguage.RU,
-          phone: null,
-          patronymic: null,
-        },
-        scope,
-      ),
+    const user = await this.transactionManager.runInTransaction(
+      async (scope) => {
+        await this.userRepository.create(
+          {
+            email: input.email,
+            username: input.username,
+            passwordHash,
+            roleId: SYSTEM_ROLE_IDS[ERoleIdentifier.USER],
+            status: EUserStatus.ACTIVE,
+            name: input.username,
+            surname: input.username,
+            language: EUserLanguage.RU,
+            phone: null,
+            patronymic: null,
+          },
+          scope,
+        );
+
+        const createMasterProfileInput: ICreateMasterProfileInput = {
+          rating: 0,
+          userId: user.id,
+          displayName: user.email,
+          description: '',
+        };
+
+        await this.masterProfileRepository.create(
+          createMasterProfileInput,
+          scope,
+        );
+
+        const createUserProfileInput: ICreateUserProfileInput = {
+          userId: user.id,
+          displayName: user.email,
+          rating: 0,
+        };
+
+        await this.userProfileRepository.create(createUserProfileInput, scope);
+
+        return user;
+      },
     );
 
     return this.loginUseCase.execute(user, metadata);
