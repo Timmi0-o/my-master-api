@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
 import type { IJwtAccessPayload, ITokenPair } from '../../domain/auth.types';
 
-const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
-const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+const ACCESS_TOKEN_TTL_MINUTES = 15;
+const REFRESH_TOKEN_TTL_DAYS = 30;
 
 @Injectable()
 export class TokenService {
@@ -13,13 +13,13 @@ export class TokenService {
   issueTokenPair(payload: IJwtAccessPayload): ITokenPair {
     const accessToken = this.jwtService.sign(payload, {
       secret: this.getAccessTokenSecret(),
-      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+      expiresIn: `${ACCESS_TOKEN_TTL_MINUTES}m`,
     });
     const refreshToken = this.jwtService.sign(
       { sub: payload.sub, nonce: randomBytes(12).toString('hex') },
       {
         secret: this.getRefreshTokenSecret(),
-        expiresIn: REFRESH_TOKEN_TTL_SECONDS,
+        expiresIn: `${REFRESH_TOKEN_TTL_DAYS}d`,
       },
     );
 
@@ -37,7 +37,8 @@ export class TokenService {
   }
 
   getRefreshTokenExpiresAt(): Date {
-    return new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000);
+    const refreshTokenTtlSeconds = REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60;
+    return new Date(Date.now() + refreshTokenTtlSeconds * 1000);
   }
 
   getAccessTokenSecret(): string {
