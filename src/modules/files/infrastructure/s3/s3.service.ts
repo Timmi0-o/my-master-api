@@ -66,6 +66,8 @@ export class S3Service implements OnModuleInit {
     bucketName: string,
     sha256sum?: string,
   ): Promise<string> {
+    // AWS SDK otherwise hoists checksum into the query string; the client still
+    // sends X-Amz-Checksum-Sha256 as a header → Yandex/AWS: "headers … not signed".
     return getSignedUrl(
       this.s3PresignClient,
       new PutObjectCommand({
@@ -73,7 +75,17 @@ export class S3Service implements OnModuleInit {
         Bucket: bucketName,
         ...(sha256sum ? { ChecksumSHA256: sha256sum } : {}),
       }),
-      { expiresIn: 60 * 5 },
+      {
+        expiresIn: 60 * 5,
+        ...(sha256sum
+          ? {
+              unhoistableHeaders: new Set([
+                'x-amz-checksum-sha256',
+                'x-amz-sdk-checksum-algorithm',
+              ]),
+            }
+          : {}),
+      },
     );
   }
 
