@@ -1,10 +1,13 @@
-import { EUserStatus, UserNotActiveError } from 'src/modules/users/domain/entities/user';
-import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
+import type { ITransactionManager } from '@shared/domain/transactions';
 import { RefreshTokenInvalidError } from 'src/modules/auth/domain/entities/refresh-token';
 import type { IRefreshTokenRepository } from 'src/modules/auth/domain/repositories/i-refresh-token.repository';
+import {
+  EUserStatus,
+  UserNotActiveError,
+} from 'src/modules/users/domain/entities/user';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IAuthResponse } from '../../domain/auth.types';
 import type { TokenService } from '../../infrastructure/services/token.service';
-import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class RefreshUseCase {
   constructor(
@@ -15,9 +18,20 @@ export class RefreshUseCase {
   ) {}
 
   async execute(refreshToken: string): Promise<IAuthResponse> {
+    console.log('refreshToken', refreshToken);
+
     const payload = this.tokenService.verifyRefreshToken(refreshToken);
+
+    console.log('payload', payload);
+
     const refreshHash = this.tokenService.hashToken(refreshToken);
-    const storedToken = await this.refreshTokenRepository.findByHash(refreshHash);
+
+    console.log('refreshHash', refreshHash);
+
+    const storedToken =
+      await this.refreshTokenRepository.findByHash(refreshHash);
+
+    console.log('storedToken', storedToken);
 
     if (!storedToken || storedToken.userId !== payload.sub) {
       if (payload.sub) {
