@@ -1,20 +1,17 @@
-import type { ICreateAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.input';
-import type { ICreateAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.output';
-import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
-import {
-  AppointmentChatMessageForbiddenError,
-} from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import { ensureAppointmentStatusActive } from '@modules/appointments/domain/entities/appointment/policies/ensure-appointment-status-active.policy';
+import type { ITransactionManager } from '@shared/domain/transactions';
+import { ensureAppointmentExists } from 'src/modules/appointments/domain/entities/appointment';
 import { ensureAppointmentChatExists } from 'src/modules/appointments/domain/entities/appointment-chat';
-import {
-  ensureAppointmentExists,
-} from 'src/modules/appointments/domain/entities/appointment';
-import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
+import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import { AppointmentChatMessageForbiddenError } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
+import type { ICreateAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.input';
+import type { ICreateAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.output';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
-import type { ITransactionManager } from '@shared/domain/transactions';
 
 export class CreateAppointmentChatMessageUseCase {
   constructor(
@@ -38,6 +35,8 @@ export class CreateAppointmentChatMessageUseCase {
       chat.appointmentId,
     );
     ensureAppointmentExists(appointment, chat.appointmentId);
+
+    ensureAppointmentStatusActive(appointment);
 
     const profile = await this.masterProfileRepository.findEntityById(
       appointment.masterProfileId,
