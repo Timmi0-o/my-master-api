@@ -8,6 +8,7 @@ import { MastersModule } from './modules/masters/masters.module';
 import { SearchModule } from './modules/search/search.module';
 import { CoreModule } from './modules/shared/infrastructure/modules/core.module';
 import { UsersModule } from './modules/users/users.module';
+import { WebPushSubscriptionsModule } from './modules/web-push-subscriptions/web-push-subscriptions.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
     FilesModule,
     SearchModule,
     BugReportsModule,
+    WebPushSubscriptionsModule,
   ],
 })
 export class AppModule {}

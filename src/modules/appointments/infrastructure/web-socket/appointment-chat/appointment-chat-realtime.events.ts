@@ -12,6 +12,7 @@ interface AppointmentChatRealtimeMessageEvent {
 
 export interface AppointmentChatRealtimeMessageCreatedEvent extends AppointmentChatRealtimeMessageEvent {
   type: 'message.created';
+  recipientUserId?: string | null;
 }
 
 export interface AppointmentChatRealtimeMessageDeletedEvent extends AppointmentChatRealtimeMessageEvent {

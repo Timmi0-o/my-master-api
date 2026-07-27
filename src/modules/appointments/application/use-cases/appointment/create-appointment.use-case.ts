@@ -16,6 +16,7 @@ import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-bl
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
 import type { ICreateAppointmentApplicationInput } from '../../dtos/appointment/create-appointment.input';
 import type { ICreateAppointmentApplicationOutput } from '../../dtos/appointment/create-appointment.output';
+import { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
 
 export class CreateAppointmentUseCase {
   constructor(
@@ -26,6 +27,7 @@ export class CreateAppointmentUseCase {
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly masterServiceRepository: IMasterServiceRepository,
     private readonly userBlockRepository: IUserBlockRepository,
+    private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
   ) {}
 
   async execute(
@@ -111,6 +113,10 @@ export class CreateAppointmentUseCase {
         };
         await this.appointmentChatMessageRepository.create(messageInput, scope);
       }
+
+      await this.realtimeAppointmentPublisher.appointmentCreated(appointment, {
+        recipientUserId: profile.userId,
+      });
 
       return appointment;
     });

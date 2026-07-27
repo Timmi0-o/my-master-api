@@ -11,9 +11,12 @@ import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/m
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
+import type { SendWebPushToUserUseCase } from 'src/modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import type { ICreateAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.input';
 import type { ICreateAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.output';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
+
+const WEB_PUSH_BODY_MAX_LENGTH = 120;
 
 export class CreateAppointmentChatMessageUseCase {
   constructor(
@@ -22,8 +25,9 @@ export class CreateAppointmentChatMessageUseCase {
     private readonly appointmentChatRepository: IAppointmentChatRepository,
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
-    private readonly realtimePublisher: IAppointmentChatRealtimePublisher,
+    private readonly realtimeChatPublisher: IAppointmentChatRealtimePublisher,
     private readonly userBlockRepository: IUserBlockRepository,
+    private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
   ) {}
 
   async execute(
@@ -68,8 +72,38 @@ export class CreateAppointmentChatMessageUseCase {
       this.messageRepository.create(createInput, scope),
     );
 
-    await this.realtimePublisher.messageCreated(message);
+    const recipientUserId = isClient
+      ? profile.userId
+      : isMaster
+        ? appointment.clientUserId
+        : null;
+
+    await this.realtimeChatPublisher.messageCreated(message, {
+      recipientUserId,
+    });
+
+    if (recipientUserId) {
+      void this.sendWebPushToUserUseCase.execute({
+        userId: recipientUserId,
+        title: 'Новое сообщение',
+        body: truncateNotificationBody(message.body),
+        data: {
+          type: 'appointment_chat_message',
+          chatId: message.chatId,
+          messageId: message.id,
+          url: `/chat/${message.chatId}`,
+        },
+      });
+    }
 
     return message;
   }
+}
+
+function truncateNotificationBody(body: string): string {
+  if (body.length <= WEB_PUSH_BODY_MAX_LENGTH) {
+    return body;
+  }
+
+  return `${body.slice(0, WEB_PUSH_BODY_MAX_LENGTH - 1)}…`;
 }

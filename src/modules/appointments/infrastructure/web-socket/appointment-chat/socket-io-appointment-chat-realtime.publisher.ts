@@ -10,11 +10,13 @@ export class SocketIoAppointmentChatRealtimePublisher implements IAppointmentCha
   //eslint-disable-next-line @typescript-eslint/require-await
   async messageCreated(
     message: IAppointmentChatMessagePublicEntity,
+    options?: { recipientUserId?: string | null },
   ): Promise<void> {
     this.eventBus.publish({
       type: 'message.created',
       chatId: message.chatId,
       message,
+      recipientUserId: options?.recipientUserId ?? null,
     });
   }
 

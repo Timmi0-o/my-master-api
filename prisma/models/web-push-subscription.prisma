@@ -1,0 +1,63 @@
+enum WebPushDeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+  UNKNOWN
+}
+
+enum WebPushSubscriptionStatus {
+  ACTIVE
+  DISABLED
+  EXPIRED
+}
+
+/// Подписка браузера/PWA на Web Push (один endpoint = одно устройство/браузер).
+model WebPushSubscription {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+
+  /// URL Push Service (FCM / Mozilla / Apple). Глобально уникален.
+  endpoint String @map("endpoint")
+  /// Client public key (PushSubscription.keys.p256dh)
+  p256dh String @map("p256dh")
+  /// Auth secret (PushSubscription.keys.auth)
+  auth String @map("auth")
+  /// PushSubscription.expirationTime, если браузер его отдаёт
+  expirationTime DateTime? @map("expiration_time")
+  /// Обычно aes128gcm
+  contentEncoding String @default("aes128gcm") @map("content_encoding")
+
+  userAgent  String?           @map("user_agent")
+  deviceType WebPushDeviceType @default(UNKNOWN) @map("device_type")
+  /// chrome | firefox | safari | edge | ...
+  browser String?
+  /// ios | android | macos | windows | linux | ...
+  platform String?
+
+  status WebPushSubscriptionStatus @default(ACTIVE)
+
+  /// Последняя успешная доставка
+  lastSuccessAt DateTime? @map("last_success_at")
+  /// Последняя ошибка доставки
+  lastFailureAt DateTime? @map("last_failure_at")
+  /// HTTP-код от Push Service (404/410 → подписка мертва)
+  lastFailureCode Int? @map("last_failure_code")
+  /// Счётчик подряд идущих ошибок (для cleanup/backoff)
+  failureCount Int @default(0) @map("failure_count")
+
+  /// Когда пользователь (пере)подписал устройство
+  subscribedAt DateTime @default(now()) @map("subscribed_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([endpoint])
+  @@index([userId, status, deletedAt])
+  @@index([status, failureCount])
+  @@index([deletedAt])
+  @@map("WebPushSubscriptions")
+}

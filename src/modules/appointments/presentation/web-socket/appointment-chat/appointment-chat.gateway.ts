@@ -1,7 +1,10 @@
+import { AssertAppointmentChatAccessUseCase } from '@modules/appointments/application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
+import { AppointmentChatRealtimeEventBus } from '@modules/appointments/infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import { type OnModuleDestroy, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
@@ -9,11 +12,10 @@ import {
 } from '@nestjs/websockets';
 import type { Subscription } from 'rxjs';
 import type { Server } from 'socket.io';
-import { AssertAppointmentChatAccessUseCase } from '@modules/appointments/application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
-import { AppointmentChatRealtimeEventBus } from '@modules/appointments/infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import {
   APPOINTMENT_CHAT_WS_EVENTS,
   APPOINTMENT_CHAT_WS_ROOM_NAME,
+  APPOINTMENT_CHAT_WS_USER_ROOM_NAME,
 } from './appointment-chat-ws.events';
 import type { AppointmentChatAuthenticatedSocket } from './guards/appointment-chat-authenticated-socket.types';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
@@ -26,7 +28,9 @@ import { validateJoinAppointmentChatPayload } from './validation/validate-join-a
   namespace: '/v1/appointment-chats',
   cors: { origin: process.env.WS_CORS_ORIGIN ?? '*' },
 })
-export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
+export class AppointmentChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnModuleDestroy
+{
   @WebSocketServer()
   server!: Server;
 
@@ -45,13 +49,23 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
       const room = APPOINTMENT_CHAT_WS_ROOM_NAME(event.chatId);
 
       if (event.type === 'message.created') {
-        server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_CREATED, {
+        const payload = {
           result: {
             data: event.message
               ? mapAppointmentChatMessageToWsPayload(event.message)
               : null,
           },
-        });
+        };
+
+        server
+          .to(room)
+          .emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_CREATED, payload);
+
+        if (event.recipientUserId) {
+          server
+            .to(APPOINTMENT_CHAT_WS_USER_ROOM_NAME(event.recipientUserId))
+            .emit(APPOINTMENT_CHAT_WS_EVENTS.INBOX_MESSAGE, payload);
+        }
         return;
       }
 
@@ -80,6 +94,22 @@ export class AppointmentChatGateway implements OnGatewayInit, OnModuleDestroy {
     }
 
     client.data.user = user;
+    await client.join(APPOINTMENT_CHAT_WS_USER_ROOM_NAME(user.id));
+  }
+
+  @SubscribeMessage(APPOINTMENT_CHAT_WS_EVENTS.SUBSCRIBE_INBOX)
+  @UseGuards(WsJwtAuthGuard)
+  async subscribeInbox(
+    @ConnectedSocket() client: AppointmentChatAuthenticatedSocket,
+  ) {
+    try {
+      await client.join(
+        APPOINTMENT_CHAT_WS_USER_ROOM_NAME(client.data.user.id),
+      );
+      return { result: { data: { subscribed: true } } };
+    } catch (error) {
+      return mapWsErrorResponse(error);
+    }
   }
 
   @SubscribeMessage(APPOINTMENT_CHAT_WS_EVENTS.JOIN)

@@ -1,12 +1,14 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
 import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
+import { SendWebPushToUserUseCase } from '../../../../web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
+import { WebPushSubscriptionsModule } from '../../../../web-push-subscriptions/web-push-subscriptions.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
 import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { CreateAppointmentChatMessageUseCase } from '../../../application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
@@ -29,6 +31,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
     UsersModule,
     forwardRef(() => AppointmentModule),
     forwardRef(() => AppointmentChatModule),
+    WebPushSubscriptionsModule,
   ],
   providers: [
     {
@@ -72,6 +75,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         profileRepo: IMasterProfileRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
         userBlockRepo: IUserBlockRepository,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
       ) =>
         new CreateAppointmentChatMessageUseCase(
           transactionManager,
@@ -81,6 +85,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
           profileRepo,
           realtimePublisher,
           userBlockRepo,
+          sendWebPushToUserUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -90,6 +95,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         MASTER_PROFILE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
+        SendWebPushToUserUseCase,
       ],
     },
     {
