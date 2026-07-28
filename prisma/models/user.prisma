@@ -37,6 +37,8 @@ model User {
   userBlocksReceived             UserBlock[]             @relation("UserBlocksReceived")
   bugReports                     BugReport[]
   webPushSubscriptions           WebPushSubscription[]
+  notifications                  Notification[] @relation("UserNotifications")
+  actedNotifications             Notification[] @relation("UserActedNotifications")
 
   @@unique([email])
   @@unique([phone])

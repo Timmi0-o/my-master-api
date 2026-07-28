@@ -7,6 +7,8 @@ import { MastersModule } from '../../../../masters/masters.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
 import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
+import { CreateNotificationUseCase } from '../../../../notifications/application/use-cases/notification/create-notification.use-case';
+import { NotificationsModule } from '../../../../notifications/notifications.module';
 import { SendWebPushToUserUseCase } from '../../../../web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import { WebPushSubscriptionsModule } from '../../../../web-push-subscriptions/web-push-subscriptions.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
@@ -31,6 +33,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
     UsersModule,
     forwardRef(() => AppointmentModule),
     forwardRef(() => AppointmentChatModule),
+    NotificationsModule,
     WebPushSubscriptionsModule,
   ],
   providers: [
@@ -75,6 +78,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         profileRepo: IMasterProfileRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
         userBlockRepo: IUserBlockRepository,
+        createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
       ) =>
         new CreateAppointmentChatMessageUseCase(
@@ -85,6 +89,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
           profileRepo,
           realtimePublisher,
           userBlockRepo,
+          createNotificationUseCase,
           sendWebPushToUserUseCase,
         ),
       inject: [
@@ -95,6 +100,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         MASTER_PROFILE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
+        CreateNotificationUseCase,
         SendWebPushToUserUseCase,
       ],
     },

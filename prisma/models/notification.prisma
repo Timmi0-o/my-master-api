@@ -1,0 +1,70 @@
+enum NotificationCategory {
+  APPOINTMENT
+  CHAT
+  REVIEW
+  SYSTEM
+}
+
+enum NotificationType {
+  APPOINTMENT_CREATED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_COMPLETED
+  APPOINTMENT_REMINDER
+  APPOINTMENT_NO_SHOW
+  CHAT_MESSAGE
+  REVIEW_CREATED
+  REVIEW_REACTION
+  SYSTEM_ANNOUNCEMENT
+  SYSTEM_SECURITY
+}
+
+enum NotificationRelatedEntityType {
+  APPOINTMENT
+  APPOINTMENT_CHAT
+  APPOINTMENT_CHAT_MESSAGE
+  MASTER_SERVICE_REVIEW
+  MASTER_PROFILE
+  USER
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  userId      String  @map("user_id")
+  actorUserId String? @map("actor_user_id")
+
+  category NotificationCategory
+  type     NotificationType
+
+  title String
+  body  String
+
+  /// Deep link для открытия из inbox / push click
+  actionUrl String? @map("action_url")
+
+  relatedEntityType NotificationRelatedEntityType? @map("related_entity_type")
+  relatedEntityId   String?                        @map("related_entity_id")
+
+  /// Доп. данные (chatId, messageId, …) — совместимо с push data
+  payload Json?
+
+  /// Идемпотентность: chat_message:{messageId}, appointment_cancelled:{id}, …
+  idempotencyKey String? @map("idempotency_key")
+
+  readAt     DateTime? @map("read_at")
+  archivedAt DateTime? @map("archived_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user  User  @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("UserActedNotifications", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, deletedAt, createdAt])
+  @@index([userId, category, deletedAt, createdAt])
+  @@index([userId, readAt, deletedAt])
+  @@map("Notifications")
+}
