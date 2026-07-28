@@ -1,12 +1,3 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  MessageEvent,
-  Post,
-  Sse,
-  UseGuards,
-} from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
@@ -19,6 +10,15 @@ import { GetUnreadNotificationsCountUseCase } from '@modules/notifications/appli
 import { MarkAllNotificationsReadUseCase } from '@modules/notifications/application/use-cases/notification/mark-all-notifications-read.use-case';
 import { MarkNotificationReadByIdUseCase } from '@modules/notifications/application/use-cases/notification/mark-notification-read-by-id.use-case';
 import { NotificationSseEventBus } from '@modules/notifications/infrastructure/sse/notification-sse.event-bus';
+import {
+  Controller,
+  Delete,
+  Get,
+  MessageEvent,
+  Post,
+  Sse,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
@@ -26,7 +26,7 @@ import { SkipResponseWrap } from '@shared/presentation/decorators/skip-response-
 import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { Observable, filter, map } from 'rxjs';
+import { Observable, filter, interval, map, merge } from 'rxjs';
 import { payloadToArchiveNotificationInput } from '../mappers/notification/payload-to-archive-notification-input';
 import { payloadToDeleteNotificationInput } from '../mappers/notification/payload-to-delete-notification-input';
 import { payloadToFindManyParams } from '../mappers/notification/payload-to-find-many-params.mapper';
@@ -94,7 +94,7 @@ export class NotificationsController {
   @Sse('stream')
   @SkipResponseWrap()
   stream(@AuthenticatedUser() user: ISessionUser): Observable<MessageEvent> {
-    return this.notificationSseEventBus.asObservable().pipe(
+    const notifications$ = this.notificationSseEventBus.asObservable().pipe(
       filter((event) => event.notification.userId === user.id),
       map(
         (event) =>
@@ -106,6 +106,17 @@ export class NotificationsController {
           }) as MessageEvent,
       ),
     );
+
+    const heartbeat$ = interval(25_000).pipe(
+      map(
+        () =>
+          ({
+            data: { type: 'heartbeat' },
+          }) as MessageEvent,
+      ),
+    );
+
+    return merge(notifications$, heartbeat$);
   }
 
   @Post('read-all')
