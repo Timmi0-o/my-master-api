@@ -1,3 +1,4 @@
+import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import type { ICreateAppointmentInput } from 'src/modules/appointments/domain/entities/appointment';
 import { AppointmentNotAvailableError } from 'src/modules/appointments/domain/entities/appointment';
@@ -35,6 +36,7 @@ export class CreateAppointmentUseCase {
     private readonly userBlockRepository: IUserBlockRepository,
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
+    private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
   ) {}
 
   async execute(
@@ -139,20 +141,37 @@ export class CreateAppointmentUseCase {
       year: 'numeric',
     });
 
+    const title = 'У вас новая запись';
+    const body = `Новая запись от ${today}`;
+    const actionUrl = '/appointments';
+    const payload = {
+      type: 'appointment_created',
+      appointmentId: appointment.id,
+      url: actionUrl,
+    };
+
     void this.createNotificationUseCase
       .execute({
         userId: profile.userId,
         actorUserId: clientUserId,
         category: NotificationCategory.APPOINTMENT,
         type: NotificationType.APPOINTMENT_CREATED,
-        title: 'У вас новая запись',
-        body: `Новая запись от ${today}`,
-        actionUrl: '/appointments',
+        title,
+        body,
+        actionUrl,
         relatedEntityType: NotificationRelatedEntityType.APPOINTMENT,
         relatedEntityId: appointment.id,
+        payload,
         idempotencyKey: `appointment_created:${appointment.id}`,
       })
       .catch(() => undefined);
+
+    void this.sendWebPushToUserUseCase.execute({
+      userId: profile.userId,
+      title,
+      body,
+      data: payload,
+    });
 
     return appointment;
   }

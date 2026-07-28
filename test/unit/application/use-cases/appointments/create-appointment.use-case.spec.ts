@@ -55,6 +55,15 @@ describe('CreateAppointmentUseCase', () => {
       execute: jest.fn().mockResolvedValue({ id: 'notif-1' }),
     };
 
+    const sendWebPushToUserUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        attempted: 0,
+        succeeded: 0,
+        failed: 0,
+        expired: 0,
+      }),
+    };
+
     const useCase = new CreateAppointmentUseCase(
       createMockTransactionManager(),
       appointmentRepository,
@@ -65,6 +74,7 @@ describe('CreateAppointmentUseCase', () => {
       userBlockRepository as never,
       realtimeAppointmentPublisher as never,
       createNotificationUseCase as never,
+      sendWebPushToUserUseCase as never,
     );
 
     const startsAt = new Date('2026-07-01T10:00:00.000Z');
@@ -137,6 +147,7 @@ describe('CreateAppointmentUseCase', () => {
         existsActiveBetweenUsers: jest.fn().mockResolvedValue(false),
       } as never,
       { appointmentCreated: jest.fn() } as never,
+      { execute: jest.fn() } as never,
       { execute: jest.fn() } as never,
     );
 
