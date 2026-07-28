@@ -2,6 +2,8 @@ import { APPOINTMENT_REALTIME_PUBLISHER_TOKEN } from '@modules/appointments/appl
 import { IAppointmentRealtimePublisher } from '@modules/appointments/application/ports/appointment/i-appointment-realtime.publisher';
 import { AppointmentGateway } from '@modules/appointments/presentation/web-socket/appointment/appointment.gateway';
 import { WsJwtAuthGuard } from '@modules/appointments/presentation/web-socket/appointment/guards/ws-jwt-auth.guard';
+import { CreateNotificationUseCase } from '@modules/notifications/application/use-cases/notification/create-notification.use-case';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import type { ITransactionManager } from '@shared/domain/transactions';
@@ -42,6 +44,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     forwardRef(() => ImageModule),
     forwardRef(() => AppointmentChatModule),
     forwardRef(() => AppointmentChatMessageModule),
+    NotificationsModule,
     JwtModule.register({}),
   ],
   providers: [
@@ -93,6 +96,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         serviceRepo: IMasterServiceRepository,
         userBlockRepo: IUserBlockRepository,
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        createNotificationUseCase: CreateNotificationUseCase,
       ) =>
         new CreateAppointmentUseCase(
           transactionManager,
@@ -103,6 +107,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           serviceRepo,
           userBlockRepo,
           realtimeAppointmentPublisher,
+          createNotificationUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -113,6 +118,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         MASTER_SERVICE_REPOSITORY_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        CreateNotificationUseCase,
       ],
     },
     {

@@ -12,6 +12,12 @@ import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/m
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
+import type { CreateNotificationUseCase } from 'src/modules/notifications/application/use-cases/notification/create-notification.use-case';
+import {
+  NotificationCategory,
+  NotificationRelatedEntityType,
+  NotificationType,
+} from 'src/modules/notifications/domain/entities/notification';
 import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
 import type { ICreateAppointmentApplicationInput } from '../../dtos/appointment/create-appointment.input';
@@ -28,6 +34,7 @@ export class CreateAppointmentUseCase {
     private readonly masterServiceRepository: IMasterServiceRepository,
     private readonly userBlockRepository: IUserBlockRepository,
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+    private readonly createNotificationUseCase: CreateNotificationUseCase,
   ) {}
 
   async execute(
@@ -91,34 +98,62 @@ export class CreateAppointmentUseCase {
       isEarlyCompletionByClient: false,
     };
 
-    return this.transactionManager.runInTransaction(async (scope) => {
-      const appointment = await this.appointmentRepository.create(
-        createInput,
-        scope,
-      );
+    const appointment = await this.transactionManager.runInTransaction(
+      async (scope) => {
+        const created = await this.appointmentRepository.create(
+          createInput,
+          scope,
+        );
 
-      const chatInput: ICreateAppointmentChatInput = {
-        appointmentId: appointment.id,
-      };
-      const chat = await this.appointmentChatRepository.create(
-        chatInput,
-        scope,
-      );
-
-      if (input.initialMessage) {
-        const messageInput: ICreateAppointmentChatMessageInput = {
-          chatId: chat.id,
-          senderUserId: input.actor.userId,
-          body: input.initialMessage.body,
+        const chatInput: ICreateAppointmentChatInput = {
+          appointmentId: created.id,
         };
-        await this.appointmentChatMessageRepository.create(messageInput, scope);
-      }
+        const chat = await this.appointmentChatRepository.create(
+          chatInput,
+          scope,
+        );
 
-      await this.realtimeAppointmentPublisher.appointmentCreated(appointment, {
-        recipientUserId: profile.userId,
-      });
+        if (input.initialMessage) {
+          const messageInput: ICreateAppointmentChatMessageInput = {
+            chatId: chat.id,
+            senderUserId: input.actor.userId,
+            body: input.initialMessage.body,
+          };
+          await this.appointmentChatMessageRepository.create(
+            messageInput,
+            scope,
+          );
+        }
 
-      return appointment;
+        await this.realtimeAppointmentPublisher.appointmentCreated(created, {
+          recipientUserId: profile.userId,
+        });
+
+        return created;
+      },
+    );
+
+    const today = new Date().toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
     });
+
+    void this.createNotificationUseCase
+      .execute({
+        userId: profile.userId,
+        actorUserId: clientUserId,
+        category: NotificationCategory.APPOINTMENT,
+        type: NotificationType.APPOINTMENT_CREATED,
+        title: 'У вас новая запись',
+        body: `Новая запись от ${today}`,
+        actionUrl: '/appointments',
+        relatedEntityType: NotificationRelatedEntityType.APPOINTMENT,
+        relatedEntityId: appointment.id,
+        idempotencyKey: `appointment_created:${appointment.id}`,
+      })
+      .catch(() => undefined);
+
+    return appointment;
   }
 }

@@ -43,6 +43,18 @@ describe('CreateAppointmentUseCase', () => {
       }),
     } as unknown as IMasterServiceRepository;
 
+    const userBlockRepository = {
+      existsActiveBetweenUsers: jest.fn().mockResolvedValue(false),
+    };
+
+    const realtimeAppointmentPublisher = {
+      appointmentCreated: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const createNotificationUseCase = {
+      execute: jest.fn().mockResolvedValue({ id: 'notif-1' }),
+    };
+
     const useCase = new CreateAppointmentUseCase(
       createMockTransactionManager(),
       appointmentRepository,
@@ -50,6 +62,9 @@ describe('CreateAppointmentUseCase', () => {
       appointmentChatMessageRepository,
       masterProfileRepository,
       masterServiceRepository,
+      userBlockRepository as never,
+      realtimeAppointmentPublisher as never,
+      createNotificationUseCase as never,
     );
 
     const startsAt = new Date('2026-07-01T10:00:00.000Z');
@@ -118,6 +133,11 @@ describe('CreateAppointmentUseCase', () => {
       {} as IAppointmentChatMessageRepository,
       masterProfileRepository,
       masterServiceRepository,
+      {
+        existsActiveBetweenUsers: jest.fn().mockResolvedValue(false),
+      } as never,
+      { appointmentCreated: jest.fn() } as never,
+      { execute: jest.fn() } as never,
     );
 
     await expect(
