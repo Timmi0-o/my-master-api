@@ -3,6 +3,8 @@ import {
   TRANSACTION_MANAGER_TOKEN,
   type ITransactionManager,
 } from '@shared/domain/transactions';
+import type { INotificationRealtimePublisher } from 'src/modules/notifications/application/ports/i-notification-realtime.publisher';
+import { NOTIFICATION_REALTIME_PUBLISHER_TOKEN } from 'src/modules/notifications/application/ports/notification-realtime.publisher.tokens';
 import { ArchiveNotificationByIdUseCase } from 'src/modules/notifications/application/use-cases/notification/archive-notification-by-id.use-case';
 import { CreateNotificationUseCase } from 'src/modules/notifications/application/use-cases/notification/create-notification.use-case';
 import { DeleteNotificationByIdUseCase } from 'src/modules/notifications/application/use-cases/notification/delete-notification-by-id.use-case';
@@ -16,6 +18,8 @@ import {
   type INotificationRepository,
 } from 'src/modules/notifications/domain/repositories/notification';
 import { PrismaNotificationRepository } from '../../persistence/repositories/notification/prisma-notification.repository';
+import { NotificationSseEventBus } from '../../sse/notification-sse.event-bus';
+import { RxjsNotificationRealtimePublisher } from '../../sse/rxjs-notification-realtime.publisher';
 
 @Module({
   providers: [
@@ -23,13 +27,28 @@ import { PrismaNotificationRepository } from '../../persistence/repositories/not
       provide: NOTIFICATION_REPOSITORY_TOKEN,
       useClass: PrismaNotificationRepository,
     },
+    NotificationSseEventBus,
+    {
+      provide: NOTIFICATION_REALTIME_PUBLISHER_TOKEN,
+      useClass: RxjsNotificationRealtimePublisher,
+    },
     {
       provide: CreateNotificationUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
         repo: INotificationRepository,
-      ) => new CreateNotificationUseCase(transactionManager, repo),
-      inject: [TRANSACTION_MANAGER_TOKEN, NOTIFICATION_REPOSITORY_TOKEN],
+        realtimePublisher: INotificationRealtimePublisher,
+      ) =>
+        new CreateNotificationUseCase(
+          transactionManager,
+          repo,
+          realtimePublisher,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        NOTIFICATION_REPOSITORY_TOKEN,
+        NOTIFICATION_REALTIME_PUBLISHER_TOKEN,
+      ],
     },
     {
       provide: GetNotificationsUseCase,
@@ -84,6 +103,8 @@ import { PrismaNotificationRepository } from '../../persistence/repositories/not
   ],
   exports: [
     NOTIFICATION_REPOSITORY_TOKEN,
+    NOTIFICATION_REALTIME_PUBLISHER_TOKEN,
+    NotificationSseEventBus,
     CreateNotificationUseCase,
     GetNotificationsUseCase,
     GetNotificationByIdUseCase,

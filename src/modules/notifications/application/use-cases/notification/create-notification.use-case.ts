@@ -1,4 +1,5 @@
 import type { ITransactionManager } from '@shared/domain/transactions';
+import type { INotificationRealtimePublisher } from 'src/modules/notifications/application/ports/i-notification-realtime.publisher';
 import {
   NotificationAlreadyExistsError,
   type ICreateNotificationInput,
@@ -11,6 +12,7 @@ export class CreateNotificationUseCase {
   constructor(
     private readonly transactionManager: ITransactionManager,
     private readonly notificationRepository: INotificationRepository,
+    private readonly realtimePublisher: INotificationRealtimePublisher,
   ) {}
 
   async execute(
@@ -30,40 +32,55 @@ export class CreateNotificationUseCase {
       idempotencyKey: input.idempotencyKey ?? null,
     };
 
-    return this.transactionManager.runInTransaction(async (scope) => {
-      if (createInput.idempotencyKey) {
-        const existing =
-          await this.notificationRepository.findEntityByUserAndIdempotencyKey(
-            createInput.userId,
-            createInput.idempotencyKey,
-            scope,
-          );
+    let created = false;
 
-        if (existing && existing.deletedAt == null) {
-          return existing;
-        }
-      }
-
-      try {
-        return await this.notificationRepository.create(createInput, scope);
-      } catch (error) {
-        if (
-          error instanceof NotificationAlreadyExistsError &&
-          createInput.idempotencyKey
-        ) {
-          const raced =
+    const notification = await this.transactionManager.runInTransaction(
+      async (scope) => {
+        if (createInput.idempotencyKey) {
+          const existing =
             await this.notificationRepository.findEntityByUserAndIdempotencyKey(
               createInput.userId,
               createInput.idempotencyKey,
               scope,
             );
-          if (raced && raced.deletedAt == null) {
-            return raced;
+
+          if (existing && existing.deletedAt == null) {
+            return existing;
           }
         }
 
-        throw error;
-      }
-    });
+        try {
+          const entity = await this.notificationRepository.create(
+            createInput,
+            scope,
+          );
+          created = true;
+          return entity;
+        } catch (error) {
+          if (
+            error instanceof NotificationAlreadyExistsError &&
+            createInput.idempotencyKey
+          ) {
+            const raced =
+              await this.notificationRepository.findEntityByUserAndIdempotencyKey(
+                createInput.userId,
+                createInput.idempotencyKey,
+                scope,
+              );
+            if (raced && raced.deletedAt == null) {
+              return raced;
+            }
+          }
+
+          throw error;
+        }
+      },
+    );
+
+    if (created) {
+      await this.realtimePublisher.notificationCreated(notification);
+    }
+
+    return notification;
   }
 }

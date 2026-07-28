@@ -1,5 +1,5 @@
 import { Logger, VersioningType } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 import {
@@ -17,7 +17,9 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
+      'http://localhost:4441',
       'http://tima53419.fvds.ru:3000',
+      'http://tima53419.fvds.ru:4441',
       'http://tima53419.fvds.ru',
       'https://tima53419.fvds.ru',
       'http://localhost:3001',
@@ -28,6 +30,7 @@ async function bootstrap() {
   });
 
   const logger = app.get<ILoggerService>(ILoggerSymbol);
+  const reflector = app.get(Reflector);
 
   app.enableVersioning({
     type: VersioningType.URI,
@@ -36,7 +39,7 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(
     new LoggingInterceptor(logger),
-    new ResponseInterceptor(),
+    new ResponseInterceptor(reflector),
   );
 
   const PORT = Number(process.env.APP_PORT);
