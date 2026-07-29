@@ -10,12 +10,14 @@ import type { AppointmentChatMessageRow } from './appointment-chat-message.row.t
 
 export function mapAppointmentChatMessageRow(
   row: AppointmentChatMessageRow,
-): IAppointmentChatMessagePublicEntity & Partial<IAppointmentChatMessageRelations> {
+): IAppointmentChatMessagePublicEntity &
+  Partial<IAppointmentChatMessageRelations> {
   const entity: IAppointmentChatMessagePublicEntity &
     Partial<IAppointmentChatMessageRelations> = {
     id: row.id,
     chatId: row.chatId,
     senderUserId: row.senderUserId,
+    actor: row.actor,
     body: row.body,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

@@ -10,7 +10,8 @@ export const appointmentChatFiltersPresetSchema: JSONSchemaType<IAppointmentChat
     type: 'object',
     properties: {
       id: { ...filterUuidArraySchema, nullable: true },
-      appointmentId: { ...filterUuidArraySchema, nullable: true },
+      masterProfileId: { ...filterUuidArraySchema, nullable: true },
+      clientUserId: { ...filterUuidArraySchema, nullable: true },
       createdAt: { ...dateRangeArrayFilterSchema, nullable: true },
       updatedAt: { ...dateRangeArrayFilterSchema, nullable: true },
       deletedAt: { ...dateRangeArrayFilterSchema, nullable: true },

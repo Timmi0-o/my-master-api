@@ -23,8 +23,16 @@ const PRESETS: Record<
   TPresetType,
   SelectOptions<IAppointmentChatPublicEntity, IAppointmentChatRelations>
 > = {
-  MINIMAL: { select: ['id', 'appointmentId'] },
-  SHORT: { select: ['id', 'appointmentId', 'createdAt', 'updatedAt'] },
+  MINIMAL: { select: ['id', 'masterProfileId', 'clientUserId'] },
+  SHORT: {
+    select: [
+      'id',
+      'masterProfileId',
+      'clientUserId',
+      'createdAt',
+      'updatedAt',
+    ],
+  },
   BASE: {
     select: [...APPOINTMENT_CHAT_SELECT_FIELDS],
     include: {
@@ -45,6 +53,7 @@ const PRESETS: Record<
           'id',
           'chatId',
           'senderUserId',
+          'actor',
           'body',
           'createdAt',
           'updatedAt',

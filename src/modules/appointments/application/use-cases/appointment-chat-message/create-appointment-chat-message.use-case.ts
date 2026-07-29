@@ -1,9 +1,14 @@
-import { ensureAppointmentStatusActive } from '@modules/appointments/domain/entities/appointment/policies/ensure-appointment-status-active.policy';
+import { ensureChatHasActiveAppointment } from '@modules/appointments/domain/entities/appointment/policies/ensure-chat-has-active-appointment.policy';
 import type { ITransactionManager } from '@shared/domain/transactions';
-import { ensureAppointmentExists } from 'src/modules/appointments/domain/entities/appointment';
-import { ensureAppointmentChatExists } from 'src/modules/appointments/domain/entities/appointment-chat';
+import {
+  ensureAppointmentChatAccessible,
+  ensureAppointmentChatExists,
+} from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
-import { AppointmentChatMessageForbiddenError } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import {
+  AppointmentChatMessageForbiddenError,
+  EAppointmentChatMessageActor,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
@@ -45,33 +50,33 @@ export class CreateAppointmentChatMessageUseCase {
     );
     ensureAppointmentChatExists(chat, input.chatId);
 
-    const appointment = await this.appointmentRepository.findEntityById(
-      chat.appointmentId,
-    );
-    ensureAppointmentExists(appointment, chat.appointmentId);
-
-    ensureAppointmentStatusActive(appointment);
-
     const profile = await this.masterProfileRepository.findEntityById(
-      appointment.masterProfileId,
+      chat.masterProfileId,
     );
-    ensureMasterProfileExists(profile, appointment.masterProfileId);
+    ensureMasterProfileExists(profile, chat.masterProfileId);
+    ensureAppointmentChatAccessible(chat, input.actor, profile.userId);
 
-    const isClient = appointment.clientUserId === input.actor.userId;
+    const isClient = chat.clientUserId === input.actor.userId;
     const isMaster = profile.userId === input.actor.userId;
     if (!input.actor.isStaffUser && !isClient && !isMaster) {
       throw new AppointmentChatMessageForbiddenError(input.chatId);
     }
 
+    const appointments = await this.appointmentRepository.findMany({
+      where: { chatId: chat.id },
+    });
+    ensureChatHasActiveAppointment(appointments, chat.id);
+
     await ensureUsersNotBlocked(
       this.userBlockRepository,
-      appointment.clientUserId,
+      chat.clientUserId,
       profile.userId,
     );
 
     const createInput: ICreateAppointmentChatMessageInput = {
       chatId: input.chatId,
       senderUserId: input.actor.userId,
+      actor: EAppointmentChatMessageActor.USER,
       body: input.body,
     };
 
@@ -82,7 +87,7 @@ export class CreateAppointmentChatMessageUseCase {
     const recipientUserId = isClient
       ? profile.userId
       : isMaster
-        ? appointment.clientUserId
+        ? chat.clientUserId
         : null;
 
     await this.realtimeChatPublisher.messageCreated(message, {

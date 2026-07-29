@@ -9,14 +9,37 @@ import type { SelectOptions } from 'src/modules/shared/domain/query';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-const PRESETS: Record<TPresetType, SelectOptions<IAppointmentChatMessagePublicEntity, IAppointmentChatMessageRelations>> = {
-  MINIMAL: { select: ['id', 'chatId', 'senderUserId'] },
-  SHORT: { select: ['id', 'chatId', 'senderUserId', 'body', 'createdAt', 'updatedAt'] },
+const PRESETS: Record<
+  TPresetType,
+  SelectOptions<
+    IAppointmentChatMessagePublicEntity,
+    IAppointmentChatMessageRelations
+  >
+> = {
+  MINIMAL: { select: ['id', 'chatId', 'senderUserId', 'actor'] },
+  SHORT: {
+    select: [
+      'id',
+      'chatId',
+      'senderUserId',
+      'actor',
+      'body',
+      'createdAt',
+      'updatedAt',
+    ],
+  },
   BASE: {
     select: [...APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS],
     include: {
       chat: {
-        select: ['id', 'appointmentId', 'createdAt', 'updatedAt', 'deletedAt'] as (keyof IAppointmentChatPublicEntity)[],
+        select: [
+          'id',
+          'masterProfileId',
+          'clientUserId',
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+        ] as (keyof IAppointmentChatPublicEntity)[],
       },
       sender: {
         select: [
@@ -42,8 +65,14 @@ const PRESETS: Record<TPresetType, SelectOptions<IAppointmentChatMessagePublicEn
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<IAppointmentChatMessagePublicEntity, IAppointmentChatMessageRelations> {
+): SelectOptions<
+  IAppointmentChatMessagePublicEntity,
+  IAppointmentChatMessageRelations
+> {
   const config = PRESETS[preset ?? 'SHORT'];
-  const select = omitDisallowedSelectFieldsForNonStaff(config.select, isStaffUser);
+  const select = omitDisallowedSelectFieldsForNonStaff(
+    config.select,
+    isStaffUser,
+  );
   return { select: select as typeof config.select, include: config.include };
 }

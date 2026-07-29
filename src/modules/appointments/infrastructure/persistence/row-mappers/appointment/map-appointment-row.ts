@@ -19,6 +19,7 @@ export function mapAppointmentRow(
     masterProfileId: row.masterProfileId,
     masterServiceId: row.masterServiceId,
     clientUserId: row.clientUserId,
+    chatId: row.chatId ?? null,
     startsAt: row.startsAt,
     durationMinutes: row.durationMinutes,
     status: row.status,
@@ -50,7 +51,8 @@ export function mapAppointmentRow(
   if (row.chat != null) {
     entity.chat = {
       id: row.chat.id,
-      appointmentId: row.chat.appointmentId,
+      masterProfileId: row.chat.masterProfileId,
+      clientUserId: row.chat.clientUserId,
       createdAt: row.chat.createdAt,
       updatedAt: row.chat.updatedAt,
       deletedAt: row.chat.deletedAt ?? null,
@@ -60,6 +62,7 @@ export function mapAppointmentRow(
               id: message.id,
               chatId: message.chatId,
               senderUserId: message.senderUserId,
+              actor: message.actor,
               body: message.body,
               createdAt: message.createdAt,
               updatedAt: message.updatedAt,

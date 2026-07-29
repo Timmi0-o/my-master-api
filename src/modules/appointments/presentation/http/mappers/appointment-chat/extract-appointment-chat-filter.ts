@@ -28,7 +28,8 @@ export function extractAppointmentChatFilter(
   };
 
   pushString('id', sanitized.id);
-  pushString('appointmentId', sanitized.appointmentId);
+  pushString('masterProfileId', sanitized.masterProfileId);
+  pushString('clientUserId', sanitized.clientUserId);
 
   const pushDate = (
     field: keyof IAppointmentChatPublicEntity & string,

@@ -3,4 +3,8 @@ export type { ICreateAppointmentChatInput } from './i-create-appointment-chat.in
 export type { IUpdateAppointmentChatInput } from './i-update-appointment-chat.input';
 export type { IAppointmentChatRelations } from './i-appointment-chat-relations';
 export { AppointmentChatNotFoundError, AppointmentChatForbiddenError } from './errors';
-export { ensureAppointmentChatExists } from './policies';
+export { ensureAppointmentChatExists, ensureAppointmentChatAccessible } from './policies';
+export {
+  isAppointmentDisplayActive,
+  resolveDisplayAppointment,
+} from './resolve-display-appointment';

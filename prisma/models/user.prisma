@@ -28,6 +28,7 @@ model User {
   sessions                Session[]
   refreshTokens           RefreshToken[]
   clientAppointments      Appointment[]            @relation("ClientAppointments")
+  clientAppointmentChats  AppointmentChat[]        @relation("ClientAppointmentChats")
   appointmentChatMessages AppointmentChatMessage[] @relation("AppointmentChatMessages")
   masterServiceReviews           MasterServiceReview[]
   masterServiceReviewReactions   MasterServiceReviewReaction[]

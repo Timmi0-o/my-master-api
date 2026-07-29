@@ -21,11 +21,15 @@ model Appointment {
   isEarlyCompletionByMaster Boolean @default(false) @map("is_early_completion_by_master")
   isEarlyCompletionByClient Boolean @default(false) @map("is_early_completion_by_client")
 
+  chatId String? @map("chat_id")
+
   masterProfile MasterProfile    @relation(fields: [masterProfileId], references: [id])
   masterService MasterService    @relation(fields: [masterServiceId], references: [id])
   clientUser    User             @relation("ClientAppointments", fields: [clientUserId], references: [id])
-  chat          AppointmentChat?
+  chat          AppointmentChat? @relation(fields: [chatId], references: [id])
   review        MasterServiceReview?
+
+  @@index([chatId])
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

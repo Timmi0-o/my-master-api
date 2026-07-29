@@ -1,6 +1,7 @@
 export interface IAppointmentChatEntity {
   id: string;
-  appointmentId: string;
+  masterProfileId: string;
+  clientUserId: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

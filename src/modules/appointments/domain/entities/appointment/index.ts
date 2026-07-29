@@ -13,6 +13,7 @@ export {
   ensureAppointmentExists,
   ensureAppointmentAccessible,
   ensureAppointmentCompletable,
+  ensureChatHasActiveAppointment,
   isAppointmentEarlyCompletion,
   type IAppointmentActor,
 } from './policies';

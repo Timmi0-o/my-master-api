@@ -4,6 +4,7 @@ import type { ICreateAppointmentInput } from 'src/modules/appointments/domain/en
 import { AppointmentNotAvailableError } from 'src/modules/appointments/domain/entities/appointment';
 import type { ICreateAppointmentChatInput } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
 import { ensureMasterProfileIsDifferent } from 'src/modules/appointments/domain/entities/appointment/policies/ensure-master-profile-is-different.policy';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
@@ -84,34 +85,53 @@ export class CreateAppointmentUseCase {
       throw new AppointmentNotAvailableError(input.startsAt);
     }
 
-    const createInput: ICreateAppointmentInput = {
-      masterProfileId: input.masterProfileId,
-      masterServiceId: input.masterServiceId,
-      clientUserId,
-      startsAt: input.startsAt,
-      durationMinutes: service.durationMinutes,
-      status: input.status ?? EAppointmentStatus.PENDING,
-      totalPrice: service.price,
-      serviceName: service.name,
-      cancelledAt: null,
-      cancelledBy: null,
-      cancelReason: null,
-      isEarlyCompletionByMaster: false,
-      isEarlyCompletionByClient: false,
-    };
-
     const appointment = await this.transactionManager.runInTransaction(
       async (scope) => {
+        const existingChat =
+          await this.appointmentChatRepository.findEntityByMasterProfileAndClient(
+            input.masterProfileId,
+            clientUserId,
+            scope,
+          );
+
+        const chatInput: ICreateAppointmentChatInput = {
+          masterProfileId: input.masterProfileId,
+          clientUserId,
+        };
+        const chat =
+          existingChat ??
+          (await this.appointmentChatRepository.create(chatInput, scope));
+
+        const createInput: ICreateAppointmentInput = {
+          masterProfileId: input.masterProfileId,
+          masterServiceId: input.masterServiceId,
+          clientUserId,
+          chatId: chat.id,
+          startsAt: input.startsAt,
+          durationMinutes: service.durationMinutes,
+          status: input.status ?? EAppointmentStatus.PENDING,
+          totalPrice: service.price,
+          serviceName: service.name,
+          cancelledAt: null,
+          cancelledBy: null,
+          cancelReason: null,
+          isEarlyCompletionByMaster: false,
+          isEarlyCompletionByClient: false,
+        };
+
         const created = await this.appointmentRepository.create(
           createInput,
           scope,
         );
 
-        const chatInput: ICreateAppointmentChatInput = {
-          appointmentId: created.id,
+        const systemMessageInput: ICreateAppointmentChatMessageInput = {
+          chatId: chat.id,
+          senderUserId: null,
+          actor: EAppointmentChatMessageActor.SYSTEM,
+          body: `Услуга ${service.name} создана`,
         };
-        const chat = await this.appointmentChatRepository.create(
-          chatInput,
+        await this.appointmentChatMessageRepository.create(
+          systemMessageInput,
           scope,
         );
 
@@ -119,6 +139,7 @@ export class CreateAppointmentUseCase {
           const messageInput: ICreateAppointmentChatMessageInput = {
             chatId: chat.id,
             senderUserId: input.actor.userId,
+            actor: EAppointmentChatMessageActor.USER,
             body: input.initialMessage.body,
           };
           await this.appointmentChatMessageRepository.create(

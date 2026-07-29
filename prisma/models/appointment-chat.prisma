@@ -1,15 +1,20 @@
-// Чат по записи: 1 appointment → 1 чат; участники — clientUser и user мастера (через appointment)
+// Чат мастер↔клиент: 1 пара → 1 чат; appointments — N:1
 model AppointmentChat {
   id String @id @default(uuid())
 
-  appointmentId String @unique @map("appointment_id")
+  masterProfileId String @map("master_profile_id")
+  clientUserId    String @map("client_user_id")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  appointment Appointment              @relation(fields: [appointmentId], references: [id])
-  messages    AppointmentChatMessage[]
+  masterProfile MasterProfile            @relation(fields: [masterProfileId], references: [id])
+  clientUser    User                     @relation("ClientAppointmentChats", fields: [clientUserId], references: [id])
+  appointments  Appointment[]
+  messages      AppointmentChatMessage[]
 
+  @@unique([masterProfileId, clientUserId])
+  @@index([clientUserId])
   @@map("AppointmentChats")
 }

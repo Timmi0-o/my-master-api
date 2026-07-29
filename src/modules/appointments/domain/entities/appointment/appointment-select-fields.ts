@@ -5,6 +5,7 @@ export const APPOINTMENT_SELECT_FIELDS = [
   'masterProfileId',
   'masterServiceId',
   'clientUserId',
+  'chatId',
   'startsAt',
   'durationMinutes',
   'status',

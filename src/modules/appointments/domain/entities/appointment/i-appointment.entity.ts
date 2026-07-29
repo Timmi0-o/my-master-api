@@ -8,6 +8,7 @@ export interface IAppointmentEntity {
   masterProfileId: string;
   masterServiceId: string;
   clientUserId: string;
+  chatId?: string | null;
   startsAt: Date;
   durationMinutes: number;
   status: EAppointmentStatus;

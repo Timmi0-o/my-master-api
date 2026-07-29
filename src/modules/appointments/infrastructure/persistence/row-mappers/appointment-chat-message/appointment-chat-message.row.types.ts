@@ -1,10 +1,12 @@
+import type { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { AppointmentChatRow } from '../appointment-chat/appointment-chat.row.types';
 import type { UserRow } from 'src/modules/users/infrastructure/persistence/row-mappers/user/user.row.types';
 
 export type AppointmentChatMessageRow = {
   id: string;
   chatId: string;
-  senderUserId: string;
+  senderUserId: string | null;
+  actor: EAppointmentChatMessageActor;
   body: string;
   createdAt: Date;
   updatedAt: Date;

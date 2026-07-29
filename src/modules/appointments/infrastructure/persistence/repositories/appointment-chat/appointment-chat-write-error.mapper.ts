@@ -6,7 +6,8 @@ import {
 
 export type AppointmentChatWriteErrorContext = {
   id?: string;
-  appointmentId?: string;
+  masterProfileId?: string;
+  clientUserId?: string;
 };
 
 export function mapAppointmentChatWriteError(

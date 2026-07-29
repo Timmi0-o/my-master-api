@@ -2,6 +2,7 @@ import type {
   EAppointmentCancelledBy,
   EAppointmentStatus,
 } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
+import type { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { MasterProfileRelationRow } from 'src/modules/masters/infrastructure/persistence/row-mappers/master-service/master-service.row.types';
 import type { MasterServiceRelationRow } from 'src/modules/masters/infrastructure/persistence/row-mappers/master-service/master-service.row.types';
 import type { UserRow } from 'src/modules/users/infrastructure/persistence/row-mappers/user/user.row.types';
@@ -9,7 +10,8 @@ import type { UserRow } from 'src/modules/users/infrastructure/persistence/row-m
 export type AppointmentChatMessageRelationRow = {
   id: string;
   chatId: string;
-  senderUserId: string;
+  senderUserId: string | null;
+  actor: EAppointmentChatMessageActor;
   body: string;
   createdAt: Date;
   updatedAt: Date;
@@ -18,7 +20,8 @@ export type AppointmentChatMessageRelationRow = {
 
 export type AppointmentChatRelationRow = {
   id: string;
-  appointmentId: string;
+  masterProfileId: string;
+  clientUserId: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -30,6 +33,7 @@ export type AppointmentRow = {
   masterProfileId: string;
   masterServiceId: string;
   clientUserId: string;
+  chatId: string | null;
   startsAt: Date;
   durationMinutes: number;
   status: EAppointmentStatus;

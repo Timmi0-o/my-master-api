@@ -19,6 +19,7 @@ model MasterProfile {
 
   services           MasterService[]
   appointments       Appointment[]
+  appointmentChats   AppointmentChat[]
   weeklySchedules    MasterWeeklySchedule[]
   scheduleExceptions MasterScheduleException[]
   subscriptions      MasterSubscription[]

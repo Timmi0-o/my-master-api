@@ -74,7 +74,8 @@ export const APPOINTMENT_RELATIONS: Record<string, RelationConfig> = {
   chat: {
     allowedSelectFields: [
       'id',
-      'appointmentId',
+      'masterProfileId',
+      'clientUserId',
       'createdAt',
       'updatedAt',
       'deletedAt',
@@ -85,6 +86,7 @@ export const APPOINTMENT_RELATIONS: Record<string, RelationConfig> = {
           'id',
           'chatId',
           'senderUserId',
+          'actor',
           'body',
           'createdAt',
           'updatedAt',

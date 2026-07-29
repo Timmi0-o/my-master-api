@@ -13,6 +13,7 @@ import { USER_PROFILE_SELECT_FIELDS } from 'src/modules/users/domain/entities/us
 
 export const APPOINTMENT_CHAT_RELATIONS: Record<string, RelationConfig> = {
   appointment: {
+    prismaName: 'appointments',
     allowedSelectFields: [...APPOINTMENT_SELECT_FIELDS],
     nested: {
       masterProfile: {
@@ -75,6 +76,7 @@ export const APPOINTMENT_CHAT_RELATIONS: Record<string, RelationConfig> = {
       'id',
       'chatId',
       'senderUserId',
+      'actor',
       'body',
       'createdAt',
       'updatedAt',

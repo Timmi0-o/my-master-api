@@ -1,17 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
+import {
+  LOGGER_TOKEN,
+  type ILogger,
+} from '@shared/domain/logging/logger.token';
 import type {
   FindManyParams,
   FindOneParams,
   ReadResult,
 } from '@shared/domain/query';
-import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
 import type { TransactionScope } from '@shared/domain/transactions';
+import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
 import type {
-  ICreateAppointmentChatInput,
   IAppointmentChatEntity,
   IAppointmentChatPublicEntity,
   IAppointmentChatRelations,
+  ICreateAppointmentChatInput,
   IUpdateAppointmentChatInput,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
@@ -24,17 +29,15 @@ import {
   wantsNestedClientUserProfileAvatarInclude,
   wantsNestedMasterProfileAvatarInclude,
 } from 'src/modules/masters/infrastructure/persistence/helpers/hydrate-profile-avatar.helper';
-import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
-import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
   mapAppointmentChatRow,
   type AppointmentChatRow,
 } from '../../row-mappers/appointment-chat';
+import { mapAppointmentChatWriteError } from './appointment-chat-write-error.mapper';
 import {
   APPOINTMENT_CHAT_RELATIONS,
   APPOINTMENT_CHAT_VALIDATION_CONFIG,
 } from './appointment-chat.relations';
-import { mapAppointmentChatWriteError } from './appointment-chat-write-error.mapper';
 
 @Injectable()
 export class PrismaAppointmentChatRepository
@@ -161,7 +164,9 @@ export class PrismaAppointmentChatRepository
       ...new Set(
         chats
           .map((chat) => chat.appointment?.masterProfile?.id)
-          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+          .filter(
+            (id): id is string => typeof id === 'string' && id.length > 0,
+          ),
       ),
     ];
 
@@ -188,8 +193,7 @@ export class PrismaAppointmentChatRepository
           ...chat.appointment,
           masterProfile: {
             ...chat.appointment.masterProfile,
-            avatar:
-              byProfileId.get(chat.appointment.masterProfile.id) ?? null,
+            avatar: byProfileId.get(chat.appointment.masterProfile.id) ?? null,
           },
         },
       };
@@ -209,7 +213,9 @@ export class PrismaAppointmentChatRepository
       ...new Set(
         chats
           .map((chat) => chat.appointment?.clientUser?.userProfile?.id)
-          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+          .filter(
+            (id): id is string => typeof id === 'string' && id.length > 0,
+          ),
       ),
     ];
 
@@ -258,12 +264,18 @@ export class PrismaAppointmentChatRepository
     return row ? mapAppointmentChatRow(row as AppointmentChatRow) : null;
   }
 
-  async findEntityByAppointmentId(
-    appointmentId: string,
+  async findEntityByMasterProfileAndClient(
+    masterProfileId: string,
+    clientUserId: string,
     scope?: TransactionScope,
   ): Promise<IAppointmentChatEntity | null> {
     const row = await this.getDelegate(scope).findUnique({
-      where: { appointmentId },
+      where: {
+        masterProfileId_clientUserId: {
+          masterProfileId,
+          clientUserId,
+        },
+      },
     });
     return row ? mapAppointmentChatRow(row as AppointmentChatRow) : null;
   }
@@ -279,7 +291,8 @@ export class PrismaAppointmentChatRepository
       return mapAppointmentChatRow(row as AppointmentChatRow);
     } catch (error) {
       throw mapAppointmentChatWriteError(error, {
-        appointmentId: input.appointmentId,
+        masterProfileId: input.masterProfileId,
+        clientUserId: input.clientUserId,
       });
     }
   }
@@ -298,11 +311,14 @@ export class PrismaAppointmentChatRepository
       const rows = await tx.appointmentChat.createManyAndReturn({
         data: [...inputs],
       });
-      return rows.map((row) => mapAppointmentChatRow(row as AppointmentChatRow));
+      return rows.map((row) =>
+        mapAppointmentChatRow(row as AppointmentChatRow),
+      );
     } catch (error) {
       const first = inputs[0];
       throw mapAppointmentChatWriteError(error, {
-        appointmentId: first.appointmentId,
+        masterProfileId: first.masterProfileId,
+        clientUserId: first.clientUserId,
       });
     }
   }

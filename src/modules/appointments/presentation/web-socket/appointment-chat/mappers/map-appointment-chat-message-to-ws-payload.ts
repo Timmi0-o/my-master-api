@@ -15,6 +15,7 @@ export function mapAppointmentChatMessageToWsPayload(
     id: message.id,
     chatId: message.chatId,
     senderUserId: message.senderUserId,
+    actor: message.actor,
     body: message.body,
     createdAt: message.createdAt.toISOString(),
     updatedAt: message.updatedAt.toISOString(),

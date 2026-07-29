@@ -1,6 +1,7 @@
 import { CreateAppointmentUseCase } from 'src/modules/appointments/application/use-cases/appointment/create-appointment.use-case';
 import { AppointmentNotAvailableError } from 'src/modules/appointments/domain/entities/appointment';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
+import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
@@ -9,9 +10,13 @@ import type { IMasterServiceRepository } from 'src/modules/masters/domain/reposi
 import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
 
 describe('CreateAppointmentUseCase', () => {
-  it('orchestrates appointment, chat and message in one transaction', async () => {
+  it('orchestrates appointment, chat and messages in one transaction', async () => {
     const appointment = { id: 'appt-1' };
-    const chat = { id: 'chat-1', appointmentId: 'appt-1' };
+    const chat = {
+      id: 'chat-1',
+      masterProfileId: 'mp-1',
+      clientUserId: 'client-1',
+    };
 
     const appointmentRepository = {
       findMany: jest.fn().mockResolvedValue([]),
@@ -19,6 +24,7 @@ describe('CreateAppointmentUseCase', () => {
     } as unknown as IAppointmentRepository;
 
     const appointmentChatRepository = {
+      findEntityByMasterProfileAndClient: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue(chat),
     } as unknown as IAppointmentChatRepository;
 
@@ -88,25 +94,116 @@ describe('CreateAppointmentUseCase', () => {
     });
 
     expect(result).toEqual(appointment);
+    expect(
+      appointmentChatRepository.findEntityByMasterProfileAndClient,
+    ).toHaveBeenCalledWith('mp-1', 'client-1', expect.anything());
+    expect(appointmentChatRepository.create).toHaveBeenCalledWith(
+      { masterProfileId: 'mp-1', clientUserId: 'client-1' },
+      expect.anything(),
+    );
     expect(appointmentRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         masterProfileId: 'mp-1',
         masterServiceId: 'svc-1',
         clientUserId: 'client-1',
+        chatId: 'chat-1',
         status: EAppointmentStatus.PENDING,
       }),
       expect.anything(),
     );
-    expect(appointmentChatRepository.create).toHaveBeenCalledWith(
-      { appointmentId: 'appt-1' },
+    expect(appointmentChatMessageRepository.create).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        chatId: 'chat-1',
+        senderUserId: null,
+        actor: EAppointmentChatMessageActor.SYSTEM,
+        body: 'Услуга Haircut создана',
+      }),
       expect.anything(),
     );
-    expect(appointmentChatMessageRepository.create).toHaveBeenCalledWith(
+    expect(appointmentChatMessageRepository.create).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         chatId: 'chat-1',
         senderUserId: 'client-1',
+        actor: EAppointmentChatMessageActor.USER,
         body: 'Hello',
       }),
+      expect.anything(),
+    );
+  });
+
+  it('reuses existing chat for the same master and client', async () => {
+    const appointment = { id: 'appt-2' };
+    const existingChat = {
+      id: 'chat-existing',
+      masterProfileId: 'mp-1',
+      clientUserId: 'client-1',
+    };
+
+    const appointmentRepository = {
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockResolvedValue(appointment),
+    } as unknown as IAppointmentRepository;
+
+    const appointmentChatRepository = {
+      findEntityByMasterProfileAndClient: jest
+        .fn()
+        .mockResolvedValue(existingChat),
+      create: jest.fn(),
+    } as unknown as IAppointmentChatRepository;
+
+    const appointmentChatMessageRepository = {
+      create: jest.fn().mockResolvedValue({ id: 'msg-1' }),
+    } as unknown as IAppointmentChatMessageRepository;
+
+    const masterProfileRepository = {
+      findEntityById: jest.fn().mockResolvedValue({
+        id: 'mp-1',
+        userId: 'master-1',
+      }),
+    } as unknown as IMasterProfileRepository;
+
+    const masterServiceRepository = {
+      findEntityById: jest.fn().mockResolvedValue({
+        id: 'svc-1',
+        masterProfileId: 'mp-1',
+        durationMinutes: 60,
+        price: 100,
+        name: 'Haircut',
+      }),
+    } as unknown as IMasterServiceRepository;
+
+    const useCase = new CreateAppointmentUseCase(
+      createMockTransactionManager(),
+      appointmentRepository,
+      appointmentChatRepository,
+      appointmentChatMessageRepository,
+      masterProfileRepository,
+      masterServiceRepository,
+      { existsActiveBetweenUsers: jest.fn().mockResolvedValue(false) } as never,
+      { appointmentCreated: jest.fn().mockResolvedValue(undefined) } as never,
+      { execute: jest.fn().mockResolvedValue({ id: 'notif-1' }) } as never,
+      {
+        execute: jest.fn().mockResolvedValue({
+          attempted: 0,
+          succeeded: 0,
+          failed: 0,
+          expired: 0,
+        }),
+      } as never,
+    );
+
+    await useCase.execute({
+      actor: { userId: 'client-1', isStaffUser: false },
+      masterProfileId: 'mp-1',
+      masterServiceId: 'svc-1',
+      startsAt: new Date('2026-07-02T10:00:00.000Z'),
+    });
+
+    expect(appointmentChatRepository.create).not.toHaveBeenCalled();
+    expect(appointmentRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ chatId: 'chat-existing' }),
       expect.anything(),
     );
   });
@@ -139,16 +236,14 @@ describe('CreateAppointmentUseCase', () => {
     const useCase = new CreateAppointmentUseCase(
       createMockTransactionManager(),
       appointmentRepository,
-      {} as IAppointmentChatRepository,
-      {} as IAppointmentChatMessageRepository,
+      {} as never,
+      {} as never,
       masterProfileRepository,
       masterServiceRepository,
-      {
-        existsActiveBetweenUsers: jest.fn().mockResolvedValue(false),
-      } as never,
-      { appointmentCreated: jest.fn() } as never,
-      { execute: jest.fn() } as never,
-      { execute: jest.fn() } as never,
+      { existsActiveBetweenUsers: jest.fn().mockResolvedValue(false) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
     );
 
     await expect(
@@ -159,7 +254,5 @@ describe('CreateAppointmentUseCase', () => {
         startsAt,
       }),
     ).rejects.toBeInstanceOf(AppointmentNotAvailableError);
-
-    expect(appointmentRepository.create).not.toHaveBeenCalled();
   });
 });

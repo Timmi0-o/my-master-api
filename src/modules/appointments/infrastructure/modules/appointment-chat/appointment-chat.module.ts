@@ -15,8 +15,6 @@ import { GetAppointmentChatByIdUseCase } from '../../../application/use-cases/ap
 import { GetAppointmentChatsUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chats.use-case';
 import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat/appointment-chat.repository.tokens';
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
-import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment/appointment.repository.tokens';
-import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
 import { AppointmentChatGateway } from '../../../presentation/web-socket/appointment-chat/appointment-chat.gateway';
 import { WsJwtAuthGuard } from '../../../presentation/web-socket/appointment-chat/guards/ws-jwt-auth.guard';
 import { PrismaAppointmentChatRepository } from '../../persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
@@ -57,17 +55,10 @@ import { AppointmentModule } from '../appointment/appointment.module';
       provide: GetAppointmentChatByIdUseCase,
       useFactory: (
         chatRepo: IAppointmentChatRepository,
-        appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
-      ) =>
-        new GetAppointmentChatByIdUseCase(
-          chatRepo,
-          appointmentRepo,
-          profileRepo,
-        ),
+      ) => new GetAppointmentChatByIdUseCase(chatRepo, profileRepo),
       inject: [
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
-        APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
       ],
     },
@@ -75,17 +66,10 @@ import { AppointmentModule } from '../appointment/appointment.module';
       provide: AssertAppointmentChatAccessUseCase,
       useFactory: (
         chatRepo: IAppointmentChatRepository,
-        appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
-      ) =>
-        new AssertAppointmentChatAccessUseCase(
-          chatRepo,
-          appointmentRepo,
-          profileRepo,
-        ),
+      ) => new AssertAppointmentChatAccessUseCase(chatRepo, profileRepo),
       inject: [
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
-        APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
       ],
     },
@@ -94,19 +78,16 @@ import { AppointmentModule } from '../appointment/appointment.module';
       useFactory: (
         transactionManager: ITransactionManager,
         chatRepo: IAppointmentChatRepository,
-        appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
       ) =>
         new DeleteAppointmentChatByIdUseCase(
           transactionManager,
           chatRepo,
-          appointmentRepo,
           profileRepo,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
-        APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
       ],
     },

@@ -105,6 +105,7 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
               'id',
               'chatId',
               'senderUserId',
+              'actor',
               'body',
               'createdAt',
               'updatedAt',

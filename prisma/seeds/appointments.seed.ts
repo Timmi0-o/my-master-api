@@ -370,14 +370,52 @@ export const appointmentsSeed: SeedRunner = async (
   let createdAppointments = 0;
   let createdMessages = 0;
 
+  const chatKey = (masterProfileId: string, clientUserId: string) =>
+    `${masterProfileId}:${clientUserId}`;
+
+  // Сначала чаты по уникальным парам — параллельный upsert гоняется о @@unique
+  const chatIdByPair = new Map<string, string>();
+  for (const draft of drafts) {
+    const key = chatKey(draft.masterProfileId, draft.clientUserId);
+    if (chatIdByPair.has(key)) {
+      continue;
+    }
+
+    const chat = await prisma.appointmentChat.upsert({
+      where: {
+        masterProfileId_clientUserId: {
+          masterProfileId: draft.masterProfileId,
+          clientUserId: draft.clientUserId,
+        },
+      },
+      create: {
+        masterProfileId: draft.masterProfileId,
+        clientUserId: draft.clientUserId,
+      },
+      update: {},
+      select: { id: true },
+    });
+    chatIdByPair.set(key, chat.id);
+  }
+
   for (const batch of chunkArray(drafts, CREATE_BATCH_SIZE)) {
     await Promise.all(
       batch.map(async (draft) => {
-        const appointment = await prisma.appointment.create({
+        const chatId = chatIdByPair.get(
+          chatKey(draft.masterProfileId, draft.clientUserId),
+        );
+        if (!chatId) {
+          throw new Error(
+            `appointments seed: missing chat for ${draft.masterProfileId}/${draft.clientUserId}`,
+          );
+        }
+
+        await prisma.appointment.create({
           data: {
             masterProfileId: draft.masterProfileId,
             masterServiceId: draft.masterServiceId,
             clientUserId: draft.clientUserId,
+            chatId,
             startsAt: draft.startsAt,
             durationMinutes: draft.durationMinutes,
             status: draft.status,
@@ -386,26 +424,24 @@ export const appointmentsSeed: SeedRunner = async (
             cancelledAt: draft.cancelledAt,
             cancelledBy: draft.cancelledBy,
             cancelReason: draft.cancelReason,
-            chat: {
-              create: {},
-            },
-          },
-          select: {
-            chat: { select: { id: true } },
           },
         });
 
-        const chatId = appointment.chat?.id;
-        if (!chatId) {
-          throw new Error('appointments seed: chat was not created');
-        }
-
         const messageResult = await prisma.appointmentChatMessage.createMany({
-          data: draft.messageBodies.map((message) => ({
-            chatId,
-            senderUserId: message.senderUserId,
-            body: message.body,
-          })),
+          data: [
+            {
+              chatId,
+              senderUserId: null,
+              actor: 'SYSTEM',
+              body: `Услуга ${draft.serviceName} создана`,
+            },
+            ...draft.messageBodies.map((message) => ({
+              chatId,
+              senderUserId: message.senderUserId,
+              actor: 'USER' as const,
+              body: message.body,
+            })),
+          ],
         });
 
         createdAppointments += 1;

@@ -29,8 +29,9 @@ export type IAppointmentChatRepository = IReadRepository<
       id: string,
       scope?: TransactionScope,
     ): Promise<IAppointmentChatEntity | null>;
-    findEntityByAppointmentId(
-      appointmentId: string,
+    findEntityByMasterProfileAndClient(
+      masterProfileId: string,
+      clientUserId: string,
       scope?: TransactionScope,
     ): Promise<IAppointmentChatEntity | null>;
   };

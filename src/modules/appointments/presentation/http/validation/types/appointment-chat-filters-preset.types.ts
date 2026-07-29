@@ -2,7 +2,8 @@ import type { IDateRangeArrayFilter, IStringArrayFilter } from 'src/modules/shar
 
 export interface IAppointmentChatFiltersPreset {
   id?: IStringArrayFilter | null;
-  appointmentId?: IStringArrayFilter | null;
+  masterProfileId?: IStringArrayFilter | null;
+  clientUserId?: IStringArrayFilter | null;
   createdAt?: IDateRangeArrayFilter | null;
   updatedAt?: IDateRangeArrayFilter | null;
   deletedAt?: IDateRangeArrayFilter | null;

@@ -3,7 +3,8 @@ import type { IAppointmentChatFiltersPreset } from '../types/appointment-chat-fi
 
 export const APPOINTMENT_CHAT_LIST_ORDER_FIELDS = [
   'id',
-  'appointmentId',
+  'masterProfileId',
+  'clientUserId',
   'createdAt',
   'updatedAt',
 ] as const;
