@@ -8,12 +8,15 @@ import { GetUserProfileByIdUseCase } from '../../../application/use-cases/user-p
 import { GetUserProfilesUseCase } from '../../../application/use-cases/user-profile/get-user-profiles.use-case';
 import { GetMyUserProfileUseCase } from '../../../application/use-cases/user-profile/get-my-user-profile.use-case';
 import { UpdateUserProfileByIdUseCase } from '../../../application/use-cases/user-profile/update-user-profile-by-id.use-case';
+import type { IUserPersonalNoteRepository } from '../../../domain/repositories/user-personal-note/i-user-personal-note.repository';
+import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from '../../../domain/repositories/user-personal-note/user-personal-note.repository.tokens';
 import type { IUserProfileRepository } from '../../../domain/repositories/user-profile/i-user-profile.repository';
 import { USER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/user-profile/user-profile.repository.tokens';
 import { PrismaUserProfileRepository } from '../../persistence/repositories/user-profile/prisma-user-profile.repository';
+import { UserPersonalNoteModule } from '../user-personal-note/user-personal-note.module';
 
 @Module({
-  imports: [forwardRef(() => ImageModule)],
+  imports: [forwardRef(() => ImageModule), UserPersonalNoteModule],
   providers: [
     {
       provide: USER_PROFILE_REPOSITORY_TOKEN,
@@ -21,15 +24,19 @@ import { PrismaUserProfileRepository } from '../../persistence/repositories/user
     },
     {
       provide: GetUserProfilesUseCase,
-      useFactory: (repo: IUserProfileRepository) =>
-        new GetUserProfilesUseCase(repo),
-      inject: [USER_PROFILE_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IUserProfileRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetUserProfilesUseCase(repo, personalNoteRepo),
+      inject: [USER_PROFILE_REPOSITORY_TOKEN, USER_PERSONAL_NOTE_REPOSITORY_TOKEN],
     },
     {
       provide: GetUserProfileByIdUseCase,
-      useFactory: (repo: IUserProfileRepository) =>
-        new GetUserProfileByIdUseCase(repo),
-      inject: [USER_PROFILE_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IUserProfileRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetUserProfileByIdUseCase(repo, personalNoteRepo),
+      inject: [USER_PROFILE_REPOSITORY_TOKEN, USER_PERSONAL_NOTE_REPOSITORY_TOKEN],
     },
     {
       provide: GetMyUserProfileUseCase,

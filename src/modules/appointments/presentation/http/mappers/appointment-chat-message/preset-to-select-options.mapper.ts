@@ -5,13 +5,13 @@ import type {
 import { APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat-message/appointment-chat-message-select-fields';
 import type { IAppointmentChatPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
 const PRESETS: Record<
   TPresetType,
-  SelectOptions<
+  PresetReadOptions<
     IAppointmentChatMessagePublicEntity,
     IAppointmentChatMessageRelations
   >
@@ -65,7 +65,7 @@ const PRESETS: Record<
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<
+): PresetReadOptions<
   IAppointmentChatMessagePublicEntity,
   IAppointmentChatMessageRelations
 > {
@@ -74,5 +74,9 @@ export function presetToSelectOptions(
     config.select,
     isStaffUser,
   );
-  return { select: select as typeof config.select, include: config.include };
+  return {
+    select: select as typeof config.select,
+    include: config.include,
+    enrich: config.enrich,
+  };
 }

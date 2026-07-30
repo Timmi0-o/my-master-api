@@ -3,11 +3,11 @@ import type {
   IFavoriteMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/favorite-master-service';
 import { FAVORITE_MASTER_SERVICE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/favorite-master-service/favorite-master-service-select-fields';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type FavoriteMasterServiceSelectOptions = SelectOptions<
+type FavoriteMasterServiceSelectOptions = PresetReadOptions<
   IFavoriteMasterServicePublicEntity,
   IFavoriteMasterServiceRelations
 >;
@@ -48,7 +48,7 @@ const FAVORITE_MASTER_SERVICE_PRESETS: Record<
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<
+): PresetReadOptions<
   IFavoriteMasterServicePublicEntity,
   IFavoriteMasterServiceRelations
 > {
@@ -61,6 +61,7 @@ export function presetToSelectOptions(
   return {
     select: select as FavoriteMasterServiceSelectOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

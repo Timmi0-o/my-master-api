@@ -1,3 +1,4 @@
+import type { EnrichOptions } from './enrich-options.types';
 import type { OrderBy } from './order-by.types';
 import type { SelectOptions } from './select-options.types';
 import type { ISlice } from './slice.types';
@@ -5,6 +6,7 @@ import type { WhereFilter } from './where-filter.types';
 
 export type FindOneParams<T, R extends object> = {
   selectOptions?: SelectOptions<T, R>;
+  enrich?: EnrichOptions;
 };
 
 export type FindManyParams<T, R extends object = Record<never, never>> = {
@@ -12,6 +14,7 @@ export type FindManyParams<T, R extends object = Record<never, never>> = {
   slice?: Partial<ISlice>;
   orderBy?: OrderBy<T, R>;
   selectOptions?: SelectOptions<T, R>;
+  enrich?: EnrichOptions;
   /** Monolith: приоритетные id в выдаче (бывший requiredIds). */
   requiredIds?: string[];
 };

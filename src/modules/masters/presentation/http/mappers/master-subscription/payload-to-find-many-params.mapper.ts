@@ -9,6 +9,7 @@ import type {
 import type { IGetMasterSubscriptionsQueryPayload } from '../../validation/schemas/get-master-subscriptions-query.types';
 import { extractMasterSubscriptionFilter } from './extract-master-subscription-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetMasterSubscriptionsQueryPayload,
@@ -37,7 +38,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<IMasterSubscriptionPublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

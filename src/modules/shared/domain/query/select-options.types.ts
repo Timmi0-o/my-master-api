@@ -1,14 +1,20 @@
-import type { ReadResultEntity, ReadResultRelations } from './query-result.types';
+import type {
+  ReadResultEntity,
+  ReadResultRelations,
+} from './query-result.types';
 
 export type QuerySelect<T> = readonly (keyof T & string)[] | undefined;
 
 type UnwrapRelationValue<V> =
-  NonNullable<V> extends ReadonlyArray<infer U> ? NonNullable<U> : NonNullable<V>;
+  NonNullable<V> extends ReadonlyArray<infer U>
+    ? NonNullable<U>
+    : NonNullable<V>;
 
 export type NestedIncludeOptionFor<V> =
   | true
   | {
-      select: readonly (keyof ReadResultEntity<UnwrapRelationValue<V>> & string)[];
+      select: readonly (keyof ReadResultEntity<UnwrapRelationValue<V>> &
+        string)[];
       include?: QueryInclude<
         ReadResultEntity<UnwrapRelationValue<V>>,
         ReadResultRelations<UnwrapRelationValue<V>>

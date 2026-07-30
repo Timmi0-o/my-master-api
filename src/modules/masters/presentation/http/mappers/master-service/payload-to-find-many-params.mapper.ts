@@ -9,6 +9,7 @@ import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query
 import type { IGetMasterServicesQueryPayload } from '../../validation/schemas/get-master-services-query.types';
 import { extractMasterServiceFilter } from './extract-master-service-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetMasterServicesQueryPayload,
@@ -32,7 +33,7 @@ export function payloadToFindManyParams(
       limit: payload.limit,
     }),
     orderBy: mapOrderBy<IMasterServicePublicEntity>({ [orderField]: orderDir }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

@@ -9,6 +9,7 @@ import type {
 import type { IGetMasterWeeklySchedulesQueryPayload } from '../../validation/schemas/get-master-weekly-schedules-query.types';
 import { extractMasterWeeklyScheduleFilter } from './extract-master-weekly-schedule-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetMasterWeeklySchedulesQueryPayload,
@@ -37,7 +38,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<IMasterWeeklySchedulePublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

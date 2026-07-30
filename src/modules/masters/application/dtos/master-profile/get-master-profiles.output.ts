@@ -1,6 +1,12 @@
-import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
+import type {
+  IMasterProfilePublicEntity,
+  IMasterProfileRelations,
+} from 'src/modules/masters/domain/entities/master-profile';
+import type { WithPersonalNote } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 
 export type GetMasterProfilesOutput = {
-  items: IMasterProfilePublicEntity[];
+  items: WithPersonalNote<
+    IMasterProfilePublicEntity & Partial<IMasterProfileRelations>
+  >[];
   total: number;
 };

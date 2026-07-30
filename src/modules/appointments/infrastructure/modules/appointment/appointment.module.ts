@@ -18,6 +18,8 @@ import { ImageModule } from '../../../../masters/infrastructure/modules/image/im
 import { MastersModule } from '../../../../masters/masters.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
 import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
+import type { IUserPersonalNoteRepository } from '../../../../users/domain/repositories/user-personal-note/i-user-personal-note.repository';
+import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-personal-note/user-personal-note.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
 import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/appointment/create-appointment.use-case';
@@ -70,23 +72,37 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     },
     {
       provide: GetMyAppointmentsUseCase,
-      useFactory: (repo: IAppointmentRepository) =>
-        new GetMyAppointmentsUseCase(repo),
-      inject: [APPOINTMENT_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IAppointmentRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetMyAppointmentsUseCase(repo, personalNoteRepo),
+      inject: [APPOINTMENT_REPOSITORY_TOKEN, USER_PERSONAL_NOTE_REPOSITORY_TOKEN],
     },
     {
       provide: GetMyClientsAppointmentsUseCase,
-      useFactory: (repo: IAppointmentRepository) =>
-        new GetMyClientsAppointmentsUseCase(repo),
-      inject: [APPOINTMENT_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IAppointmentRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetMyClientsAppointmentsUseCase(repo, personalNoteRepo),
+      inject: [APPOINTMENT_REPOSITORY_TOKEN, USER_PERSONAL_NOTE_REPOSITORY_TOKEN],
     },
     {
       provide: GetAppointmentByIdUseCase,
       useFactory: (
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
-      ) => new GetAppointmentByIdUseCase(appointmentRepo, profileRepo),
-      inject: [APPOINTMENT_REPOSITORY_TOKEN, MASTER_PROFILE_REPOSITORY_TOKEN],
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) =>
+        new GetAppointmentByIdUseCase(
+          appointmentRepo,
+          profileRepo,
+          personalNoteRepo,
+        ),
+      inject: [
+        APPOINTMENT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: CreateAppointmentUseCase,

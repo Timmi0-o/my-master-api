@@ -1,4 +1,5 @@
 import type { IGetAppointmentChatByIdApplicationInput } from 'src/modules/appointments/application/dtos/appointment-chat/get-appointment-chat-by-id.input';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import type { IGetByIdQueryPayload } from '../../validation/schemas/get-by-id-query.types';
 import { toAppointmentActor } from '../shared/to-appointment-actor';
@@ -13,6 +14,10 @@ export function payloadToGetAppointmentChatByIdInput(
   return {
     id,
     actor: toAppointmentActor(sessionUser, isStaffUser),
-    params: { selectOptions: presetToSelectOptions(query.preset, isStaffUser) },
+    params: {
+      ...splitPresetReadOptions(
+        presetToSelectOptions(query.preset, isStaffUser),
+      ),
+    },
   };
 }

@@ -9,6 +9,7 @@ import type {
 import type { IGetNotificationsQueryPayload } from '../../validation/schemas/get-notifications-query.types';
 import { extractNotificationFilter } from './extract-notification-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetNotificationsQueryPayload,
@@ -42,7 +43,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<INotificationPublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

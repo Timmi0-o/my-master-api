@@ -1,0 +1,21 @@
+model UserPersonalNote {
+  id String @id @default(uuid())
+
+  ownerUserId     String @map("owner_user_id")
+  referenceUserId String @map("reference_user_id")
+
+  names Json  @map("names")
+  notes Json? @map("notes")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  owner     User @relation("UserPersonalNotesOwned", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  reference User @relation("UserPersonalNotesReferenced", fields: [referenceUserId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerUserId, referenceUserId])
+  @@index([referenceUserId])
+  @@index([deletedAt])
+  @@map("UserPersonalNotes")
+}

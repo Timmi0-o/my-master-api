@@ -1,12 +1,15 @@
 import { mapFileToHttpResponse } from 'src/modules/files/presentation/http/response/map-file-response';
 import type { IProfileAvatarView } from 'src/modules/masters/domain/entities/image';
+import type { IUserPersonalNotePublicEntity } from 'src/modules/users/domain/entities/user-personal-note';
 import type {
   IUserProfilePublicEntity,
   IUserProfileRelations,
 } from 'src/modules/users/domain/entities/user-profile';
 
 type UserProfileWithRelations = IUserProfilePublicEntity &
-  Partial<IUserProfileRelations>;
+  Partial<IUserProfileRelations> & {
+    personalNote?: IUserPersonalNotePublicEntity | null;
+  };
 
 function mapAvatarToHttpResponse(
   avatar: IProfileAvatarView | null | undefined,

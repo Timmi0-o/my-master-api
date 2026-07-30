@@ -1,6 +1,8 @@
 import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '@modules/auth/presentation/guards/optional-jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { CreateRootFolderUseCase } from '@modules/files/application/use-cases/folder/create-root-folder.use-case';
@@ -67,6 +69,7 @@ export class MasterProfilesController {
 
   @Get()
   @PublicEndpoint()
+  @UseGuards(OptionalJwtAuthGuard)
   async getMasterProfiles(
     @HttpQuery(getMasterProfilesQuerySchema, {
       preprocess: normalizeListQueryRaw,
@@ -75,9 +78,13 @@ export class MasterProfilesController {
     })
     payload: IGetMasterProfilesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
+    @CurrentUser() user: ISessionUser | null,
   ) {
     const params = payloadToFindManyParams(payload, metadata);
-    const output = await this.getMasterProfilesUseCase.execute(params);
+    const output = await this.getMasterProfilesUseCase.execute(
+      params,
+      user?.id,
+    );
     return mapGetMasterProfilesHttpResponse(output, payload);
   }
 
@@ -103,6 +110,7 @@ export class MasterProfilesController {
 
   @Get(':id')
   @PublicEndpoint()
+  @UseGuards(OptionalJwtAuthGuard)
   async getMasterProfileById(
     @HttpParams(idParamSchema, {
       preprocess: normalizeIdParam,
@@ -113,8 +121,15 @@ export class MasterProfilesController {
       errorMessage: 'Некорректные параметры запроса',
     })
     queryPayload: IGetByIdQueryPayload,
+    @CurrentUser() user: ISessionUser | null,
+    @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterProfileByIdInput(params.id, queryPayload);
+    const input = payloadToGetMasterProfileByIdInput(
+      params.id,
+      queryPayload,
+      user,
+      metadata.isStaffUser,
+    );
     const item = await this.getMasterProfileByIdUseCase.execute(input);
     return mapGetMasterProfileByIdHttpResponse(item);
   }

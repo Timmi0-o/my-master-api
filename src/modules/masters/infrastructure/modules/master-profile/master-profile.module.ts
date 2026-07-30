@@ -1,6 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
+import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user-personal-note/user-personal-note.repository.tokens';
+import { UserPersonalNoteModule } from 'src/modules/users/infrastructure/modules/user-personal-note/user-personal-note.module';
 import { CreateMasterProfileUseCase } from '../../../application/use-cases/master-profile/create-master-profile.use-case';
 import { DeleteMasterProfileByIdUseCase } from '../../../application/use-cases/master-profile/delete-master-profile-by-id.use-case';
 import { GetMasterProfileByIdUseCase } from '../../../application/use-cases/master-profile/get-master-profile-by-id.use-case';
@@ -13,7 +16,7 @@ import { PrismaMasterProfileRepository } from '../../persistence/repositories/ma
 import { ImageModule } from '../image/image.module';
 
 @Module({
-  imports: [forwardRef(() => ImageModule)],
+  imports: [forwardRef(() => ImageModule), UserPersonalNoteModule],
   providers: [
     {
       provide: MASTER_PROFILE_REPOSITORY_TOKEN,
@@ -21,15 +24,25 @@ import { ImageModule } from '../image/image.module';
     },
     {
       provide: GetMasterProfilesUseCase,
-      useFactory: (repo: IMasterProfileRepository) =>
-        new GetMasterProfilesUseCase(repo),
-      inject: [MASTER_PROFILE_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IMasterProfileRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetMasterProfilesUseCase(repo, personalNoteRepo),
+      inject: [
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: GetMasterProfileByIdUseCase,
-      useFactory: (repo: IMasterProfileRepository) =>
-        new GetMasterProfileByIdUseCase(repo),
-      inject: [MASTER_PROFILE_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IMasterProfileRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetMasterProfileByIdUseCase(repo, personalNoteRepo),
+      inject: [
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: GetMyMasterProfileUseCase,

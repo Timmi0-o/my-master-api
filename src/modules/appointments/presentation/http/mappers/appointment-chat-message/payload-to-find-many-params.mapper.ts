@@ -9,6 +9,7 @@ import type {
 import type { IGetAppointmentChatMessagesQueryPayload } from '../../validation/schemas/get-appointment-chat-messages-query.types';
 import { extractAppointmentChatMessageFilter } from './extract-appointment-chat-message-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetAppointmentChatMessagesQueryPayload,
@@ -24,7 +25,7 @@ export function payloadToFindManyParams(
     },
     slice: mapPaginationToSlice({ page: payload.page, limit: payload.limit }),
     orderBy: mapOrderBy<IAppointmentChatMessagePublicEntity>({ [orderField]: orderDir }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

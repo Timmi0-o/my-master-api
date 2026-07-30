@@ -4,8 +4,8 @@ import type {
 } from 'src/modules/masters/domain/entities/master-profile';
 import { MASTER_PROFILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-profile/master-profile-select-fields';
 import { IMAGE_FILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/image';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
 export const MASTER_PROFILE_PRESET_VALUES = [
@@ -14,7 +14,7 @@ export const MASTER_PROFILE_PRESET_VALUES = [
   'BASE',
 ] as const;
 
-type MasterProfileSelectOptions = SelectOptions<
+type MasterProfilePresetOptions = PresetReadOptions<
   IMasterProfilePublicEntity,
   IMasterProfileRelations
 >;
@@ -29,7 +29,7 @@ const AVATAR_INCLUDE = {
   },
 } as const;
 
-const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfileSelectOptions> =
+const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfilePresetOptions> =
   {
     MINIMAL: {
       select: ['id', 'userId', 'displayName', 'rating'],
@@ -82,13 +82,14 @@ const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfileSelectOptions> =
           },
         },
       },
+      enrich: { personalNotes: true },
     },
   };
 
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<IMasterProfilePublicEntity, IMasterProfileRelations> {
+): PresetReadOptions<IMasterProfilePublicEntity, IMasterProfileRelations> {
   const config = MASTER_PROFILE_PRESETS[preset ?? 'SHORT'];
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
@@ -96,8 +97,9 @@ export function presetToSelectOptions(
   );
 
   return {
-    select: select as MasterProfileSelectOptions['select'],
+    select: select as MasterProfilePresetOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

@@ -36,6 +36,8 @@ model User {
   favoriteMasterServices         FavoriteMasterService[]
   userBlocksCreated              UserBlock[]             @relation("UserBlocksCreated")
   userBlocksReceived             UserBlock[]             @relation("UserBlocksReceived")
+  userPersonalNotesOwned         UserPersonalNote[]      @relation("UserPersonalNotesOwned")
+  userPersonalNotesReferenced    UserPersonalNote[]      @relation("UserPersonalNotesReferenced")
   bugReports                     BugReport[]
   webPushSubscriptions           WebPushSubscription[]
   notifications                  Notification[] @relation("UserNotifications")

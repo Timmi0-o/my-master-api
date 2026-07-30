@@ -2,8 +2,11 @@ import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
+import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
+import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user-personal-note/user-personal-note.repository.tokens';
 import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
 import { PrismaUserRepository } from 'src/modules/users/infrastructure/persistence/repositories/user/prisma-user.repository';
+import { UsersModule } from 'src/modules/users/users.module';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
@@ -27,6 +30,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
     forwardRef(() => MastersModule),
     forwardRef(() => ImageModule),
     forwardRef(() => AppointmentModule),
+    UsersModule,
     JwtModule.register({}),
   ],
   providers: [
@@ -56,10 +60,17 @@ import { AppointmentModule } from '../appointment/appointment.module';
       useFactory: (
         chatRepo: IAppointmentChatRepository,
         profileRepo: IMasterProfileRepository,
-      ) => new GetAppointmentChatByIdUseCase(chatRepo, profileRepo),
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) =>
+        new GetAppointmentChatByIdUseCase(
+          chatRepo,
+          profileRepo,
+          personalNoteRepo,
+        ),
       inject: [
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
       ],
     },
     {

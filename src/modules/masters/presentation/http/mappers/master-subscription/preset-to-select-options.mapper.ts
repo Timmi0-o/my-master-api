@@ -3,11 +3,11 @@ import type {
   IMasterSubscriptionRelations,
 } from 'src/modules/masters/domain/entities/master-subscription';
 import { MASTER_SUBSCRIPTION_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-subscription/master-subscription-select-fields';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type MasterSubscriptionSelectOptions = SelectOptions<
+type MasterSubscriptionSelectOptions = PresetReadOptions<
   IMasterSubscriptionPublicEntity,
   IMasterSubscriptionRelations
 >;
@@ -49,7 +49,7 @@ const MASTER_SUBSCRIPTION_PRESETS: Record<
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<
+): PresetReadOptions<
   IMasterSubscriptionPublicEntity,
   IMasterSubscriptionRelations
 > {
@@ -62,6 +62,7 @@ export function presetToSelectOptions(
   return {
     select: select as MasterSubscriptionSelectOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

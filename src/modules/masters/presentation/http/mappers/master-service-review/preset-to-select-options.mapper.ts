@@ -3,11 +3,11 @@ import type {
   IMasterServiceReviewRelations,
 } from 'src/modules/masters/domain/entities/master-service-review';
 import { MASTER_SERVICE_REVIEW_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-service-review/master-service-review-select-fields';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type MasterServiceReviewSelectOptions = SelectOptions<
+type MasterServiceReviewSelectOptions = PresetReadOptions<
   IMasterServiceReviewPublicEntity,
   IMasterServiceReviewRelations
 >;
@@ -56,7 +56,7 @@ const MASTER_SERVICE_REVIEW_PRESETS: Record<
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<
+): PresetReadOptions<
   IMasterServiceReviewPublicEntity,
   IMasterServiceReviewRelations
 > {
@@ -69,6 +69,7 @@ export function presetToSelectOptions(
   return {
     select: select as MasterServiceReviewSelectOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

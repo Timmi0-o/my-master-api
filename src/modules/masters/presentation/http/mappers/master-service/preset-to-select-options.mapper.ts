@@ -5,10 +5,10 @@ import type {
 } from 'src/modules/masters/domain/entities/master-service';
 import { MASTER_SERVICE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-service/master-service-select-fields';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type MasterServiceSelectOptions = SelectOptions<
+type MasterServiceSelectOptions = PresetReadOptions<
   IMasterServicePublicEntity,
   IMasterServiceRelations
 >;
@@ -99,7 +99,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<IMasterServicePublicEntity, IMasterServiceRelations> {
+): PresetReadOptions<IMasterServicePublicEntity, IMasterServiceRelations> {
   const config = MASTER_SERVICE_PRESETS[preset ?? 'SHORT'];
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
@@ -109,6 +109,7 @@ export function presetToSelectOptions(
   return {
     select: select as MasterServiceSelectOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

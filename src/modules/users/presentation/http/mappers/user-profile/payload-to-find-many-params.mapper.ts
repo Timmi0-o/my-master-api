@@ -9,6 +9,7 @@ import type {
 import type { IGetUserProfilesQueryPayload } from '../../validation/schemas/get-user-profiles-query.types';
 import { extractUserProfileFilter } from './extract-user-profile-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetUserProfilesQueryPayload,
@@ -32,7 +33,7 @@ export function payloadToFindManyParams(
       limit: payload.limit,
     }),
     orderBy: mapOrderBy<IUserProfilePublicEntity>({ [orderField]: orderDir }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

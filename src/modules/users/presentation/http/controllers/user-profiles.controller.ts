@@ -79,9 +79,10 @@ export class UserProfilesController {
     })
     payload: IGetUserProfilesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
+    @AuthenticatedUser() user: ISessionUser,
   ) {
     const params = payloadToFindManyParams(payload, metadata);
-    const output = await this.getUserProfilesUseCase.execute(params);
+    const output = await this.getUserProfilesUseCase.execute(params, user.id);
     return mapGetUserProfilesHttpResponse(output, payload);
   }
 

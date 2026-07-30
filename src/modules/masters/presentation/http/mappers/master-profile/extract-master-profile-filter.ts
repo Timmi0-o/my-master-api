@@ -15,7 +15,9 @@ import type { IMasterProfileFiltersPreset } from '../../validation/types/master-
 export function extractMasterProfileFilter(
   filter: IMasterProfileFiltersPreset | undefined,
   isStaffUser: boolean,
-): WhereFilter<IMasterProfilePublicEntity, IMasterProfileRelations> | undefined {
+):
+  | WhereFilter<IMasterProfilePublicEntity, IMasterProfileRelations>
+  | undefined {
   const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
 
   if (!sanitized) {
@@ -37,7 +39,7 @@ export function extractMasterProfileFilter(
   }
 
   const pushString = (
-    field: keyof IMasterProfilePublicEntity & string,
+    field: keyof IMasterProfilePublicEntity,
     value: IMasterProfileFiltersPreset['id'],
   ): void => {
     if (!value) return;
@@ -58,11 +60,14 @@ export function extractMasterProfileFilter(
   }
 
   const pushDate = (
-    field: keyof IMasterProfilePublicEntity & string,
+    field: keyof IMasterProfilePublicEntity,
     value: IMasterProfileFiltersPreset['createdAt'],
   ): void => {
     if (!value) return;
-    const part = mapMultiDateRangeFilter<IMasterProfilePublicEntity>(field, value);
+    const part = mapMultiDateRangeFilter<IMasterProfilePublicEntity>(
+      field,
+      value,
+    );
     if (part) parts.push(part);
   };
 

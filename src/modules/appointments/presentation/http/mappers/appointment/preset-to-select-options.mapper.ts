@@ -6,11 +6,11 @@ import type {
 } from 'src/modules/appointments/domain/entities/appointment';
 import { APPOINTMENT_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment/appointment-select-fields';
 import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type AppointmentSelectOptions = SelectOptions<
+type AppointmentPresetOptions = PresetReadOptions<
   IAppointmentPublicEntity,
   IAppointmentRelations
 >;
@@ -25,7 +25,7 @@ const CLIENT_USER_PROFILE_AVATAR_INCLUDE = {
   },
 } as const;
 
-const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
+const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentPresetOptions> = {
   MINIMAL: {
     select: [
       'id',
@@ -115,13 +115,14 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentSelectOptions> = {
         },
       },
     },
+    enrich: { personalNotes: true },
   },
 };
 
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<IAppointmentPublicEntity, IAppointmentRelations> {
+): PresetReadOptions<IAppointmentPublicEntity, IAppointmentRelations> {
   const config = APPOINTMENT_PRESETS[preset ?? 'SHORT'];
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
@@ -129,7 +130,8 @@ export function presetToSelectOptions(
   );
 
   return {
-    select: select as AppointmentSelectOptions['select'],
+    select: select as AppointmentPresetOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }

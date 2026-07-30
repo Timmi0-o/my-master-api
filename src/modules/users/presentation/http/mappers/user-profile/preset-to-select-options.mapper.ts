@@ -4,11 +4,11 @@ import type {
 } from 'src/modules/users/domain/entities/user-profile';
 import { USER_PROFILE_SELECT_FIELDS } from 'src/modules/users/domain/entities/user-profile/user-profile--select-fields';
 import { IMAGE_FILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/image';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type UserProfileSelectOptions = SelectOptions<
+type UserProfilePresetOptions = PresetReadOptions<
   IUserProfilePublicEntity,
   IUserProfileRelations
 >;
@@ -23,7 +23,7 @@ const AVATAR_INCLUDE = {
   },
 } as const;
 
-const USER_PROFILE_PRESETS: Record<TPresetType, UserProfileSelectOptions> = {
+const USER_PROFILE_PRESETS: Record<TPresetType, UserProfilePresetOptions> = {
   MINIMAL: {
     select: ['id', 'userId', 'displayName', 'rating'],
     include: AVATAR_INCLUDE,
@@ -50,13 +50,14 @@ const USER_PROFILE_PRESETS: Record<TPresetType, UserProfileSelectOptions> = {
       'deletedAt',
     ],
     include: AVATAR_INCLUDE,
+    enrich: { personalNotes: true },
   },
 };
 
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<IUserProfilePublicEntity, IUserProfileRelations> {
+): PresetReadOptions<IUserProfilePublicEntity, IUserProfileRelations> {
   const config = USER_PROFILE_PRESETS[preset ?? 'SHORT'];
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
@@ -64,8 +65,9 @@ export function presetToSelectOptions(
   );
 
   return {
-    select: select as UserProfileSelectOptions['select'],
+    select: select as UserProfilePresetOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

@@ -13,17 +13,25 @@ import type { IAppointmentChatFiltersPreset } from '../../validation/types/appoi
 export function extractAppointmentChatFilter(
   filter: IAppointmentChatFiltersPreset | undefined,
   isStaffUser: boolean,
-): WhereFilter<IAppointmentChatPublicEntity, IAppointmentChatRelations> | undefined {
+):
+  | WhereFilter<IAppointmentChatPublicEntity, IAppointmentChatRelations>
+  | undefined {
   const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
   if (!sanitized) return undefined;
 
-  const parts: WhereFilter<IAppointmentChatPublicEntity, IAppointmentChatRelations>[] = [];
+  const parts: WhereFilter<
+    IAppointmentChatPublicEntity,
+    IAppointmentChatRelations
+  >[] = [];
   const pushString = (
-    field: keyof IAppointmentChatPublicEntity & string,
+    field: keyof IAppointmentChatPublicEntity,
     value: IAppointmentChatFiltersPreset['id'],
   ): void => {
     if (!value) return;
-    const part = mapStringArrayFilter<IAppointmentChatPublicEntity>(field, value);
+    const part = mapStringArrayFilter<IAppointmentChatPublicEntity>(
+      field,
+      value,
+    );
     if (part) parts.push(part);
   };
 
@@ -32,11 +40,14 @@ export function extractAppointmentChatFilter(
   pushString('clientUserId', sanitized.clientUserId);
 
   const pushDate = (
-    field: keyof IAppointmentChatPublicEntity & string,
+    field: keyof IAppointmentChatPublicEntity,
     value: IAppointmentChatFiltersPreset['createdAt'],
   ): void => {
     if (!value) return;
-    const part = mapMultiDateRangeFilter<IAppointmentChatPublicEntity>(field, value);
+    const part = mapMultiDateRangeFilter<IAppointmentChatPublicEntity>(
+      field,
+      value,
+    );
     if (part) parts.push(part);
   };
 

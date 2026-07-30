@@ -15,7 +15,9 @@ export type WhereOperator<T> = {
 };
 
 type UnwrapRelationValue<V> =
-  NonNullable<V> extends ReadonlyArray<infer U> ? NonNullable<U> : NonNullable<V>;
+  NonNullable<V> extends ReadonlyArray<infer U>
+    ? NonNullable<U>
+    : NonNullable<V>;
 
 type RelationWhereFilter<R extends object> = {
   [K in keyof R]?: WhereFilter<ReadResultEntity<UnwrapRelationValue<R[K]>>>;

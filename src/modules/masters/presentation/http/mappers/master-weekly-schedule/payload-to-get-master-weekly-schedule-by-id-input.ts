@@ -3,6 +3,7 @@ import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import type { IGetByIdQueryPayload } from '../../validation/schemas/get-by-id-query.types';
 import { toMasterActor } from '../shared/to-master-actor';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToGetMasterWeeklyScheduleByIdInput(
   id: string,
@@ -14,7 +15,7 @@ export function payloadToGetMasterWeeklyScheduleByIdInput(
     id,
     actor: toMasterActor(sessionUser, isStaffUser),
     params: {
-      selectOptions: presetToSelectOptions(query.preset, isStaffUser),
+      ...splitPresetReadOptions(presetToSelectOptions(query.preset, isStaffUser)),
     },
   };
 }

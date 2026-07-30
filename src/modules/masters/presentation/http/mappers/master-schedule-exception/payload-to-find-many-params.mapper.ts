@@ -9,6 +9,7 @@ import type {
 import type { IGetMasterScheduleExceptionsQueryPayload } from '../../validation/schemas/get-master-schedule-exceptions-query.types';
 import { extractMasterScheduleExceptionFilter } from './extract-master-schedule-exception-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetMasterScheduleExceptionsQueryPayload,
@@ -37,7 +38,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<IMasterScheduleExceptionPublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

@@ -3,6 +3,7 @@ import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import type { IGetByIdQueryPayload } from '../../validation/schemas/get-by-id-query.types';
 import { toAppointmentActor } from '../shared/to-appointment-actor';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToGetAppointmentByIdInput(
   id: string,
@@ -14,7 +15,7 @@ export function payloadToGetAppointmentByIdInput(
     id,
     actor: toAppointmentActor(sessionUser, isStaffUser),
     params: {
-      selectOptions: presetToSelectOptions(query.preset, isStaffUser),
+      ...splitPresetReadOptions(presetToSelectOptions(query.preset, isStaffUser)),
     },
   };
 }

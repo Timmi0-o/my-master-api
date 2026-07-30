@@ -9,6 +9,7 @@ import type {
 import type { IGetFavoriteMasterServicesQueryPayload } from '../../validation/schemas/get-favorite-master-services-query.types';
 import { extractFavoriteMasterServiceFilter } from './extract-favorite-master-service-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetFavoriteMasterServicesQueryPayload,
@@ -37,7 +38,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<IFavoriteMasterServicePublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

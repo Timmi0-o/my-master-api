@@ -3,6 +3,7 @@ import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
 import type { IGetByIdQueryPayload } from '../../validation/schemas/get-by-id-query.types';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
 import { toUserActor } from '../shared/to-user-actor';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToGetMyUserProfileInput(
   query: IGetByIdQueryPayload,
@@ -12,7 +13,7 @@ export function payloadToGetMyUserProfileInput(
   return {
     actor: toUserActor(sessionUser, isStaffUser),
     params: {
-      selectOptions: presetToSelectOptions(query.preset, isStaffUser),
+      ...splitPresetReadOptions(presetToSelectOptions(query.preset, isStaffUser)),
     },
   };
 }

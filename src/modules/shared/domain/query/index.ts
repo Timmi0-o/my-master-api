@@ -1,3 +1,4 @@
+export * from './enrich-options.types';
 export * from './order-by.types';
 export * from './query-result.types';
 export * from './read-params.types';

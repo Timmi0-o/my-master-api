@@ -3,11 +3,11 @@ import type {
   IMasterScheduleExceptionRelations,
 } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import { MASTER_SCHEDULE_EXCEPTION_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception-select-fields';
-import type { SelectOptions } from 'src/modules/shared/domain/query';
+import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 
-type MasterScheduleExceptionSelectOptions = SelectOptions<
+type MasterScheduleExceptionSelectOptions = PresetReadOptions<
   IMasterScheduleExceptionPublicEntity,
   IMasterScheduleExceptionRelations
 >;
@@ -73,7 +73,7 @@ const MASTER_SCHEDULE_EXCEPTION_PRESETS: Record<
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): SelectOptions<
+): PresetReadOptions<
   IMasterScheduleExceptionPublicEntity,
   IMasterScheduleExceptionRelations
 > {
@@ -86,6 +86,7 @@ export function presetToSelectOptions(
   return {
     select: select as MasterScheduleExceptionSelectOptions['select'],
     include: config.include,
+    enrich: config.enrich,
   };
 }
 

@@ -6,6 +6,7 @@ import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import type { IGetUsersQueryPayload } from '../../validation/schemas/get-users-query.types';
 import { extractUserFilter } from './extract-user-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetUsersQueryPayload,
@@ -26,7 +27,7 @@ export function payloadToFindManyParams(
       limit: payload.limit,
     }),
     orderBy: mapOrderBy<IUserPublicEntity>({ [orderField]: orderDir }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

@@ -1,14 +1,18 @@
 declare const __readResultEntity: unique symbol;
 declare const __readResultRelations: unique symbol;
 
-export type ReadResult<TEntity, TRelations extends object = Record<never, never>> =
-  TEntity &
-    Partial<TRelations> & {
-      readonly [__readResultEntity]?: TEntity;
-      readonly [__readResultRelations]?: TRelations;
-    };
+export type ReadResult<
+  TEntity,
+  TRelations extends object = Record<never, never>,
+> = TEntity &
+  Partial<TRelations> & {
+    readonly [__readResultEntity]?: TEntity;
+    readonly [__readResultRelations]?: TRelations;
+  };
 
-export type ReadResultEntity<T> = T extends { readonly [__readResultEntity]?: infer E }
+export type ReadResultEntity<T> = T extends {
+  readonly [__readResultEntity]?: infer E;
+}
   ? unknown extends E
     ? T
     : E

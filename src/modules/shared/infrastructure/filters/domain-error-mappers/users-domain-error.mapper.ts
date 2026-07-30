@@ -15,12 +15,19 @@ import {
   UserBlockInteractionForbiddenError,
   UserBlockNotFoundError,
 } from 'src/modules/users/domain/entities/user-block';
+import {
+  UserPersonalNoteAlreadyExistsError,
+  UserPersonalNoteCannotTargetSelfError,
+  UserPersonalNoteForbiddenError,
+  UserPersonalNoteNotFoundError,
+} from 'src/modules/users/domain/entities/user-personal-note';
 
 export const mapUsersDomainError: DomainErrorMapper = (error) => {
   if (
     error instanceof UserNotFoundError ||
     error instanceof UserProfileNotFoundError ||
-    error instanceof UserBlockNotFoundError
+    error instanceof UserBlockNotFoundError ||
+    error instanceof UserPersonalNoteNotFoundError
   ) {
     return new NotFoundException(error.message);
   }
@@ -31,14 +38,19 @@ export const mapUsersDomainError: DomainErrorMapper = (error) => {
     error instanceof UserProfileForbiddenError ||
     error instanceof UserBlockForbiddenError ||
     error instanceof UserBlockCannotBlockSelfError ||
-    error instanceof UserBlockInteractionForbiddenError
+    error instanceof UserBlockInteractionForbiddenError ||
+    error instanceof UserPersonalNoteForbiddenError ||
+    error instanceof UserPersonalNoteCannotTargetSelfError
   ) {
     return new ForbiddenException(error.message);
   }
   if (error instanceof UserAlreadyExistsError) {
     return new ConflictException(error.message);
   }
-  if (error instanceof UserBlockAlreadyExistsError) {
+  if (
+    error instanceof UserBlockAlreadyExistsError ||
+    error instanceof UserPersonalNoteAlreadyExistsError
+  ) {
     return new BadRequestException(error.message);
   }
   return null;

@@ -3,6 +3,7 @@ import type { IMasterServiceRepository } from 'src/modules/masters/domain/reposi
 import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
 import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/mappers/master-profile/preset-to-select-options.mapper';
 import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/mappers/master-service/preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 import type {
   ISearchByTextApplicationInput,
   ISearchByTextApplicationOutput,
@@ -122,12 +123,12 @@ export class SearchByTextUseCase {
       this.masterProfileRepository.findMany({
         where: buildMasterWhere(q, category),
         slice,
-        selectOptions: masterProfilePresetToSelectOptions('BASE', false),
+        ...splitPresetReadOptions(masterProfilePresetToSelectOptions('BASE', false)),
       }),
       this.masterServiceRepository.findMany({
         where: serviceWhere,
         slice,
-        selectOptions: masterServicePresetToSelectOptions('BASE', false),
+        ...splitPresetReadOptions(masterServicePresetToSelectOptions('BASE', false)),
       }),
     ]);
 

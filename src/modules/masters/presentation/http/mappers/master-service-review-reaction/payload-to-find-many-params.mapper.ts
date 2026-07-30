@@ -9,6 +9,7 @@ import type {
 import type { IGetMasterServiceReviewReactionsQueryPayload } from '../../validation/schemas/get-master-service-review-reactions-query.types';
 import { extractMasterServiceReviewReactionFilter } from './extract-master-service-review-reaction-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetMasterServiceReviewReactionsQueryPayload,
@@ -37,7 +38,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<IMasterServiceReviewReactionPublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }

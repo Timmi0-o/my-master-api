@@ -9,6 +9,7 @@ import type {
 import type { IGetUserBlocksQueryPayload } from '../../validation/schemas/get-user-blocks-query.types';
 import { extractUserBlockFilter } from './extract-user-block-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
+import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
 export function payloadToFindManyParams(
   payload: IGetUserBlocksQueryPayload,
@@ -40,7 +41,7 @@ export function payloadToFindManyParams(
     orderBy: mapOrderBy<IUserBlockPublicEntity>({
       [orderField]: orderDir,
     }),
-    selectOptions: presetToSelectOptions(payload.preset, metadata.isStaffUser),
+    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
     requiredIds: payload.requiredIds,
   };
 }
