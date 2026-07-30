@@ -19,6 +19,15 @@ export const USER_PROFILE_RELATIONS: Record<string, RelationConfig> = {
       },
     },
   },
+  banner: {
+    virtual: true,
+    allowedSelectFields: [...IMAGE_SELECT_FIELDS],
+    nested: {
+      file: {
+        allowedSelectFields: [...IMAGE_FILE_SELECT_FIELDS],
+      },
+    },
+  },
 };
 
 export const USER_PROFILE_VALIDATION_CONFIG: ReadOptionsValidationConfig = {

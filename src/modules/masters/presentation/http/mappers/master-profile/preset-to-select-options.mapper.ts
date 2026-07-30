@@ -29,11 +29,26 @@ const AVATAR_INCLUDE = {
   },
 } as const;
 
+const BANNER_INCLUDE = {
+  banner: {
+    include: {
+      file: {
+        select: [...IMAGE_FILE_SELECT_FIELDS],
+      },
+    },
+  },
+} as const;
+
+const PROFILE_MEDIA_INCLUDE = {
+  ...AVATAR_INCLUDE,
+  ...BANNER_INCLUDE,
+} as const;
+
 const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfilePresetOptions> =
   {
     MINIMAL: {
       select: ['id', 'userId', 'displayName', 'rating'],
-      include: AVATAR_INCLUDE,
+      include: PROFILE_MEDIA_INCLUDE,
     },
     SHORT: {
       select: [
@@ -48,7 +63,7 @@ const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfilePresetOptions> =
         'createdAt',
         'updatedAt',
       ],
-      include: AVATAR_INCLUDE,
+      include: PROFILE_MEDIA_INCLUDE,
     },
     BASE: {
       select: [
@@ -69,7 +84,7 @@ const MASTER_PROFILE_PRESETS: Record<TPresetType, MasterProfilePresetOptions> =
         'deletedAt',
       ],
       include: {
-        ...AVATAR_INCLUDE,
+        ...PROFILE_MEDIA_INCLUDE,
         services: {
           include: {
             images: {

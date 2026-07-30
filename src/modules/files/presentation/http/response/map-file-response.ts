@@ -15,7 +15,9 @@ const resolveFileAccessLevelForHttpResponse = (
   if (
     file.purpose === FilePurpose.MASTER_SERVICE_IMAGE ||
     file.purpose === FilePurpose.MASTER_PROFILE_PHOTO ||
-    file.purpose === FilePurpose.PROFILE_PHOTO
+    file.purpose === FilePurpose.MASTER_PROFILE_BANNER ||
+    file.purpose === FilePurpose.PROFILE_PHOTO ||
+    file.purpose === FilePurpose.PROFILE_BANNER
   ) {
     return FileAccessLevel.PUBLIC;
   }

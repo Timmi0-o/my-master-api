@@ -8,4 +8,5 @@ import type {
 export type IMasterProfileRelations = {
   services: ReadResult<IMasterServicePublicEntity, IMasterServiceRelations>[];
   avatar?: IProfileAvatarView | null;
+  banner?: IProfileAvatarView | null;
 };

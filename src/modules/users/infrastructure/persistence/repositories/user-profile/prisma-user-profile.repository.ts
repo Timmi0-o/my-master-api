@@ -8,6 +8,7 @@ import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/
 import {
   groupAvatarsByEntityId,
   wantsAvatarInclude,
+  wantsBannerInclude,
 } from 'src/modules/masters/infrastructure/persistence/helpers/hydrate-profile-avatar.helper';
 import type {
   ICreateUserProfileInput,
@@ -81,11 +82,15 @@ export class PrismaUserProfileRepository
     IUserProfileRelations
   > | null> {
     const result = await super.findOne(id, params, scope);
-    if (result == null || !wantsAvatarInclude(params?.selectOptions?.include)) {
-      return result;
+    if (result == null) {
+      return null;
     }
 
-    const [hydrated] = await this.hydrateAvatars([result], scope);
+    const [hydrated] = await this.hydrateRelations(
+      [result],
+      params?.selectOptions?.include,
+      scope,
+    );
     return hydrated ?? null;
   }
 
@@ -94,11 +99,29 @@ export class PrismaUserProfileRepository
     scope?: TransactionScope,
   ): Promise<ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[]> {
     const results = await super.findMany(params, scope);
-    if (!wantsAvatarInclude(params?.selectOptions?.include)) {
-      return results;
+    return this.hydrateRelations(
+      results,
+      params?.selectOptions?.include,
+      scope,
+    );
+  }
+
+  private async hydrateRelations(
+    profiles: ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[],
+    include: unknown,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[]> {
+    let next = profiles;
+
+    if (wantsAvatarInclude(include)) {
+      next = await this.hydrateAvatars(next, scope);
     }
 
-    return this.hydrateAvatars(results, scope);
+    if (wantsBannerInclude(include)) {
+      next = await this.hydrateBanners(next, scope);
+    }
+
+    return next;
   }
 
   private async hydrateAvatars(
@@ -120,6 +143,28 @@ export class PrismaUserProfileRepository
     return profiles.map((profile) => ({
       ...profile,
       avatar: byProfileId.get(profile.id) ?? null,
+    }));
+  }
+
+  private async hydrateBanners(
+    profiles: ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[],
+    scope?: TransactionScope,
+  ): Promise<ReadResult<IUserProfilePublicEntity, IUserProfileRelations>[]> {
+    if (profiles.length === 0) {
+      return profiles;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.CLIENT_PROFILE_BANNER,
+      profiles.map((profile) => profile.id),
+      { includeFile: true },
+      scope,
+    );
+    const byProfileId = groupAvatarsByEntityId(images);
+
+    return profiles.map((profile) => ({
+      ...profile,
+      banner: byProfileId.get(profile.id) ?? null,
     }));
   }
 

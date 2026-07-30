@@ -38,11 +38,13 @@ import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normali
 import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
 import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
 import { payloadToDeleteMasterProfileImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-images-input';
+import { payloadToDeleteMasterProfileBannerImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-banner-images-input';
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
 import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
 import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
 import { payloadToPresignMasterProfileImagesInput } from '../mappers/master-profile/payload-to-presign-master-profile-images-input';
+import { payloadToPresignMasterProfileBannerImagesInput } from '../mappers/master-profile/payload-to-presign-master-profile-banner-images-input';
 import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
 import { mapCreateMasterProfileHttpResponse } from '../response/map-create-master-profile-response';
 import { mapDeleteMasterProfileHttpResponse } from '../response/map-delete-master-profile-response';
@@ -202,6 +204,58 @@ export class MasterProfilesController {
     @GetMetadata() metadata: IGetMetadata,
   ) {
     const input = payloadToDeleteMasterProfileImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.deleteImagesUseCase.execute(input);
+    return mapDeleteMasterProfileImagesHttpResponse(output);
+  }
+
+  @Post(':id/banner/images/presign')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
+  async presignMasterProfileBannerImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(presignMasterProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload presign баннера профиля мастера',
+    })
+    payload: IPresignMasterProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToPresignMasterProfileBannerImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.presignImagesUseCase.execute(input);
+    return mapPresignMasterProfileImagesHttpResponse(output);
+  }
+
+  @Delete(':id/banner/images')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
+  async deleteMasterProfileBannerImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(deleteMasterProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload удаления баннера профиля мастера',
+    })
+    payload: IDeleteMasterProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToDeleteMasterProfileBannerImagesInput(
       params.id,
       payload,
       user,

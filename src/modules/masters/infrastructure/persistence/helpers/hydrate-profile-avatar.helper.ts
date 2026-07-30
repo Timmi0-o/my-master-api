@@ -33,6 +33,14 @@ export function wantsAvatarInclude(include: unknown): boolean {
   return Object.prototype.hasOwnProperty.call(include, 'avatar');
 }
 
+export function wantsBannerInclude(include: unknown): boolean {
+  if (!include || typeof include !== 'object') {
+    return false;
+  }
+
+  return Object.prototype.hasOwnProperty.call(include, 'banner');
+}
+
 export function wantsNestedMasterProfileAvatarInclude(
   include: unknown,
 ): boolean {

@@ -2,4 +2,5 @@ import type { IProfileAvatarView } from 'src/modules/masters/domain/entities/ima
 
 export type IUserProfileRelations = {
   avatar?: IProfileAvatarView | null;
+  banner?: IProfileAvatarView | null;
 };

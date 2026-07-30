@@ -11,18 +11,18 @@ type UserProfileWithRelations = IUserProfilePublicEntity &
     personalNote?: IUserPersonalNotePublicEntity | null;
   };
 
-function mapAvatarToHttpResponse(
-  avatar: IProfileAvatarView | null | undefined,
+function mapProfileMediaToHttpResponse(
+  media: IProfileAvatarView | null | undefined,
 ): IProfileAvatarView | null | undefined {
-  if (avatar == null) {
-    return avatar;
+  if (media == null) {
+    return media;
   }
 
   return {
-    ...avatar,
-    ...(avatar.file != null
+    ...media,
+    ...(media.file != null
       ? {
-          file: mapFileToHttpResponse(avatar.file) as unknown as NonNullable<
+          file: mapFileToHttpResponse(media.file) as unknown as NonNullable<
             IProfileAvatarView['file']
           >,
         }
@@ -33,14 +33,23 @@ function mapAvatarToHttpResponse(
 export function mapUserProfileToHttpResponse(
   profile: UserProfileWithRelations,
 ): UserProfileWithRelations {
-  if (profile.avatar === undefined) {
-    return profile;
+  let next = profile;
+
+  if (next.avatar !== undefined) {
+    next = {
+      ...next,
+      avatar: mapProfileMediaToHttpResponse(next.avatar),
+    };
   }
 
-  return {
-    ...profile,
-    avatar: mapAvatarToHttpResponse(profile.avatar),
-  };
+  if (next.banner !== undefined) {
+    next = {
+      ...next,
+      banner: mapProfileMediaToHttpResponse(next.banner),
+    };
+  }
+
+  return next;
 }
 
 export function mapUserProfilesToHttpResponse(

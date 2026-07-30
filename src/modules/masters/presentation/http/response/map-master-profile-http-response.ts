@@ -12,18 +12,18 @@ type MasterProfileWithRelations = IMasterProfilePublicEntity &
     personalNote?: IUserPersonalNotePublicEntity | null;
   };
 
-function mapAvatarToHttpResponse(
-  avatar: IProfileAvatarView | null | undefined,
+function mapProfileMediaToHttpResponse(
+  media: IProfileAvatarView | null | undefined,
 ): IProfileAvatarView | null | undefined {
-  if (avatar == null) {
-    return avatar;
+  if (media == null) {
+    return media;
   }
 
   return {
-    ...avatar,
-    ...(avatar.file != null
+    ...media,
+    ...(media.file != null
       ? {
-          file: mapFileToHttpResponse(avatar.file) as unknown as NonNullable<
+          file: mapFileToHttpResponse(media.file) as unknown as NonNullable<
             IProfileAvatarView['file']
           >,
         }
@@ -34,21 +34,29 @@ function mapAvatarToHttpResponse(
 export function mapMasterProfileToHttpResponse(
   profile: MasterProfileWithRelations,
 ): MasterProfileWithRelations {
-  const withAvatar =
-    profile.avatar !== undefined
-      ? {
-          ...profile,
-          avatar: mapAvatarToHttpResponse(profile.avatar),
-        }
-      : profile;
+  let next = profile;
 
-  if (withAvatar.services == null) {
-    return withAvatar;
+  if (next.avatar !== undefined) {
+    next = {
+      ...next,
+      avatar: mapProfileMediaToHttpResponse(next.avatar),
+    };
+  }
+
+  if (next.banner !== undefined) {
+    next = {
+      ...next,
+      banner: mapProfileMediaToHttpResponse(next.banner),
+    };
+  }
+
+  if (next.services == null) {
+    return next;
   }
 
   return {
-    ...withAvatar,
-    services: mapMasterServicesToHttpResponse(withAvatar.services),
+    ...next,
+    services: mapMasterServicesToHttpResponse(next.services),
   };
 }
 

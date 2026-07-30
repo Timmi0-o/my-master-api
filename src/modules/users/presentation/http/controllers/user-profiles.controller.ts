@@ -36,11 +36,13 @@ import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normali
 import { outputCreateUserProfileToCreateRootFolderInput } from '../mappers/user-profile/output-create-user-profile-to-create-root-folder-input';
 import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload-to-create-user-profile-input';
 import { payloadToDeleteUserProfileImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-images-input';
+import { payloadToDeleteUserProfileBannerImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-banner-images-input';
 import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
 import { payloadToFindManyParams } from '../mappers/user-profile/payload-to-find-many-params.mapper';
 import { payloadToGetMyUserProfileInput } from '../mappers/user-profile/payload-to-get-my-user-profile-input';
 import { payloadToGetUserProfileByIdInput } from '../mappers/user-profile/payload-to-get-user-profile-by-id-input';
 import { payloadToPresignUserProfileImagesInput } from '../mappers/user-profile/payload-to-presign-user-profile-images-input';
+import { payloadToPresignUserProfileBannerImagesInput } from '../mappers/user-profile/payload-to-presign-user-profile-banner-images-input';
 import { payloadToUpdateUserProfileInput } from '../mappers/user-profile/payload-to-update-user-profile-input';
 import { mapCreateUserProfileHttpResponse } from '../response/map-create-user-profile-response';
 import { mapDeleteUserProfileHttpResponse } from '../response/map-delete-user-profile-response';
@@ -199,6 +201,56 @@ export class UserProfilesController {
     @GetMetadata() metadata: IGetMetadata,
   ) {
     const input = payloadToDeleteUserProfileImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.deleteImagesUseCase.execute(input);
+    return mapDeleteUserProfileImagesHttpResponse(output);
+  }
+
+  @Post(':id/banner/images/presign')
+  @Authorize({ kind: 'authenticated' })
+  async presignUserProfileBannerImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(presignUserProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload presign баннера профиля пользователя',
+    })
+    payload: IPresignUserProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToPresignUserProfileBannerImagesInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.presignImagesUseCase.execute(input);
+    return mapPresignUserProfileImagesHttpResponse(output);
+  }
+
+  @Delete(':id/banner/images')
+  @Authorize({ kind: 'authenticated' })
+  async deleteUserProfileBannerImages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(deleteUserProfileImagesPayloadSchema, {
+      errorMessage: 'Некорректный payload удаления баннера профиля пользователя',
+    })
+    payload: IDeleteUserProfileImagesPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = payloadToDeleteUserProfileBannerImagesInput(
       params.id,
       payload,
       user,

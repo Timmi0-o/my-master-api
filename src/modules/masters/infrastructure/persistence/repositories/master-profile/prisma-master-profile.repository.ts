@@ -23,6 +23,7 @@ import { PrismaReadRepository } from '@shared/infrastructure/persistence/reposit
 import {
   groupAvatarsByEntityId,
   wantsAvatarInclude,
+  wantsBannerInclude,
 } from '../../helpers/hydrate-profile-avatar.helper';
 import {
   groupImagesByEntityId,
@@ -130,6 +131,10 @@ export class PrismaMasterProfileRepository
       next = await this.hydrateAvatars(next, scope);
     }
 
+    if (wantsBannerInclude(include)) {
+      next = await this.hydrateBanners(next, scope);
+    }
+
     if (wantsNestedServiceImagesInclude(include)) {
       next = await this.hydrateServiceImages(next, scope);
     }
@@ -161,6 +166,33 @@ export class PrismaMasterProfileRepository
     return profiles.map((profile) => ({
       ...profile,
       avatar: byProfileId.get(profile.id) ?? null,
+    }));
+  }
+
+  private async hydrateBanners(
+    profiles: ReadResult<
+      IMasterProfilePublicEntity,
+      IMasterProfileRelations
+    >[],
+    scope?: TransactionScope,
+  ): Promise<
+    ReadResult<IMasterProfilePublicEntity, IMasterProfileRelations>[]
+  > {
+    if (profiles.length === 0) {
+      return profiles;
+    }
+
+    const images = await this.imageRepository.findByEntityTypeAndEntityIds(
+      ImageEntityType.MASTER_PROFILE_BANNER,
+      profiles.map((profile) => profile.id),
+      { includeFile: true },
+      scope,
+    );
+    const byProfileId = groupAvatarsByEntityId(images);
+
+    return profiles.map((profile) => ({
+      ...profile,
+      banner: byProfileId.get(profile.id) ?? null,
     }));
   }
 

@@ -94,7 +94,8 @@ export class DeleteImagesUseCase {
         ensureMasterProfileAccessible(profile, input.actor);
         return;
       }
-      case ImageEntityType.MASTER_PROFILE_AVATAR: {
+      case ImageEntityType.MASTER_PROFILE_AVATAR:
+      case ImageEntityType.MASTER_PROFILE_BANNER: {
         const profile = await this.masterProfileRepository.findEntityById(
           input.entityId,
         );
@@ -102,7 +103,8 @@ export class DeleteImagesUseCase {
         ensureMasterProfileAccessible(profile, input.actor);
         return;
       }
-      case ImageEntityType.CLIENT_PROFILE_AVATAR: {
+      case ImageEntityType.CLIENT_PROFILE_AVATAR:
+      case ImageEntityType.CLIENT_PROFILE_BANNER: {
         const profile = await this.userProfileRepository.findEntityById(
           input.entityId,
         );
