@@ -2,7 +2,7 @@ import type {
   INotificationPublicEntity,
   INotificationRelations,
 } from 'src/modules/notifications/domain/entities/notification';
-import { NOTIFICATION_SELECT_FIELDS } from 'src/modules/notifications/domain/entities/notification/notification-select-fields';
+import { NOTIFICATION_SELECT_FIELDS, NOTIFICATION_STAFF_ONLY_FIELDS } from 'src/modules/notifications/domain/entities/notification/notification-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -55,6 +55,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    NOTIFICATION_STAFF_ONLY_FIELDS,
   );
 
   return {

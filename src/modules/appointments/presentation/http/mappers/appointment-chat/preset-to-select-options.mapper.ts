@@ -3,7 +3,7 @@ import type {
   IAppointmentChatRelations,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
-import { APPOINTMENT_CHAT_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat/appointment-chat-select-fields';
+import { APPOINTMENT_CHAT_SELECT_FIELDS, APPOINTMENT_CHAT_STAFF_ONLY_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat/appointment-chat-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -76,6 +76,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    APPOINTMENT_CHAT_STAFF_ONLY_FIELDS,
   );
   return {
     select: select as typeof config.select,

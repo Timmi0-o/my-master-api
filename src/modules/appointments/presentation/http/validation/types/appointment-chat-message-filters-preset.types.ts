@@ -1,4 +1,8 @@
-import type { IDateRangeArrayFilter, IStringArrayFilter, ITextSearchFilterPreset } from 'src/modules/shared/application/presets/common/filter-preset.types';
+import type {
+  IDateRangeArrayFilter,
+  IStringArrayFilter,
+  ITextSearchFilterPreset,
+} from 'src/modules/shared/application/presets/common/filter-preset.types';
 
 export interface IAppointmentChatMessageFiltersPreset {
   search?: ITextSearchFilterPreset | null;

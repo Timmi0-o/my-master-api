@@ -8,3 +8,7 @@ export const USER_BLOCK_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IUserBlockPublicEntity)[];
+
+export const USER_BLOCK_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IUserBlockPublicEntity)[];

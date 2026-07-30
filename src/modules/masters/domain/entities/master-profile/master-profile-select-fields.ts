@@ -17,3 +17,7 @@ export const MASTER_PROFILE_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IMasterProfilePublicEntity & string)[];
+
+export const MASTER_PROFILE_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IMasterProfilePublicEntity & string)[];

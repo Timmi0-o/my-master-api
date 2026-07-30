@@ -15,3 +15,7 @@ export const USER_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IUserPublicEntity)[];
+
+export const USER_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IUserPublicEntity)[];

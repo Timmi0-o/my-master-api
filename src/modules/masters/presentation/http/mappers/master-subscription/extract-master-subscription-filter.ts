@@ -4,10 +4,11 @@ import type {
 } from 'src/modules/masters/domain/entities/master-subscription';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { MASTER_SUBSCRIPTION_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-subscription/master-subscription-select-fields';
 import type { IMasterSubscriptionFiltersPreset } from '../../validation/types/master-subscription-filters-preset.types';
 
 export function extractMasterSubscriptionFilter(
@@ -19,56 +20,26 @@ export function extractMasterSubscriptionFilter(
       IMasterSubscriptionRelations
     >
   | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, MASTER_SUBSCRIPTION_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     IMasterSubscriptionPublicEntity,
     IMasterSubscriptionRelations
   >[] = [];
 
-  const pushString = (
-    field: keyof IMasterSubscriptionPublicEntity & string,
-    value: IMasterSubscriptionFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IMasterSubscriptionPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
+  queryFilterBuildManager(parts, [
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    { type: 'stringArray', field: 'userId', value: sanitized.userId },
+    {
+      type: 'stringArray',
+      field: 'masterProfileId',
+      value: sanitized.masterProfileId,
+    },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  pushString('id', sanitized.id);
-  pushString('userId', sanitized.userId);
-  pushString('masterProfileId', sanitized.masterProfileId);
-
-  const pushDate = (
-    field: keyof IMasterSubscriptionPublicEntity & string,
-    value: IMasterSubscriptionFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IMasterSubscriptionPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

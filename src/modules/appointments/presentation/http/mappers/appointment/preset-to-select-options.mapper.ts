@@ -4,7 +4,7 @@ import type {
   IAppointmentPublicEntity,
   IAppointmentRelations,
 } from 'src/modules/appointments/domain/entities/appointment';
-import { APPOINTMENT_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment/appointment-select-fields';
+import { APPOINTMENT_SELECT_FIELDS, APPOINTMENT_STAFF_ONLY_FIELDS } from 'src/modules/appointments/domain/entities/appointment/appointment-select-fields';
 import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
@@ -127,6 +127,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    APPOINTMENT_STAFF_ONLY_FIELDS,
   );
 
   return {

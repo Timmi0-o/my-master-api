@@ -4,10 +4,11 @@ import type {
 } from 'src/modules/notifications/domain/entities/notification';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { NOTIFICATION_STAFF_ONLY_FIELDS } from 'src/modules/notifications/domain/entities/notification/notification-select-fields';
 import type { INotificationFiltersPreset } from '../../validation/types/notification-filters-preset.types';
 
 export function extractNotificationFilter(
@@ -16,70 +17,38 @@ export function extractNotificationFilter(
 ):
   | WhereFilter<INotificationPublicEntity, INotificationRelations>
   | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, NOTIFICATION_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     INotificationPublicEntity,
     INotificationRelations
   >[] = [];
 
-  const pushString = (
-    field: keyof INotificationPublicEntity & string,
-    value: INotificationFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<INotificationPublicEntity>(field, value);
-    if (part) parts.push(part);
-  };
+  queryFilterBuildManager(parts, [
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    { type: 'stringArray', field: 'userId', value: sanitized.userId },
+    {
+      type: 'stringArray',
+      field: 'actorUserId',
+      value: sanitized.actorUserId,
+    },
+    {
+      type: 'stringArray',
+      field: 'category',
+      value: sanitized.category as INotificationFiltersPreset['id'],
+    },
+    {
+      type: 'stringArray',
+      field: 'type',
+      value: sanitized.type as INotificationFiltersPreset['id'],
+    },
+    { type: 'nullStatus', field: 'readAt', value: sanitized.isRead },
+    { type: 'nullStatus', field: 'archivedAt', value: sanitized.isArchived },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  pushString('id', sanitized.id);
-  pushString('userId', sanitized.userId);
-  pushString('actorUserId', sanitized.actorUserId);
-  pushString(
-    'category',
-    sanitized.category as INotificationFiltersPreset['id'],
-  );
-  pushString('type', sanitized.type as INotificationFiltersPreset['id']);
-
-  if (sanitized.isRead) {
-    parts.push({
-      readAt: { isNull: !sanitized.isRead.value },
-    });
-  }
-
-  if (sanitized.isArchived) {
-    parts.push({
-      archivedAt: { isNull: !sanitized.isArchived.value },
-    });
-  }
-
-  const pushDate = (
-    field: keyof INotificationPublicEntity & string,
-    value: INotificationFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<INotificationPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

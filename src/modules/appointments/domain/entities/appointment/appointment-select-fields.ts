@@ -20,3 +20,7 @@ export const APPOINTMENT_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IAppointmentPublicEntity)[];
+
+export const APPOINTMENT_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IAppointmentPublicEntity)[];

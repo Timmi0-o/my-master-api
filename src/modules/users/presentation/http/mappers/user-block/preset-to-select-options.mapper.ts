@@ -2,7 +2,7 @@ import type {
   IUserBlockPublicEntity,
   IUserBlockRelations,
 } from 'src/modules/users/domain/entities/user-block';
-import { USER_BLOCK_SELECT_FIELDS } from 'src/modules/users/domain/entities/user-block/user-block-select-fields';
+import { USER_BLOCK_SELECT_FIELDS, USER_BLOCK_STAFF_ONLY_FIELDS } from 'src/modules/users/domain/entities/user-block/user-block-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -48,6 +48,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    USER_BLOCK_STAFF_ONLY_FIELDS,
   );
 
   return {

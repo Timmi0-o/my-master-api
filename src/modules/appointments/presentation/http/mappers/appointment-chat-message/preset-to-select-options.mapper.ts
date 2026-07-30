@@ -1,13 +1,16 @@
+import type { IAppointmentChatPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type {
   IAppointmentChatMessagePublicEntity,
   IAppointmentChatMessageRelations,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
-import { APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat-message/appointment-chat-message-select-fields';
-import type { IAppointmentChatPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat';
-import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
+import {
+  APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS,
+  APPOINTMENT_CHAT_MESSAGE_STAFF_ONLY_FIELDS,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message/appointment-chat-message-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 
 const PRESETS: Record<
   TPresetType,
@@ -73,6 +76,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    APPOINTMENT_CHAT_MESSAGE_STAFF_ONLY_FIELDS,
   );
   return {
     select: select as typeof config.select,

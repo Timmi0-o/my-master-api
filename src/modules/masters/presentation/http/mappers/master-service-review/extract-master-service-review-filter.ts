@@ -4,11 +4,11 @@ import type {
 } from 'src/modules/masters/domain/entities/master-service-review';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapMultiNumberRangeFilter,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { MASTER_SERVICE_REVIEW_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-service-review/master-service-review-select-fields';
 import type { IMasterServiceReviewFiltersPreset } from '../../validation/types/master-service-review-filters-preset.types';
 
 export function extractMasterServiceReviewFilter(
@@ -20,65 +20,36 @@ export function extractMasterServiceReviewFilter(
       IMasterServiceReviewRelations
     >
   | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, MASTER_SERVICE_REVIEW_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     IMasterServiceReviewPublicEntity,
     IMasterServiceReviewRelations
   >[] = [];
 
-  const pushString = (
-    field: keyof IMasterServiceReviewPublicEntity & string,
-    value: IMasterServiceReviewFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IMasterServiceReviewPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
+  queryFilterBuildManager(parts, [
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    {
+      type: 'stringArray',
+      field: 'masterServiceId',
+      value: sanitized.masterServiceId,
+    },
+    {
+      type: 'stringArray',
+      field: 'clientUserId',
+      value: sanitized.clientUserId,
+    },
+    {
+      type: 'stringArray',
+      field: 'appointmentId',
+      value: sanitized.appointmentId,
+    },
+    { type: 'numberRange', field: 'rating', value: sanitized.rating },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  pushString('id', sanitized.id);
-  pushString('masterServiceId', sanitized.masterServiceId);
-  pushString('clientUserId', sanitized.clientUserId);
-  pushString('appointmentId', sanitized.appointmentId);
-
-  if (sanitized.rating) {
-    const part = mapMultiNumberRangeFilter<IMasterServiceReviewPublicEntity>(
-      'rating',
-      sanitized.rating,
-    );
-    if (part) parts.push(part);
-  }
-
-  const pushDate = (
-    field: keyof IMasterServiceReviewPublicEntity & string,
-    value: IMasterServiceReviewFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IMasterServiceReviewPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

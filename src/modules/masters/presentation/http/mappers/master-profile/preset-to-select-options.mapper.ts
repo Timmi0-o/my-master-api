@@ -2,7 +2,7 @@ import type {
   IMasterProfilePublicEntity,
   IMasterProfileRelations,
 } from 'src/modules/masters/domain/entities/master-profile';
-import { MASTER_PROFILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-profile/master-profile-select-fields';
+import { MASTER_PROFILE_SELECT_FIELDS, MASTER_PROFILE_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-profile/master-profile-select-fields';
 import { IMAGE_FILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/image';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
@@ -109,6 +109,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    MASTER_PROFILE_STAFF_ONLY_FIELDS,
   );
 
   return {

@@ -14,3 +14,7 @@ export const MASTER_SCHEDULE_EXCEPTION_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IMasterScheduleExceptionPublicEntity)[];
+
+export const MASTER_SCHEDULE_EXCEPTION_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IMasterScheduleExceptionPublicEntity)[];

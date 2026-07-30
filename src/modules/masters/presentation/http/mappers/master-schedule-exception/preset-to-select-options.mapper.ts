@@ -2,7 +2,7 @@ import type {
   IMasterScheduleExceptionPublicEntity,
   IMasterScheduleExceptionRelations,
 } from 'src/modules/masters/domain/entities/master-schedule-exception';
-import { MASTER_SCHEDULE_EXCEPTION_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception-select-fields';
+import { MASTER_SCHEDULE_EXCEPTION_SELECT_FIELDS, MASTER_SCHEDULE_EXCEPTION_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -81,6 +81,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    MASTER_SCHEDULE_EXCEPTION_STAFF_ONLY_FIELDS,
   );
 
   return {

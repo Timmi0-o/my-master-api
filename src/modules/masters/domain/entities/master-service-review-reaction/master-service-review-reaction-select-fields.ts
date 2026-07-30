@@ -9,3 +9,7 @@ export const MASTER_SERVICE_REVIEW_REACTION_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IMasterServiceReviewReactionPublicEntity)[];
+
+export const MASTER_SERVICE_REVIEW_REACTION_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IMasterServiceReviewReactionPublicEntity)[];

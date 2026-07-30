@@ -4,12 +4,11 @@ import type {
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapMultiNumberRangeFilter,
-  mapSearchByFields,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { MASTER_PROFILE_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-profile/master-profile-select-fields';
 import type { IMasterProfileFiltersPreset } from '../../validation/types/master-profile-filters-preset.types';
 
 export function extractMasterProfileFilter(
@@ -18,70 +17,33 @@ export function extractMasterProfileFilter(
 ):
   | WhereFilter<IMasterProfilePublicEntity, IMasterProfileRelations>
   | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, MASTER_PROFILE_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     IMasterProfilePublicEntity,
     IMasterProfileRelations
   >[] = [];
 
-  if (sanitized.search?.value) {
-    const part = mapSearchByFields<IMasterProfilePublicEntity>(
-      sanitized.search.value,
-      ['displayName', 'description'],
-      sanitized.search.mode ?? 'PARTIAL',
-    );
-    if (part) parts.push(part);
-  }
+  queryFilterBuildManager(parts, [
+    {
+      type: 'search',
+      value: sanitized.search?.value,
+      fieldsBySearch: ['displayName', 'description'],
+      mode: sanitized.search?.mode,
+    },
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    { type: 'stringArray', field: 'userId', value: sanitized.userId },
+    {
+      type: 'stringArray',
+      field: 'displayName',
+      value: sanitized.displayName,
+    },
+    { type: 'numberRange', field: 'rating', value: sanitized.rating },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  const pushString = (
-    field: keyof IMasterProfilePublicEntity,
-    value: IMasterProfileFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IMasterProfilePublicEntity>(field, value);
-    if (part) parts.push(part);
-  };
-
-  pushString('id', sanitized.id);
-  pushString('userId', sanitized.userId);
-  pushString('displayName', sanitized.displayName);
-
-  if (sanitized.rating) {
-    const part = mapMultiNumberRangeFilter<IMasterProfilePublicEntity>(
-      'rating',
-      sanitized.rating,
-    );
-    if (part) parts.push(part);
-  }
-
-  const pushDate = (
-    field: keyof IMasterProfilePublicEntity,
-    value: IMasterProfileFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IMasterProfilePublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

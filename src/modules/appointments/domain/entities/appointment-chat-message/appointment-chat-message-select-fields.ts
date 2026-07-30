@@ -10,3 +10,7 @@ export const APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IAppointmentChatMessagePublicEntity)[];
+
+export const APPOINTMENT_CHAT_MESSAGE_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IAppointmentChatMessagePublicEntity)[];

@@ -4,77 +4,42 @@ import type {
 } from 'src/modules/users/domain/entities/user-profile';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapMultiNumberRangeFilter,
-  mapSearchByFields,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { USER_PROFILE_STAFF_ONLY_FIELDS } from 'src/modules/users/domain/entities/user-profile/user-profile--select-fields';
 import type { IUserProfileFiltersPreset } from '../../validation/types/user-profile-filters-preset.types';
 
 export function extractUserProfileFilter(
   filter: IUserProfileFiltersPreset | undefined,
   isStaffUser: boolean,
 ): WhereFilter<IUserProfilePublicEntity, IUserProfileRelations> | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, USER_PROFILE_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<IUserProfilePublicEntity, IUserProfileRelations>[] =
     [];
 
-  if (sanitized.search?.value) {
-    const part = mapSearchByFields<IUserProfilePublicEntity>(
-      sanitized.search.value,
-      ['displayName'],
-      sanitized.search.mode ?? 'PARTIAL',
-    );
-    if (part) parts.push(part);
-  }
+  queryFilterBuildManager(parts, [
+    {
+      type: 'search',
+      value: sanitized.search?.value,
+      fieldsBySearch: ['displayName'],
+      mode: sanitized.search?.mode,
+    },
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    { type: 'stringArray', field: 'userId', value: sanitized.userId },
+    {
+      type: 'stringArray',
+      field: 'displayName',
+      value: sanitized.displayName,
+    },
+    { type: 'numberRange', field: 'rating', value: sanitized.rating },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  const pushString = (
-    field: keyof IUserProfilePublicEntity & string,
-    value: IUserProfileFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IUserProfilePublicEntity>(field, value);
-    if (part) parts.push(part);
-  };
-
-  pushString('id', sanitized.id);
-  pushString('userId', sanitized.userId);
-  pushString('displayName', sanitized.displayName);
-
-  if (sanitized.rating) {
-    const part = mapMultiNumberRangeFilter<IUserProfilePublicEntity>(
-      'rating',
-      sanitized.rating,
-    );
-    if (part) parts.push(part);
-  }
-
-  const pushDate = (
-    field: keyof IUserProfilePublicEntity & string,
-    value: IUserProfileFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IUserProfilePublicEntity>(field, value);
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

@@ -8,3 +8,7 @@ export const FAVORITE_MASTER_SERVICE_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof IFavoriteMasterServicePublicEntity)[];
+
+export const FAVORITE_MASTER_SERVICE_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof IFavoriteMasterServicePublicEntity)[];

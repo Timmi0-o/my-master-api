@@ -2,7 +2,7 @@ import type {
   IMasterSubscriptionPublicEntity,
   IMasterSubscriptionRelations,
 } from 'src/modules/masters/domain/entities/master-subscription';
-import { MASTER_SUBSCRIPTION_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-subscription/master-subscription-select-fields';
+import { MASTER_SUBSCRIPTION_SELECT_FIELDS, MASTER_SUBSCRIPTION_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-subscription/master-subscription-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -57,6 +57,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    MASTER_SUBSCRIPTION_STAFF_ONLY_FIELDS,
   );
 
   return {

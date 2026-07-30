@@ -4,71 +4,56 @@ import type {
 } from 'src/modules/appointments/domain/entities/appointment';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapSearchByFields,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { APPOINTMENT_STAFF_ONLY_FIELDS } from 'src/modules/appointments/domain/entities/appointment/appointment-select-fields';
 import type { IAppointmentFiltersPreset } from '../../validation/types/appointment-filters-preset.types';
 
 export function extractAppointmentFilter(
   filter: IAppointmentFiltersPreset | undefined,
   isStaffUser: boolean,
 ): WhereFilter<IAppointmentPublicEntity, IAppointmentRelations> | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, APPOINTMENT_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<IAppointmentPublicEntity, IAppointmentRelations>[] =
     [];
 
-  if (sanitized.search?.value) {
-    const part = mapSearchByFields<IAppointmentPublicEntity>(
-      sanitized.search.value,
-      ['serviceName'],
-      sanitized.search.mode ?? 'PARTIAL',
-    );
-    if (part) parts.push(part);
-  }
+  queryFilterBuildManager(parts, [
+    {
+      type: 'search',
+      value: sanitized.search?.value,
+      fieldsBySearch: ['serviceName'],
+      mode: sanitized.search?.mode,
+    },
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    {
+      type: 'stringArray',
+      field: 'masterProfileId',
+      value: sanitized.masterProfileId,
+    },
+    {
+      type: 'stringArray',
+      field: 'masterServiceId',
+      value: sanitized.masterServiceId,
+    },
+    {
+      type: 'stringArray',
+      field: 'clientUserId',
+      value: sanitized.clientUserId,
+    },
+    {
+      type: 'stringArray',
+      field: 'status',
+      value: sanitized.status as IAppointmentFiltersPreset['id'],
+    },
+    { type: 'dateRange', field: 'startsAt', value: sanitized.startsAt },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  const pushString = (
-    field: keyof IAppointmentPublicEntity & string,
-    value: IAppointmentFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IAppointmentPublicEntity>(field, value);
-    if (part) parts.push(part);
-  };
-
-  pushString('id', sanitized.id);
-  pushString('masterProfileId', sanitized.masterProfileId);
-  pushString('masterServiceId', sanitized.masterServiceId);
-  pushString('clientUserId', sanitized.clientUserId);
-  pushString('status', sanitized.status as IAppointmentFiltersPreset['id']);
-
-  const pushDate = (
-    field: keyof IAppointmentPublicEntity & string,
-    value: IAppointmentFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IAppointmentPublicEntity>(field, value);
-    if (part) parts.push(part);
-  };
-
-  pushDate('startsAt', sanitized.startsAt);
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

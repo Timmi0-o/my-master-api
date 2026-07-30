@@ -2,12 +2,13 @@ import type {
   IAppointmentChatPublicEntity,
   IAppointmentChatRelations,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
+import { APPOINTMENT_CHAT_STAFF_ONLY_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat/appointment-chat-select-fields';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 import type { IAppointmentChatFiltersPreset } from '../../validation/types/appointment-chat-filters-preset.types';
 
 export function extractAppointmentChatFilter(
@@ -16,45 +17,34 @@ export function extractAppointmentChatFilter(
 ):
   | WhereFilter<IAppointmentChatPublicEntity, IAppointmentChatRelations>
   | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(
+    filter,
+    isStaffUser,
+    APPOINTMENT_CHAT_STAFF_ONLY_FIELDS,
+  );
   if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     IAppointmentChatPublicEntity,
     IAppointmentChatRelations
   >[] = [];
-  const pushString = (
-    field: keyof IAppointmentChatPublicEntity,
-    value: IAppointmentChatFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IAppointmentChatPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
 
-  pushString('id', sanitized.id);
-  pushString('masterProfileId', sanitized.masterProfileId);
-  pushString('clientUserId', sanitized.clientUserId);
+  queryFilterBuildManager(parts, [
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    {
+      type: 'stringArray',
+      field: 'masterProfileId',
+      value: sanitized.masterProfileId,
+    },
+    {
+      type: 'stringArray',
+      field: 'clientUserId',
+      value: sanitized.clientUserId,
+    },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  const pushDate = (
-    field: keyof IAppointmentChatPublicEntity,
-    value: IAppointmentChatFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IAppointmentChatPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) return undefined;
-  return parts.length === 1 ? parts[0] : { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

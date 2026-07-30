@@ -41,7 +41,7 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 
 - `select` — поля корневой public entity (`*_SELECT_FIELDS` в domain для validation).
 - `include` — вложенные relations; для relation с полями — `{ select: string[] }`.
-- Staff/non-staff: `omitDisallowedSelectFieldsForNonStaff` в `presentation/.../staff-visibility.helper.ts`.
+- Staff/non-staff: `omitDisallowedSelectFieldsForNonStaff(select, isStaffUser, *_STAFF_ONLY_FIELDS)` и `stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, *_STAFF_ONLY_FIELDS)` в `presentation/.../staff-visibility.helper.ts`. Список staff-only полей — `*_STAFF_ONLY_FIELDS` рядом с `*_SELECT_FIELDS` в domain entity.
 
 ## Read options validation
 
@@ -54,7 +54,7 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 
 `presentation/http/mappers/<entity>/query-params-to-find-many-params.mapper.ts`:
 
-1. `FilterExtractor.extract(sanitizedFilter)`
+1. `extract-<entity>-filter` → `WhereFilter` (через `queryFilterBuildManager`)
 2. visibility (`deletedAt: null` для non-staff)
 3. `slice` из `page`/`limit`
 4. `orderBy` из `orderField`/`orderDir`
@@ -64,7 +64,7 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 `shared/presentation/http/query/` — только `map-order-by`, `map-pagination-to-slice` (как `rpc/query`).
 
 List mapper на сущность:
-- `extract-<entity>-filter.ts` — filter payload → `WhereFilter` (presentation, `mapStringArrayFilter` и др. из `shared/presentation/http/mappers/filter/`)
+- `extract-<entity>-filter.ts` — `stripStaffOnlyFilterFieldsForNonStaff(..., *_STAFF_ONLY_FIELDS)` → `queryFilterBuildManager(parts, config)` → `finalizeWhereFilterParts(parts)`. Config items: `search` | `stringArray` | `dateRange` | `numberRange` | `nullStatus`. Field mappers (`mapSearchByFields`, `mapStringArrayFilter`, …) вызываются только из manager.
 - `query-params-to-find-many-params.mapper.ts` — export `queryParamsToFindManyParams`, `where: { ...(non-staff ? { deletedAt: null } : {}), ...filterWhere }`
 
 Именование: `preset-to-select-options.mapper.ts`, `payload-to-*-input.ts`.

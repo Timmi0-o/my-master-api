@@ -2,7 +2,7 @@ import type { TPresetType } from 'src/modules/shared/application/presets/common/
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
 import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
-import { USER_SELECT_FIELDS } from 'src/modules/users/domain/entities/user/user-select-fields';
+import { USER_SELECT_FIELDS, USER_STAFF_ONLY_FIELDS } from 'src/modules/users/domain/entities/user/user-select-fields';
 
 type UserSelectOptions = PresetReadOptions<IUserPublicEntity, Record<never, never>>;
 
@@ -52,6 +52,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    USER_STAFF_ONLY_FIELDS,
   );
 
   return {

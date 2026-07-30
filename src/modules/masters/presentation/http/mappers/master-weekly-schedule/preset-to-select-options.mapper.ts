@@ -2,7 +2,7 @@ import type {
   IMasterWeeklySchedulePublicEntity,
   IMasterWeeklyScheduleRelations,
 } from 'src/modules/masters/domain/entities/master-weekly-schedule';
-import { MASTER_WEEKLY_SCHEDULE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/master-weekly-schedule/master-weekly-schedule-select-fields';
+import { MASTER_WEEKLY_SCHEDULE_SELECT_FIELDS, MASTER_WEEKLY_SCHEDULE_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-weekly-schedule/master-weekly-schedule-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
@@ -76,6 +76,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    MASTER_WEEKLY_SCHEDULE_STAFF_ONLY_FIELDS,
   );
 
   return {

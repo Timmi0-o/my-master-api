@@ -19,3 +19,7 @@ export const NOTIFICATION_SELECT_FIELDS = [
   'updatedAt',
   'deletedAt',
 ] as const satisfies readonly (keyof INotificationPublicEntity)[];
+
+export const NOTIFICATION_STAFF_ONLY_FIELDS = [
+  'deletedAt',
+] as const satisfies readonly (keyof INotificationPublicEntity)[];

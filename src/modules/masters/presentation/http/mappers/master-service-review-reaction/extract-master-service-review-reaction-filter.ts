@@ -4,10 +4,11 @@ import type {
 } from 'src/modules/masters/domain/entities/master-service-review-reaction';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { MASTER_SERVICE_REVIEW_REACTION_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-service-review-reaction/master-service-review-reaction-select-fields';
 import type { IMasterServiceReviewReactionFiltersPreset } from '../../validation/types/master-service-review-reaction-filters-preset.types';
 
 export function extractMasterServiceReviewReactionFilter(
@@ -19,58 +20,27 @@ export function extractMasterServiceReviewReactionFilter(
       IMasterServiceReviewReactionRelations
     >
   | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, MASTER_SERVICE_REVIEW_REACTION_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     IMasterServiceReviewReactionPublicEntity,
     IMasterServiceReviewReactionRelations
   >[] = [];
 
-  const pushString = (
-    field: keyof IMasterServiceReviewReactionPublicEntity & string,
-    value: IMasterServiceReviewReactionFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IMasterServiceReviewReactionPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
+  queryFilterBuildManager(parts, [
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    { type: 'stringArray', field: 'userId', value: sanitized.userId },
+    {
+      type: 'stringArray',
+      field: 'masterServiceReviewId',
+      value: sanitized.masterServiceReviewId,
+    },
+    { type: 'stringArray', field: 'type', value: sanitized.type },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  pushString('id', sanitized.id);
-  pushString('userId', sanitized.userId);
-  pushString('masterServiceReviewId', sanitized.masterServiceReviewId);
-  pushString('type', sanitized.type);
-
-  const pushDate = (
-    field: keyof IMasterServiceReviewReactionPublicEntity & string,
-    value: IMasterServiceReviewReactionFiltersPreset['createdAt'],
-  ): void => {
-    if (!value) return;
-    const part =
-      mapMultiDateRangeFilter<IMasterServiceReviewReactionPublicEntity>(
-        field,
-        value,
-      );
-    if (part) parts.push(part);
-  };
-
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

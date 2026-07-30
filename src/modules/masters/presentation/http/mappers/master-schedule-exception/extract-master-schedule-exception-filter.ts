@@ -4,11 +4,11 @@ import type {
 } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import type { WhereFilter } from 'src/modules/shared/domain/query';
 import {
-  mapMultiDateRangeFilter,
-  mapSearchByFields,
-  mapStringArrayFilter,
+  finalizeWhereFilterParts,
+  queryFilterBuildManager,
 } from 'src/modules/shared/presentation/http/mappers/filter';
-import { stripDeletedAtFilterForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { stripStaffOnlyFilterFieldsForNonStaff } from 'src/modules/shared/presentation/http/mappers/shared/staff-visibility.helper';
+import { MASTER_SCHEDULE_EXCEPTION_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception-select-fields';
 import type { IMasterScheduleExceptionFiltersPreset } from '../../validation/types/master-schedule-exception-filters-preset.types';
 
 export function extractMasterScheduleExceptionFilter(
@@ -18,67 +18,38 @@ export function extractMasterScheduleExceptionFilter(
   IMasterScheduleExceptionPublicEntity,
   IMasterScheduleExceptionRelations
 > | undefined {
-  const sanitized = stripDeletedAtFilterForNonStaff(filter, isStaffUser);
-
-  if (!sanitized) {
-    return undefined;
-  }
+  const sanitized = stripStaffOnlyFilterFieldsForNonStaff(filter, isStaffUser, MASTER_SCHEDULE_EXCEPTION_STAFF_ONLY_FIELDS);
+  if (!sanitized) return undefined;
 
   const parts: WhereFilter<
     IMasterScheduleExceptionPublicEntity,
     IMasterScheduleExceptionRelations
   >[] = [];
 
-  if (sanitized.search?.value) {
-    const part = mapSearchByFields<IMasterScheduleExceptionPublicEntity>(
-      sanitized.search.value,
-      ['title', 'note'],
-      sanitized.search.mode ?? 'PARTIAL',
-    );
-    if (part) parts.push(part);
-  }
+  queryFilterBuildManager(parts, [
+    {
+      type: 'search',
+      value: sanitized.search?.value,
+      fieldsBySearch: ['title', 'note'],
+      mode: sanitized.search?.mode,
+    },
+    { type: 'stringArray', field: 'id', value: sanitized.id },
+    {
+      type: 'stringArray',
+      field: 'masterProfileId',
+      value: sanitized.masterProfileId,
+    },
+    {
+      type: 'stringArray',
+      field: 'kind',
+      value: sanitized.kind as IMasterScheduleExceptionFiltersPreset['id'],
+    },
+    { type: 'dateRange', field: 'startsAt', value: sanitized.startsAt },
+    { type: 'dateRange', field: 'endsAt', value: sanitized.endsAt },
+    { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
+    { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
+    { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
+  ]);
 
-  const pushString = (
-    field: keyof IMasterScheduleExceptionPublicEntity & string,
-    value: IMasterScheduleExceptionFiltersPreset['id'],
-  ): void => {
-    if (!value) return;
-    const part = mapStringArrayFilter<IMasterScheduleExceptionPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushString('id', sanitized.id);
-  pushString('masterProfileId', sanitized.masterProfileId);
-  pushString('kind', sanitized.kind as IMasterScheduleExceptionFiltersPreset['id']);
-
-  const pushDate = (
-    field: keyof IMasterScheduleExceptionPublicEntity & string,
-    value: IMasterScheduleExceptionFiltersPreset['startsAt'],
-  ): void => {
-    if (!value) return;
-    const part = mapMultiDateRangeFilter<IMasterScheduleExceptionPublicEntity>(
-      field,
-      value,
-    );
-    if (part) parts.push(part);
-  };
-
-  pushDate('startsAt', sanitized.startsAt);
-  pushDate('endsAt', sanitized.endsAt);
-  pushDate('createdAt', sanitized.createdAt);
-  pushDate('updatedAt', sanitized.updatedAt);
-  pushDate('deletedAt', sanitized.deletedAt);
-
-  if (!parts.length) {
-    return undefined;
-  }
-
-  if (parts.length === 1) {
-    return parts[0];
-  }
-
-  return { and: parts };
+  return finalizeWhereFilterParts(parts);
 }

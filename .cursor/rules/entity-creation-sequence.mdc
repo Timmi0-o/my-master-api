@@ -51,7 +51,7 @@ flowchart TB
 | `policies/` | `ensure*Exists`, `ensure*Accessible` — pure functions |
 | `errors/` | co-located domain errors |
 | `i-<entity>-relations.ts` | Типы вложений для `ReadResult` (если есть relations в list/get-by-id) |
-| `<entity>-select-fields.ts` | Константа полей для preset/select validation |
+| `<entity>-select-fields.ts` | `*_SELECT_FIELDS` + `*_STAFF_ONLY_FIELDS` (поля только для staff: filter/select) |
 | `index.ts` | Re-export типов |
 
 Если есть «секретные» поля (например `passwordHash`) — отдельная full entity vs public; иначе `PublicEntity` может совпадать с полной.

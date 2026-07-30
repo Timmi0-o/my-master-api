@@ -2,7 +2,7 @@ import type {
   IUserProfilePublicEntity,
   IUserProfileRelations,
 } from 'src/modules/users/domain/entities/user-profile';
-import { USER_PROFILE_SELECT_FIELDS } from 'src/modules/users/domain/entities/user-profile/user-profile--select-fields';
+import { USER_PROFILE_SELECT_FIELDS, USER_PROFILE_STAFF_ONLY_FIELDS } from 'src/modules/users/domain/entities/user-profile/user-profile--select-fields';
 import { IMAGE_FILE_SELECT_FIELDS } from 'src/modules/masters/domain/entities/image';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
@@ -77,6 +77,7 @@ export function presetToSelectOptions(
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,
     isStaffUser,
+    USER_PROFILE_STAFF_ONLY_FIELDS,
   );
 
   return {
