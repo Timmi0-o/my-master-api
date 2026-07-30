@@ -14,6 +14,7 @@
 #   DEPLOY_SSH_PASSWORD      password auth via sshpass / SSH_ASKPASS
 #   DEPLOY_SKIP_BUILD=1      не пересобирать образ, залить текущий local tag
 #   DEPLOY_SYNC_COMPOSE=1    также залить docker-compose.prod.yml
+#   DEPLOY_SKIP_PRUNE=1      не чистить dangling-образы на сервере
 #   DEPLOY_HEALTH_PATH       default: /v1/search?q=test
 #   DEPLOY_APP_PORT          default: 8567
 
@@ -132,6 +133,20 @@ log "Load image and recreate app on server"
 run_ssh bash -s <<EOF
 set -euo pipefail
 
+SKIP_PRUNE=$(printf '%q' "${DEPLOY_SKIP_PRUNE:-0}")
+
+prune_dangling_images() {
+  if [ "\$SKIP_PRUNE" = "1" ]; then
+    return 0
+  fi
+  echo "==> Docker image prune (dangling)"
+  docker image prune -f
+  df -h / | tail -n 1 || true
+}
+
+# Освобождаем место до load: на маленьком VPS tar (~300MB+) иначе не влезет.
+prune_dangling_images
+
 gunzip -c /tmp/my-master-api-app.tar.gz | docker load
 rm -f /tmp/my-master-api-app.tar.gz
 
@@ -146,6 +161,9 @@ else
 fi
 
 \$COMPOSE -f $(printf '%q' "$DEPLOY_COMPOSE_FILE") up -d --force-recreate --no-deps app
+
+# После recreate старый :latest становится <none> — подчищаем.
+prune_dangling_images
 
 sleep 8
 docker ps --filter name=my-master-api-app --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'
