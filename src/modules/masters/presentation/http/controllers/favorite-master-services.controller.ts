@@ -24,7 +24,7 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateFavoriteMasterServiceInput } from '../mappers/favorite-master-service/payload-to-create-favorite-master-service-input';
 import { payloadToDeleteFavoriteMasterServiceInput } from '../mappers/favorite-master-service/payload-to-delete-favorite-master-service-input';
-import { payloadToFindManyParams } from '../mappers/favorite-master-service/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/favorite-master-service/query-params-to-find-many-params.mapper';
 import { payloadToGetFavoriteMasterServiceByIdInput } from '../mappers/favorite-master-service/payload-to-get-favorite-master-service-by-id-input';
 import { mapCreateFavoriteMasterServiceHttpResponse } from '../response/map-create-favorite-master-service-response';
 import { mapDeleteFavoriteMasterServiceHttpResponse } from '../response/map-delete-favorite-master-service-response';
@@ -48,12 +48,12 @@ export class FavoriteMasterServicesController {
       errorMessage:
         'Некорректные параметры запроса списка избранных услуг мастера',
     })
-    payload: IGetFavoriteMasterServicesQueryPayload,
+    queryParams: IGetFavoriteMasterServicesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getFavoriteMasterServicesUseCase.execute(params);
-    return mapGetFavoriteMasterServicesHttpResponse(output, payload);
+    return mapGetFavoriteMasterServicesHttpResponse(output, queryParams);
   }
 
   @Get(':id')

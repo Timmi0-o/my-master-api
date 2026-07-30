@@ -20,7 +20,7 @@ import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decor
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToDeleteMasterServiceReviewReactionInput } from '../mappers/master-service-review-reaction/payload-to-delete-master-service-review-reaction-input';
-import { payloadToFindManyParams } from '../mappers/master-service-review-reaction/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/master-service-review-reaction/query-params-to-find-many-params.mapper';
 import { payloadToUpsertMasterServiceReviewReactionInput } from '../mappers/master-service-review-reaction/payload-to-upsert-master-service-review-reaction-input';
 import { mapDeleteMasterServiceReviewReactionHttpResponse } from '../response/map-delete-master-service-review-reaction-response';
 import { mapGetMasterServiceReviewReactionsHttpResponse } from '../response/map-get-master-service-review-reactions-response';
@@ -42,13 +42,13 @@ export class MasterServiceReviewReactionsController {
       errorMessage:
         'Некорректные параметры запроса списка реакций на отзывы',
     })
-    payload: IGetMasterServiceReviewReactionsQueryPayload,
+    queryParams: IGetMasterServiceReviewReactionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output =
       await this.getMasterServiceReviewReactionsUseCase.execute(params);
-    return mapGetMasterServiceReviewReactionsHttpResponse(output, payload);
+    return mapGetMasterServiceReviewReactionsHttpResponse(output, queryParams);
   }
 
   @Post()

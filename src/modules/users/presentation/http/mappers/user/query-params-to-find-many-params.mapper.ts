@@ -8,14 +8,14 @@ import { extractUserFilter } from './extract-user-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
 import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
-export function payloadToFindManyParams(
-  payload: IGetUsersQueryPayload,
+export function queryParamsToFindManyParams(
+  queryParams: IGetUsersQueryPayload,
   metadata: IGetMetadata,
 ): FindManyParams<IUserPublicEntity, Record<never, never>> {
-  const filterWhere = extractUserFilter(payload.filter, metadata.isStaffUser);
+  const filterWhere = extractUserFilter(queryParams.filter, metadata.isStaffUser);
 
-  const orderField = payload.orderField ?? 'id';
-  const orderDir = payload.orderDir ?? 'desc';
+  const orderField = queryParams.orderField ?? 'id';
+  const orderDir = queryParams.orderDir ?? 'desc';
 
   return {
     where: {
@@ -23,11 +23,11 @@ export function payloadToFindManyParams(
       ...(filterWhere ?? {}),
     },
     slice: mapPaginationToSlice({
-      page: payload.page,
-      limit: payload.limit,
+      page: queryParams.page,
+      limit: queryParams.limit,
     }),
     orderBy: mapOrderBy<IUserPublicEntity>({ [orderField]: orderDir }),
-    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
-    requiredIds: payload.requiredIds,
+    ...splitPresetReadOptions(presetToSelectOptions(queryParams.preset, metadata.isStaffUser)),
+    requiredIds: queryParams.requiredIds,
   };
 }

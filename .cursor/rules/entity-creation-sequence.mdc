@@ -144,7 +144,7 @@ Mutate: `create-*-payload.schema.ts`, не `*-body.schema.ts`.
 
 | Операция | Файлы |
 |----------|--------|
-| GET list | `extract-<entity>-filter.ts`, `preset-to-select-options.mapper.ts`, `payload-to-find-many-params.mapper.ts` |
+| GET list | `extract-<entity>-filter.ts`, `preset-to-select-options.mapper.ts`, `query-params-to-find-many-params.mapper.ts` |
 | GET by id | `payload-to-get-<entity>-by-id-input.ts` |
 | POST/PATCH/DELETE | `payload-to-create-*-input.ts`, `payload-to-update-*-input.ts`, `payload-to-delete-*-input.ts` |
 
@@ -206,7 +206,7 @@ src/modules/<feature>/
 
 | Сценарий | Пропустить |
 |----------|------------|
-| Только create/read без list | `extract-*-filter`, `payload-to-find-many-params`, `get-*-many` use-case, list response mapper |
+| Только create/read без list | `extract-*-filter`, `query-params-to-find-many-params`, `get-*-many` use-case, list response mapper |
 | Нет relations в ответе | `i-*-relations.ts`, `include` в preset, `relationConfig` (минимальный `select` only) |
 | Auth token/session | Нет `IReadRepository`; нет preset/query layer |
 

@@ -31,7 +31,7 @@ import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normali
 import { payloadToCompleteAppointmentInput } from '../mappers/appointment/payload-to-complete-appointment-input';
 import { payloadToCreateAppointmentInput } from '../mappers/appointment/payload-to-create-appointment-input';
 import { payloadToDeleteAppointmentInput } from '../mappers/appointment/payload-to-delete-appointment-input';
-import { payloadToFindManyParams } from '../mappers/appointment/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/appointment/query-params-to-find-many-params.mapper';
 import { payloadToGetAppointmentByIdInput } from '../mappers/appointment/payload-to-get-appointment-by-id-input';
 import { payloadToGetMyAppointmentsInput } from '../mappers/appointment/payload-to-get-my-appointments-input';
 import { payloadToGetMyClientsAppointmentsInput } from '../mappers/appointment/payload-to-get-my-clients-appointments-input';
@@ -67,14 +67,14 @@ export class AppointmentsController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка записей',
     })
-    payload: IGetAppointmentsQueryPayload,
+    queryParams: IGetAppointmentsQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const input = payloadToGetMyAppointmentsInput(params, user, metadata.isStaffUser);
     const output = await this.getMyAppointmentsUseCase.execute(input);
-    return mapGetAppointmentsHttpResponse(output, payload);
+    return mapGetAppointmentsHttpResponse(output, queryParams);
   }
 
   @Get('my-clients')
@@ -87,18 +87,18 @@ export class AppointmentsController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка записей',
     })
-    payload: IGetAppointmentsQueryPayload,
+    queryParams: IGetAppointmentsQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const input = payloadToGetMyClientsAppointmentsInput(
       params,
       user,
       metadata.isStaffUser,
     );
     const output = await this.getMyClientsAppointmentsUseCase.execute(input);
-    return mapGetAppointmentsHttpResponse(output, payload);
+    return mapGetAppointmentsHttpResponse(output, queryParams);
   }
 
   @Get()
@@ -108,12 +108,12 @@ export class AppointmentsController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка записей',
     })
-    payload: IGetAppointmentsQueryPayload,
+    queryParams: IGetAppointmentsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getAppointmentsUseCase.execute(params);
-    return mapGetAppointmentsHttpResponse(output, payload);
+    return mapGetAppointmentsHttpResponse(output, queryParams);
   }
 
   @Get(':id')

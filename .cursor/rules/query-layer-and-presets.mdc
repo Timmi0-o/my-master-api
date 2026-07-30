@@ -52,7 +52,7 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 
 ## Query → FindManyParams
 
-`presentation/http/mappers/<entity>/payload-to-find-many-params.mapper.ts`:
+`presentation/http/mappers/<entity>/query-params-to-find-many-params.mapper.ts`:
 
 1. `FilterExtractor.extract(sanitizedFilter)`
 2. visibility (`deletedAt: null` для non-staff)
@@ -65,7 +65,7 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 
 List mapper на сущность:
 - `extract-<entity>-filter.ts` — filter payload → `WhereFilter` (presentation, `mapStringArrayFilter` и др. из `shared/presentation/http/mappers/filter/`)
-- `payload-to-find-many-params.mapper.ts` — export `payloadToFindManyParams`, `where: { ...(non-staff ? { deletedAt: null } : {}), ...filterWhere }`
+- `query-params-to-find-many-params.mapper.ts` — export `queryParamsToFindManyParams`, `where: { ...(non-staff ? { deletedAt: null } : {}), ...filterWhere }`
 
 Именование: `preset-to-select-options.mapper.ts`, `payload-to-*-input.ts`.
 
@@ -130,5 +130,5 @@ Controller не собирает Prisma args и не знает про presets �
 Кратко для query-слоя после domain + repository:
 
 1. `preset-to-select-options` (inline MINIMAL/SHORT/BASE) + `extract-*-filter` в presentation
-2. `payload-to-find-many-params` + `*_VALIDATION_CONFIG` в `*.relations.ts`
+2. `query-params-to-find-many-params` + `*_VALIDATION_CONFIG` в `*.relations.ts`
 3. Use-cases get many / get by id; RN list с relations — `preset: 'BASE'`

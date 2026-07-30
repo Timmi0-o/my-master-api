@@ -11,17 +11,17 @@ import { extractMasterServiceFilter } from './extract-master-service-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
 import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
-export function payloadToFindManyParams(
-  payload: IGetMasterServicesQueryPayload,
+export function queryParamsToFindManyParams(
+  queryParams: IGetMasterServicesQueryPayload,
   metadata: IGetMetadata,
 ): FindManyParams<IMasterServicePublicEntity, IMasterServiceRelations> {
   const filterWhere = extractMasterServiceFilter(
-    payload.filter,
+    queryParams.filter,
     metadata.isStaffUser,
   );
 
-  const orderField = payload.orderField ?? 'id';
-  const orderDir = payload.orderDir ?? 'asc';
+  const orderField = queryParams.orderField ?? 'id';
+  const orderDir = queryParams.orderDir ?? 'asc';
 
   return {
     where: {
@@ -29,11 +29,11 @@ export function payloadToFindManyParams(
       ...(filterWhere ?? {}),
     },
     slice: mapPaginationToSlice({
-      page: payload.page,
-      limit: payload.limit,
+      page: queryParams.page,
+      limit: queryParams.limit,
     }),
     orderBy: mapOrderBy<IMasterServicePublicEntity>({ [orderField]: orderDir }),
-    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
-    requiredIds: payload.requiredIds,
+    ...splitPresetReadOptions(presetToSelectOptions(queryParams.preset, metadata.isStaffUser)),
+    requiredIds: queryParams.requiredIds,
   };
 }

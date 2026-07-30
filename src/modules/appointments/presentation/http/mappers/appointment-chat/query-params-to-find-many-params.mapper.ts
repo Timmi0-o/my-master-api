@@ -11,28 +11,28 @@ import type { IGetAppointmentChatsQueryPayload } from '../../validation/schemas/
 import { extractAppointmentChatFilter } from './extract-appointment-chat-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
 
-export function payloadToFindManyParams(
-  payload: IGetAppointmentChatsQueryPayload,
+export function queryParamsToFindManyParams(
+  queryParams: IGetAppointmentChatsQueryPayload,
   metadata: IGetMetadata,
 ): FindManyParams<IAppointmentChatPublicEntity, IAppointmentChatRelations> {
   const filterWhere = extractAppointmentChatFilter(
-    payload.filter,
+    queryParams.filter,
     metadata.isStaffUser,
   );
-  const orderField = payload.orderField ?? 'id';
-  const orderDir = payload.orderDir ?? 'asc';
+  const orderField = queryParams.orderField ?? 'id';
+  const orderDir = queryParams.orderDir ?? 'asc';
   return {
     where: {
       ...(metadata.isStaffUser ? {} : { deletedAt: { isNull: true } }),
       ...(filterWhere ?? {}),
     },
-    slice: mapPaginationToSlice({ page: payload.page, limit: payload.limit }),
+    slice: mapPaginationToSlice({ page: queryParams.page, limit: queryParams.limit }),
     orderBy: mapOrderBy<IAppointmentChatPublicEntity>({
       [orderField]: orderDir,
     }),
     ...splitPresetReadOptions(
-      presetToSelectOptions(payload.preset, metadata.isStaffUser),
+      presetToSelectOptions(queryParams.preset, metadata.isStaffUser),
     ),
-    requiredIds: payload.requiredIds,
+    requiredIds: queryParams.requiredIds,
   };
 }

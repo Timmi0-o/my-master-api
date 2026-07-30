@@ -26,7 +26,7 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-create-master-weekly-schedule-input';
 import { payloadToDeleteMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-delete-master-weekly-schedule-input';
-import { payloadToFindManyParams } from '../mappers/master-weekly-schedule/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/master-weekly-schedule/query-params-to-find-many-params.mapper';
 import { payloadToGetMasterWeeklyScheduleByIdInput } from '../mappers/master-weekly-schedule/payload-to-get-master-weekly-schedule-by-id-input';
 import { payloadToUpdateMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-update-master-weekly-schedule-input';
 import { mapCreateMasterWeeklyScheduleHttpResponse } from '../response/map-create-master-weekly-schedule-response';
@@ -54,12 +54,12 @@ export class MasterWeeklySchedulesController {
       errorMessage:
         'Некорректные параметры запроса списка недельного расписания мастера',
     })
-    payload: IGetMasterWeeklySchedulesQueryPayload,
+    queryParams: IGetMasterWeeklySchedulesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterWeeklySchedulesUseCase.execute(params);
-    return mapGetMasterWeeklySchedulesHttpResponse(output, payload);
+    return mapGetMasterWeeklySchedulesHttpResponse(output, queryParams);
   }
 
   @Get(':id')

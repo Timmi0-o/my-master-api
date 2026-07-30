@@ -26,7 +26,7 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-create-master-schedule-exception-input';
 import { payloadToDeleteMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-delete-master-schedule-exception-input';
-import { payloadToFindManyParams } from '../mappers/master-schedule-exception/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/master-schedule-exception/query-params-to-find-many-params.mapper';
 import { payloadToGetMasterScheduleExceptionByIdInput } from '../mappers/master-schedule-exception/payload-to-get-master-schedule-exception-by-id-input';
 import { payloadToUpdateMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-update-master-schedule-exception-input';
 import { mapCreateMasterScheduleExceptionHttpResponse } from '../response/map-create-master-schedule-exception-response';
@@ -54,13 +54,13 @@ export class MasterScheduleExceptionsController {
       errorMessage:
         'Некорректные параметры запроса списка исключений расписания мастера',
     })
-    payload: IGetMasterScheduleExceptionsQueryPayload,
+    queryParams: IGetMasterScheduleExceptionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output =
       await this.getMasterScheduleExceptionsUseCase.execute(params);
-    return mapGetMasterScheduleExceptionsHttpResponse(output, payload);
+    return mapGetMasterScheduleExceptionsHttpResponse(output, queryParams);
   }
 
   @Get(':id')

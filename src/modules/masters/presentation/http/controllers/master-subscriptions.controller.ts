@@ -28,7 +28,7 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateMasterSubscriptionInput } from '../mappers/master-subscription/payload-to-create-master-subscription-input';
 import { payloadToDeleteMasterSubscriptionInput } from '../mappers/master-subscription/payload-to-delete-master-subscription-input';
-import { payloadToFindManyParams } from '../mappers/master-subscription/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/master-subscription/query-params-to-find-many-params.mapper';
 import { payloadToGetMasterSubscriptionByIdInput } from '../mappers/master-subscription/payload-to-get-master-subscription-by-id-input';
 import { mapCreateMasterSubscriptionHttpResponse } from '../response/map-create-master-subscription-response';
 import { mapDeleteMasterSubscriptionHttpResponse } from '../response/map-delete-master-subscription-response';
@@ -52,12 +52,12 @@ export class MasterSubscriptionsController {
       errorMessage:
         'Некорректные параметры запроса списка подписок на мастеров',
     })
-    payload: IGetMasterSubscriptionsQueryPayload,
+    queryParams: IGetMasterSubscriptionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterSubscriptionsUseCase.execute(params);
-    return mapGetMasterSubscriptionsHttpResponse(output, payload);
+    return mapGetMasterSubscriptionsHttpResponse(output, queryParams);
   }
 
   @Get(':id')

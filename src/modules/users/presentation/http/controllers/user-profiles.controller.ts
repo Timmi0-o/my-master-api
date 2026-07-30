@@ -38,7 +38,7 @@ import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload
 import { payloadToDeleteUserProfileImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-images-input';
 import { payloadToDeleteUserProfileBannerImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-banner-images-input';
 import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
-import { payloadToFindManyParams } from '../mappers/user-profile/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/user-profile/query-params-to-find-many-params.mapper';
 import { payloadToGetMyUserProfileInput } from '../mappers/user-profile/payload-to-get-my-user-profile-input';
 import { payloadToGetUserProfileByIdInput } from '../mappers/user-profile/payload-to-get-user-profile-by-id-input';
 import { payloadToPresignUserProfileImagesInput } from '../mappers/user-profile/payload-to-presign-user-profile-images-input';
@@ -79,13 +79,13 @@ export class UserProfilesController {
       errorMessage:
         'Некорректные параметры запроса списка профилей пользователей',
     })
-    payload: IGetUserProfilesQueryPayload,
+    queryParams: IGetUserProfilesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
     @AuthenticatedUser() user: ISessionUser,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getUserProfilesUseCase.execute(params, user.id);
-    return mapGetUserProfilesHttpResponse(output, payload);
+    return mapGetUserProfilesHttpResponse(output, queryParams);
   }
 
   @Get('me')

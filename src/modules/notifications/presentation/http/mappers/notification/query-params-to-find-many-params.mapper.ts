@@ -11,19 +11,19 @@ import { extractNotificationFilter } from './extract-notification-filter';
 import { presetToSelectOptions } from './preset-to-select-options.mapper';
 import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 
-export function payloadToFindManyParams(
-  payload: IGetNotificationsQueryPayload,
+export function queryParamsToFindManyParams(
+  queryParams: IGetNotificationsQueryPayload,
   metadata: IGetMetadata,
   actorUserId: string,
 ): FindManyParams<INotificationPublicEntity, INotificationRelations> {
   const filterWhere = extractNotificationFilter(
-    payload.filter,
+    queryParams.filter,
     metadata.isStaffUser,
   );
 
-  const orderField = payload.orderField ?? 'createdAt';
-  const orderDir = payload.orderDir ?? 'desc';
-  const includeArchived = payload.filter?.isArchived?.value === true;
+  const orderField = queryParams.orderField ?? 'createdAt';
+  const orderDir = queryParams.orderDir ?? 'desc';
+  const includeArchived = queryParams.filter?.isArchived?.value === true;
 
   return {
     where: {
@@ -37,13 +37,13 @@ export function payloadToFindManyParams(
       ...(filterWhere ?? {}),
     },
     slice: mapPaginationToSlice({
-      page: payload.page,
-      limit: payload.limit,
+      page: queryParams.page,
+      limit: queryParams.limit,
     }),
     orderBy: mapOrderBy<INotificationPublicEntity>({
       [orderField]: orderDir,
     }),
-    ...splitPresetReadOptions(presetToSelectOptions(payload.preset, metadata.isStaffUser)),
-    requiredIds: payload.requiredIds,
+    ...splitPresetReadOptions(presetToSelectOptions(queryParams.preset, metadata.isStaffUser)),
+    requiredIds: queryParams.requiredIds,
   };
 }

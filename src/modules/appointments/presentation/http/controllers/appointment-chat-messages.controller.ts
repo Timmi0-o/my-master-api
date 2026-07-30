@@ -28,7 +28,7 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToCreateAppointmentChatMessageInput } from '../mappers/appointment-chat-message/payload-to-create-appointment-chat-message-input';
 import { payloadToDeleteAppointmentChatMessageInput } from '../mappers/appointment-chat-message/payload-to-delete-appointment-chat-message-input';
-import { payloadToFindManyParams } from '../mappers/appointment-chat-message/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/appointment-chat-message/query-params-to-find-many-params.mapper';
 import { payloadToGetAppointmentChatMessageByIdInput } from '../mappers/appointment-chat-message/payload-to-get-appointment-chat-message-by-id-input';
 import { mapCreateAppointmentChatMessageHttpResponse } from '../response/map-create-appointment-chat-message-response';
 import { mapDeleteAppointmentChatMessageHttpResponse } from '../response/map-delete-appointment-chat-message-response';
@@ -55,12 +55,13 @@ export class AppointmentChatMessagesController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка сообщений',
     })
-    payload: IGetAppointmentChatMessagesQueryPayload,
+    queryParams: IGetAppointmentChatMessagesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
+
     const output = await this.getAppointmentChatMessagesUseCase.execute(params);
-    return mapGetAppointmentChatMessagesHttpResponse(output, payload);
+    return mapGetAppointmentChatMessagesHttpResponse(output, queryParams);
   }
 
   @Get(':id')

@@ -20,7 +20,7 @@ import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToDeleteAppointmentChatInput } from '../mappers/appointment-chat/payload-to-delete-appointment-chat-input';
-import { payloadToFindManyParams } from '../mappers/appointment-chat/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/appointment-chat/query-params-to-find-many-params.mapper';
 import { payloadToGetAppointmentChatByIdInput } from '../mappers/appointment-chat/payload-to-get-appointment-chat-by-id-input';
 import { mapDeleteAppointmentChatHttpResponse } from '../response/map-delete-appointment-chat-response';
 import { mapGetAppointmentChatByIdHttpResponse } from '../response/map-get-appointment-chat-by-id-response';
@@ -42,12 +42,12 @@ export class AppointmentChatsController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка чатов записей',
     })
-    payload: IGetAppointmentChatsQueryPayload,
+    queryParams: IGetAppointmentChatsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getAppointmentChatsUseCase.execute(params);
-    return mapGetAppointmentChatsHttpResponse(output, payload);
+    return mapGetAppointmentChatsHttpResponse(output, queryParams);
   }
 
   @Get(':id')

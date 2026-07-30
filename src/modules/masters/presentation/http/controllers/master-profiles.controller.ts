@@ -40,7 +40,7 @@ import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/pay
 import { payloadToDeleteMasterProfileImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-images-input';
 import { payloadToDeleteMasterProfileBannerImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-banner-images-input';
 import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
-import { payloadToFindManyParams } from '../mappers/master-profile/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/master-profile/query-params-to-find-many-params.mapper';
 import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
 import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
 import { payloadToPresignMasterProfileImagesInput } from '../mappers/master-profile/payload-to-presign-master-profile-images-input';
@@ -78,16 +78,16 @@ export class MasterProfilesController {
       errorMessage:
         'Некорректные параметры запроса списка профилей мастеров',
     })
-    payload: IGetMasterProfilesQueryPayload,
+    queryParams: IGetMasterProfilesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
     @CurrentUser() user: ISessionUser | null,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterProfilesUseCase.execute(
       params,
       user?.id,
     );
-    return mapGetMasterProfilesHttpResponse(output, payload);
+    return mapGetMasterProfilesHttpResponse(output, queryParams);
   }
 
   @Get('me')

@@ -19,7 +19,7 @@ import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decor
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { payloadToAssignUserRoleInput } from '../mappers/user/payload-to-assign-user-role-input';
-import { payloadToFindManyParams } from '../mappers/user/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/user/query-params-to-find-many-params.mapper';
 import { mapGetUsersHttpResponse } from '../response/map-get-users-response';
 import { mapAssignUserRoleHttpResponse } from '../response/map-assign-user-role-response';
 
@@ -38,12 +38,12 @@ export class UsersController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка пользователей',
     })
-    payload: IGetUsersQueryPayload,
+    queryParams: IGetUsersQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getUsersUseCase.execute(params);
-    return mapGetUsersHttpResponse(output, payload);
+    return mapGetUsersHttpResponse(output, queryParams);
   }
 
   @Patch(':id/role')

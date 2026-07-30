@@ -40,7 +40,7 @@ import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normali
 import { payloadToCreateMasterServiceInput } from '../mappers/master-service/payload-to-create-master-service-input';
 import { payloadToDeleteMasterServiceImagesInput } from '../mappers/master-service/payload-to-delete-master-service-images-input';
 import { payloadToDeleteMasterServiceInput } from '../mappers/master-service/payload-to-delete-master-service-input';
-import { payloadToFindManyParams } from '../mappers/master-service/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/master-service/query-params-to-find-many-params.mapper';
 import { payloadToFindMyServicesParams } from '../mappers/master-service/payload-to-find-my-services-params.mapper';
 import { payloadToGetMasterServiceByIdInput } from '../mappers/master-service/payload-to-get-master-service-by-id-input';
 import { payloadToGetMyServicesInput } from '../mappers/master-service/payload-to-get-my-services-input';
@@ -77,12 +77,12 @@ export class MasterServicesController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка услуг мастеров',
     })
-    payload: IGetMasterServicesQueryPayload,
+    queryParams: IGetMasterServicesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata);
+    const params = queryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterServicesUseCase.execute(params);
-    return mapGetMasterServicesHttpResponse(output, payload);
+    return mapGetMasterServicesHttpResponse(output, queryParams);
   }
 
   @Get('my')

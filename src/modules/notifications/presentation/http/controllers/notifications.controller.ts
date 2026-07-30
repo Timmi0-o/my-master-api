@@ -29,7 +29,7 @@ import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normali
 import { Observable, filter, interval, map, merge } from 'rxjs';
 import { payloadToArchiveNotificationInput } from '../mappers/notification/payload-to-archive-notification-input';
 import { payloadToDeleteNotificationInput } from '../mappers/notification/payload-to-delete-notification-input';
-import { payloadToFindManyParams } from '../mappers/notification/payload-to-find-many-params.mapper';
+import { queryParamsToFindManyParams } from '../mappers/notification/query-params-to-find-many-params.mapper';
 import { payloadToGetNotificationByIdInput } from '../mappers/notification/payload-to-get-notification-by-id-input';
 import { payloadToGetUnreadNotificationsCountInput } from '../mappers/notification/payload-to-get-unread-notifications-count-input';
 import { payloadToMarkAllNotificationsReadInput } from '../mappers/notification/payload-to-mark-all-notifications-read-input';
@@ -69,13 +69,13 @@ export class NotificationsController {
       preprocess: normalizeListQueryRaw,
       errorMessage: 'Некорректные параметры запроса списка уведомлений',
     })
-    payload: IGetNotificationsQueryPayload,
+    queryParams: IGetNotificationsQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindManyParams(payload, metadata, user.id);
+    const params = queryParamsToFindManyParams(queryParams, metadata, user.id);
     const output = await this.getNotificationsUseCase.execute(params);
-    return mapGetNotificationsHttpResponse(output, payload);
+    return mapGetNotificationsHttpResponse(output, queryParams);
   }
 
   @Get('unread-count')
