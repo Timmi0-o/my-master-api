@@ -4,7 +4,7 @@ import { GetPermissionsUseCase } from '@modules/authorization/application/use-ca
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
-import { mapGetPermissionsHttpResponse } from '../response/map-get-permissions-response';
+import { mapGetPermissionsHttpResponse } from '../http-responses/map-get-permissions-response';
 
 @Controller({ path: 'permissions', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)

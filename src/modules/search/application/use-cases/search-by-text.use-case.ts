@@ -1,8 +1,8 @@
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service';
 import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
-import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/mappers/master-profile/preset-to-select-options.mapper';
-import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/mappers/master-service/preset-to-select-options.mapper';
+import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-profile/preset-to-select-options.mapper';
+import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-service/preset-to-select-options.mapper';
 import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 import type {
   ISearchByTextApplicationInput,

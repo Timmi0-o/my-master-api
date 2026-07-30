@@ -25,16 +25,16 @@ import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateMasterServiceReviewInput } from '../mappers/master-service-review/payload-to-create-master-service-review-input';
-import { payloadToDeleteMasterServiceReviewInput } from '../mappers/master-service-review/payload-to-delete-master-service-review-input';
-import { queryParamsToFindManyParams } from '../mappers/master-service-review/query-params-to-find-many-params.mapper';
-import { payloadToGetMasterServiceReviewByIdInput } from '../mappers/master-service-review/payload-to-get-master-service-review-by-id-input';
-import { payloadToUpdateMasterServiceReviewInput } from '../mappers/master-service-review/payload-to-update-master-service-review-input';
-import { mapCreateMasterServiceReviewHttpResponse } from '../response/map-create-master-service-review-response';
-import { mapDeleteMasterServiceReviewHttpResponse } from '../response/map-delete-master-service-review-response';
-import { mapGetMasterServiceReviewByIdHttpResponse } from '../response/map-get-master-service-review-by-id-response';
-import { mapGetMasterServiceReviewsHttpResponse } from '../response/map-get-master-service-reviews-response';
-import { mapUpdateMasterServiceReviewHttpResponse } from '../response/map-update-master-service-review-response';
+import { requestBodyToCreateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-create-master-service-review-use-case-input';
+import { requestParamsToDeleteMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-params-to-delete-master-service-review-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput } from '../request-mappers/master-service-review/request-query-params-to-get-master-service-review-by-id-use-case-input';
+import { requestBodyToUpdateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-update-master-service-review-use-case-input';
+import { mapCreateMasterServiceReviewHttpResponse } from '../http-responses/map-create-master-service-review-response';
+import { mapDeleteMasterServiceReviewHttpResponse } from '../http-responses/map-delete-master-service-review-response';
+import { mapGetMasterServiceReviewByIdHttpResponse } from '../http-responses/map-get-master-service-review-by-id-response';
+import { mapGetMasterServiceReviewsHttpResponse } from '../http-responses/map-get-master-service-reviews-response';
+import { mapUpdateMasterServiceReviewHttpResponse } from '../http-responses/map-update-master-service-review-response';
 
 @Controller({ path: 'master-service-reviews', version: '1' })
 export class MasterServiceReviewsController {
@@ -57,7 +57,7 @@ export class MasterServiceReviewsController {
     queryParams: IGetMasterServiceReviewsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterServiceReviewsUseCase.execute(params);
     return mapGetMasterServiceReviewsHttpResponse(output, queryParams);
   }
@@ -76,7 +76,7 @@ export class MasterServiceReviewsController {
     queryPayload: IGetByIdQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterServiceReviewByIdInput(
+    const input = requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput(
       params.id,
       queryPayload,
       metadata.isStaffUser,
@@ -96,7 +96,7 @@ export class MasterServiceReviewsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateMasterServiceReviewInput(
+    const input = requestBodyToCreateMasterServiceReviewUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -121,7 +121,7 @@ export class MasterServiceReviewsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateMasterServiceReviewInput(
+    const input = requestBodyToUpdateMasterServiceReviewUseCaseInput(
       params.id,
       payload,
       user,
@@ -144,7 +144,7 @@ export class MasterServiceReviewsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterServiceReviewInput(
+    const input = requestParamsToDeleteMasterServiceReviewUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

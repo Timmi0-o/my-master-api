@@ -27,20 +27,20 @@ import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { Observable, filter, interval, map, merge } from 'rxjs';
-import { payloadToArchiveNotificationInput } from '../mappers/notification/payload-to-archive-notification-input';
-import { payloadToDeleteNotificationInput } from '../mappers/notification/payload-to-delete-notification-input';
-import { queryParamsToFindManyParams } from '../mappers/notification/query-params-to-find-many-params.mapper';
-import { payloadToGetNotificationByIdInput } from '../mappers/notification/payload-to-get-notification-by-id-input';
-import { payloadToGetUnreadNotificationsCountInput } from '../mappers/notification/payload-to-get-unread-notifications-count-input';
-import { payloadToMarkAllNotificationsReadInput } from '../mappers/notification/payload-to-mark-all-notifications-read-input';
-import { payloadToMarkNotificationReadInput } from '../mappers/notification/payload-to-mark-notification-read-input';
-import { mapArchiveNotificationHttpResponse } from '../response/map-archive-notification-response';
-import { mapDeleteNotificationHttpResponse } from '../response/map-delete-notification-response';
-import { mapGetNotificationByIdHttpResponse } from '../response/map-get-notification-by-id-response';
-import { mapGetNotificationsHttpResponse } from '../response/map-get-notifications-response';
-import { mapGetUnreadNotificationsCountHttpResponse } from '../response/map-get-unread-notifications-count-response';
-import { mapMarkAllNotificationsReadHttpResponse } from '../response/map-mark-all-notifications-read-response';
-import { mapMarkNotificationReadHttpResponse } from '../response/map-mark-notification-read-response';
+import { requestParamsToArchiveNotificationUseCaseInput } from '../request-mappers/notification/request-params-to-archive-notification-use-case-input';
+import { requestParamsToDeleteNotificationUseCaseInput } from '../request-mappers/notification/request-params-to-delete-notification-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/notification/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetNotificationByIdUseCaseInput } from '../request-mappers/notification/request-query-params-to-get-notification-by-id-use-case-input';
+import { requestParamsToGetUnreadNotificationsCountUseCaseInput } from '../request-mappers/notification/request-params-to-get-unread-notifications-count-use-case-input';
+import { requestParamsToMarkAllNotificationsReadUseCaseInput } from '../request-mappers/notification/request-params-to-mark-all-notifications-read-use-case-input';
+import { requestParamsToMarkNotificationReadUseCaseInput } from '../request-mappers/notification/request-params-to-mark-notification-read-use-case-input';
+import { mapArchiveNotificationHttpResponse } from '../http-responses/map-archive-notification-response';
+import { mapDeleteNotificationHttpResponse } from '../http-responses/map-delete-notification-response';
+import { mapGetNotificationByIdHttpResponse } from '../http-responses/map-get-notification-by-id-response';
+import { mapGetNotificationsHttpResponse } from '../http-responses/map-get-notifications-response';
+import { mapGetUnreadNotificationsCountHttpResponse } from '../http-responses/map-get-unread-notifications-count-response';
+import { mapMarkAllNotificationsReadHttpResponse } from '../http-responses/map-mark-all-notifications-read-response';
+import { mapMarkNotificationReadHttpResponse } from '../http-responses/map-mark-notification-read-response';
 import { getByIdQuerySchema } from '../validation/schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from '../validation/schemas/get-by-id-query.types';
 import { getNotificationsQuerySchema } from '../validation/schemas/get-notifications-query.schema';
@@ -73,7 +73,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata, user.id);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata, user.id);
     const output = await this.getNotificationsUseCase.execute(params);
     return mapGetNotificationsHttpResponse(output, queryParams);
   }
@@ -83,7 +83,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetUnreadNotificationsCountInput(
+    const input = requestParamsToGetUnreadNotificationsCountUseCaseInput(
       user,
       metadata.isStaffUser,
     );
@@ -124,7 +124,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToMarkAllNotificationsReadInput(
+    const input = requestParamsToMarkAllNotificationsReadUseCaseInput(
       user,
       metadata.isStaffUser,
     );
@@ -146,7 +146,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetNotificationByIdInput(
+    const input = requestQueryParamsToGetNotificationByIdUseCaseInput(
       params.id,
       queryPayload,
       metadata.isStaffUser,
@@ -166,7 +166,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToMarkNotificationReadInput(
+    const input = requestParamsToMarkNotificationReadUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,
@@ -185,7 +185,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToArchiveNotificationInput(
+    const input = requestParamsToArchiveNotificationUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,
@@ -204,7 +204,7 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteNotificationInput(
+    const input = requestParamsToDeleteNotificationUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

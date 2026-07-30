@@ -33,9 +33,9 @@ import {
   mapLoginHttpResponse,
   mapRefreshHttpResponse,
   mapRegisterHttpResponse,
-} from '../response/map-auth-response';
-import { mapGetMeHttpResponse } from '../response/map-get-me-response';
-import { mapLogoutHttpResponse } from '../response/map-logout-response';
+} from '../http-responses/map-auth-response';
+import { mapGetMeHttpResponse } from '../http-responses/map-get-me-response';
+import { mapLogoutHttpResponse } from '../http-responses/map-logout-response';
 
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {

@@ -1,0 +1,58 @@
+---
+description: Strict naming for HTTP request → use-case mappers (body / query / params)
+globs: "**/presentation/**/request-mappers/**/*.ts"
+alwaysApply: false
+---
+
+# HTTP request mappers — naming (strict)
+
+Папки presentation:
+
+- request → `presentation/http/request-mappers/` (не `mappers/`)
+- response → `presentation/http/http-responses/` (не `response/`)
+
+В `presentation/http/request-mappers/` **запрещён** префикс `payload-to-*` / `payloadTo*`.
+
+Мапперы в use-case **всегда** заканчиваются на `use-case-input` / `UseCaseInput` (не просто `input` / `Input`).
+
+| Источник | Файл | Функция |
+|----------|------|---------|
+| `@HttpBody` | `request-body-to-<action>-use-case-input.ts` | `requestBodyTo<Action>UseCaseInput` |
+| `@HttpQuery` (GET list/by-id/search) | `request-query-params-to-<action>-use-case-input.ts` | `requestQueryParamsTo<Action>UseCaseInput` |
+| Только `@HttpParams` / session (delete, complete, mark-read, …) | `request-params-to-<action>-use-case-input.ts` | `requestParamsTo<Action>UseCaseInput` |
+
+## Query specifics
+
+- List → `FindManyParams`: `request-query-params-to-find-many-params.mapper.ts` / `requestQueryParamsToFindManyParams` (не use-case-input — это не `I*ApplicationInput`)
+- GET by id: `request-query-params-to-get-<entity>-by-id-use-case-input.ts` / `requestQueryParamsToGet<Entity>ByIdUseCaseInput`
+- Другой GET из query: `request-query-params-to-get-<…>-use-case-input.ts`, `…-to-search-…-use-case-input`, `…-to-find-…`, `…-to-query-…`
+
+## Compose после list-mapper
+
+Если mapper принимает уже готовый `FindManyParams` (+ actor), а не raw query:
+
+- Файл: `find-many-params-to-get-<…>-use-case-input.ts`
+- Функция: `findManyParamsToGet<…>UseCaseInput`
+
+## Примеры
+
+```ts
+// body
+request-body-to-create-favorite-master-service-use-case-input.ts
+requestBodyToCreateFavoriteMasterServiceUseCaseInput
+
+// query GET by id
+request-query-params-to-get-appointment-chat-by-id-use-case-input.ts
+requestQueryParamsToGetAppointmentChatByIdUseCaseInput
+
+// path params only
+request-params-to-delete-appointment-chat-use-case-input.ts
+requestParamsToDeleteAppointmentChatUseCaseInput
+```
+
+## Не путать
+
+- Zod/AJV типы payload (`I*Payload`, `*-payload.schema.ts`) — без переименования.
+- Application DTO: `I*ApplicationInput` — без суффикса UseCase в типе.
+- Response: `http-responses/map-*-response.ts`.
+- Orchestration: `output-*-to-*-use-case-input.ts` / `output*To*UseCaseInput`.

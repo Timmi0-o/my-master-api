@@ -26,14 +26,14 @@ import {
 } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateMasterSubscriptionInput } from '../mappers/master-subscription/payload-to-create-master-subscription-input';
-import { payloadToDeleteMasterSubscriptionInput } from '../mappers/master-subscription/payload-to-delete-master-subscription-input';
-import { queryParamsToFindManyParams } from '../mappers/master-subscription/query-params-to-find-many-params.mapper';
-import { payloadToGetMasterSubscriptionByIdInput } from '../mappers/master-subscription/payload-to-get-master-subscription-by-id-input';
-import { mapCreateMasterSubscriptionHttpResponse } from '../response/map-create-master-subscription-response';
-import { mapDeleteMasterSubscriptionHttpResponse } from '../response/map-delete-master-subscription-response';
-import { mapGetMasterSubscriptionByIdHttpResponse } from '../response/map-get-master-subscription-by-id-response';
-import { mapGetMasterSubscriptionsHttpResponse } from '../response/map-get-master-subscriptions-response';
+import { requestBodyToCreateMasterSubscriptionUseCaseInput } from '../request-mappers/master-subscription/request-body-to-create-master-subscription-use-case-input';
+import { requestParamsToDeleteMasterSubscriptionUseCaseInput } from '../request-mappers/master-subscription/request-params-to-delete-master-subscription-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-subscription/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterSubscriptionByIdUseCaseInput } from '../request-mappers/master-subscription/request-query-params-to-get-master-subscription-by-id-use-case-input';
+import { mapCreateMasterSubscriptionHttpResponse } from '../http-responses/map-create-master-subscription-response';
+import { mapDeleteMasterSubscriptionHttpResponse } from '../http-responses/map-delete-master-subscription-response';
+import { mapGetMasterSubscriptionByIdHttpResponse } from '../http-responses/map-get-master-subscription-by-id-response';
+import { mapGetMasterSubscriptionsHttpResponse } from '../http-responses/map-get-master-subscriptions-response';
 
 @Controller({ path: 'master-subscriptions', version: '1' })
 export class MasterSubscriptionsController {
@@ -55,7 +55,7 @@ export class MasterSubscriptionsController {
     queryParams: IGetMasterSubscriptionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterSubscriptionsUseCase.execute(params);
     return mapGetMasterSubscriptionsHttpResponse(output, queryParams);
   }
@@ -74,7 +74,7 @@ export class MasterSubscriptionsController {
     queryPayload: IGetByIdQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterSubscriptionByIdInput(
+    const input = requestQueryParamsToGetMasterSubscriptionByIdUseCaseInput(
       params.id,
       queryPayload,
       metadata.isStaffUser,
@@ -94,7 +94,7 @@ export class MasterSubscriptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateMasterSubscriptionInput(
+    const input = requestBodyToCreateMasterSubscriptionUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -115,7 +115,7 @@ export class MasterSubscriptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterSubscriptionInput(
+    const input = requestParamsToDeleteMasterSubscriptionUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

@@ -4,8 +4,8 @@ import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.
 import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeParams } from '@shared/presentation/http/helpers/normalize-id-param';
 import type { Request } from 'express';
-import { payloadToGetFileShareInput } from '../mappers/file-share/payload-to-get-file-share-input';
-import { mapGetFileShareByTokenHttpResponse } from '../response/map-files-http-response';
+import { requestQueryParamsToGetFileShareUseCaseInput } from '../request-mappers/file-share/request-query-params-to-get-file-share-use-case-input';
+import { mapGetFileShareByTokenHttpResponse } from '../http-responses/map-files-http-response';
 import { fileShareTokenParamSchema } from '../validation/schemas/file-share-token-param.schema';
 import type { IFileShareTokenParamPayload } from '../validation/schemas/file-share-token-param.types';
 import { getFileShareQuerySchema } from '../validation/schemas/get-file-share-query.schema';
@@ -33,7 +33,7 @@ export class FileSharesController {
       (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
       req.ip;
 
-    const input = payloadToGetFileShareInput(params.token, {
+    const input = requestQueryParamsToGetFileShareUseCaseInput(params.token, {
       ...query,
       clientIp,
     });

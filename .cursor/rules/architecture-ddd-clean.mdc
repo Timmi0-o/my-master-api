@@ -37,22 +37,25 @@ alwaysApply: false
 - Use-case возвращает `I*ApplicationOutput`, не HTTP-ответ.
 - **Use-case не вызывает другой use-case** — оркестрация нескольких use-case только в controller (без репозиториев).
 - **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/<entity>/`.
-- HTTP: `@HttpBody` / `@HttpQuery` / `@HttpParams` (AJV schema) → `payload-to-*-input.ts` в `presentation/http/mappers/<entity>/` → `useCase.execute(input)`.
-- Оркестрация в controller: после `execute` первого use-case — `output-*-to-*-input.ts` → `secondUseCase.execute(...)`.
+- HTTP: `@HttpBody` / `@HttpQuery` / `@HttpParams` (AJV schema) → request mapper в `presentation/http/request-mappers/<entity>/` → `useCase.execute(input)`.
+- Именование request-мапперов (strict): `request-body-to-*` | `request-query-params-to-*` | `request-params-to-*` — см. `http-request-mappers.mdc`.
+- Оркестрация в controller: после `execute` первого use-case — `output-*-to-*-use-case-input.ts` → `secondUseCase.execute(...)`.
 - Mutate/get-by-id: `actor: { userId, isStaffUser }` внутри application input.
-- List: `query-params-to-find-many-params.mapper.ts` → `FindManyParams` (без actor, visibility в mapper).
-- Shared: `mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.
+- List: `request-query-params-to-find-many-params.mapper.ts` → `FindManyParams` (без actor, visibility в mapper).
+- Shared: `request-mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.
 
 ## Presentation mappers
 
 | Тип | Файл | Функция | Когда |
 |-----|------|---------|-------|
-| HTTP → use-case | `payload-to-create-user-profile-input.ts` | `payloadToCreateUserProfileInput` | validator payload + session → `I*ApplicationInput` |
-| Output → use-case | `output-create-user-profile-to-create-root-folder-input.ts` | `outputCreateUserProfileToCreateRootFolderInput` | output (и при необходимости исходный input) первого use-case → input второго |
+| Body → use-case | `request-body-to-create-user-profile-use-case-input.ts` | `requestBodyToCreateUserProfileUseCaseInput` | `@HttpBody` + session → `I*ApplicationInput` |
+| Query → use-case | `request-query-params-to-get-user-profile-by-id-use-case-input.ts` | `requestQueryParamsToGetUserProfileByIdUseCaseInput` | `@HttpQuery` (+ params) → `I*ApplicationInput` |
+| Params → use-case | `request-params-to-delete-user-profile-use-case-input.ts` | `requestParamsToDeleteUserProfileUseCaseInput` | `@HttpParams` / session only |
+| Output → use-case | `output-create-user-profile-to-create-root-folder-use-case-input.ts` | `outputCreateUserProfileToCreateRootFolderUseCaseInput` | output (и при необходимости исходный input) первого use-case → input второго |
 
 Правила именования orchestration-мапперов:
-- Файл: `output-<source-use-case-kebab>-to-<target-use-case-kebab>-input.ts`
-- Функция: camelCase того же пути — `outputCreateUserProfileToCreateRootFolderInput`
+- Файл: `output-<source-use-case-kebab>-to-<target-use-case-kebab>-use-case-input.ts`
+- Функция: camelCase того же пути — `outputCreateUserProfileToCreateRootFolderUseCaseInput`
 - Не использовать префикс `to*` для таких мапперов.
 
 ## RBAC (authorization module)

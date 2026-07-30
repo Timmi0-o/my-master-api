@@ -27,7 +27,7 @@ Auth-модули (session, refresh) — плоский Prisma без базы, 
 
 ## Пресеты (inline в presentation)
 
-Файл `presentation/http/mappers/<entity>/preset-to-select-options.mapper.ts`:
+Файл `presentation/http/request-mappers/<entity>/preset-to-select-options.mapper.ts`:
 
 ```typescript
 const PRESETS: Record<TPresetType, SelectOptions<T, R>> = {
@@ -52,7 +52,7 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 
 ## Query → FindManyParams
 
-`presentation/http/mappers/<entity>/query-params-to-find-many-params.mapper.ts`:
+`presentation/http/request-mappers/<entity>/request-query-params-to-find-many-params.mapper.ts`:
 
 1. `extract-<entity>-filter` → `WhereFilter` (через `queryFilterBuildManager`)
 2. visibility (`deletedAt: null` для non-staff)
@@ -65,9 +65,9 @@ export function presetToSelectOptions(preset, isStaffUser) { ... }
 
 List mapper на сущность:
 - `extract-<entity>-filter.ts` — `stripStaffOnlyFilterFieldsForNonStaff(..., *_STAFF_ONLY_FIELDS)` → `queryFilterBuildManager(parts, config)` → `finalizeWhereFilterParts(parts)`. Config items: `search` | `stringArray` | `dateRange` | `numberRange` | `nullStatus`. Field mappers (`mapSearchByFields`, `mapStringArrayFilter`, …) вызываются только из manager.
-- `query-params-to-find-many-params.mapper.ts` — export `queryParamsToFindManyParams`, `where: { ...(non-staff ? { deletedAt: null } : {}), ...filterWhere }`
+- `request-query-params-to-find-many-params.mapper.ts` — export `requestQueryParamsToFindManyParams`, `where: { ...(non-staff ? { deletedAt: null } : {}), ...filterWhere }`
 
-Именование: `preset-to-select-options.mapper.ts`, `payload-to-*-input.ts`.
+Именование: `preset-to-select-options.mapper.ts`; request mappers — `request-body-to-*` / `request-query-params-to-*` / `request-params-to-*` (см. `http-request-mappers.mdc`).
 
 Use-case получает готовый `FindManyParams` и вызывает только порт репозитория.
 
@@ -130,5 +130,5 @@ Controller не собирает Prisma args и не знает про presets �
 Кратко для query-слоя после domain + repository:
 
 1. `preset-to-select-options` (inline MINIMAL/SHORT/BASE) + `extract-*-filter` в presentation
-2. `query-params-to-find-many-params` + `*_VALIDATION_CONFIG` в `*.relations.ts`
+2. `request-query-params-to-find-many-params` + `*_VALIDATION_CONFIG` в `*.relations.ts`
 3. Use-cases get many / get by id; RN list с relations — `preset: 'BASE'`

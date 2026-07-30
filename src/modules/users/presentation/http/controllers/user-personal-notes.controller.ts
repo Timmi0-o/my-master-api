@@ -13,10 +13,10 @@ import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams } from '@shared/presentation/http/decorators';
-import { payloadToGetUserPersonalNoteByReferenceInput } from '../mappers/user-personal-note/payload-to-get-user-personal-note-by-reference-input';
-import { payloadToUpsertUserPersonalNoteInput } from '../mappers/user-personal-note/payload-to-upsert-user-personal-note-input';
-import { mapGetUserPersonalNoteByReferenceHttpResponse } from '../response/map-get-user-personal-note-by-reference-response';
-import { mapUserPersonalNoteHttpResponse } from '../response/map-user-personal-note-http-response';
+import { requestParamsToGetUserPersonalNoteByReferenceUseCaseInput } from '../request-mappers/user-personal-note/request-params-to-get-user-personal-note-by-reference-use-case-input';
+import { requestBodyToUpsertUserPersonalNoteUseCaseInput } from '../request-mappers/user-personal-note/request-body-to-upsert-user-personal-note-use-case-input';
+import { mapGetUserPersonalNoteByReferenceHttpResponse } from '../http-responses/map-get-user-personal-note-by-reference-response';
+import { mapUserPersonalNoteHttpResponse } from '../http-responses/map-user-personal-note-http-response';
 
 @Controller({ path: 'user-personal-notes', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -36,7 +36,7 @@ export class UserPersonalNotesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetUserPersonalNoteByReferenceInput(
+    const input = requestParamsToGetUserPersonalNoteByReferenceUseCaseInput(
       params.referenceUserId,
       user,
       metadata.isStaffUser,
@@ -55,7 +55,7 @@ export class UserPersonalNotesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpsertUserPersonalNoteInput(
+    const input = requestBodyToUpsertUserPersonalNoteUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,

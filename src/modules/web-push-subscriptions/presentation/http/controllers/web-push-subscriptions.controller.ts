@@ -12,13 +12,13 @@ import type { ISessionUser } from '@shared/domain/i-session-user';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
-import { payloadToDeleteWebPushSubscriptionInput } from '../mappers/web-push-subscription/payload-to-delete-web-push-subscription-input';
-import { payloadToGetMyWebPushSubscriptionsInput } from '../mappers/web-push-subscription/payload-to-get-my-web-push-subscriptions-input';
-import { payloadToUpsertWebPushSubscriptionInput } from '../mappers/web-push-subscription/payload-to-upsert-web-push-subscription-input';
-import { mapDeleteWebPushSubscriptionHttpResponse } from '../response/map-delete-web-push-subscription-response';
-import { mapGetMyWebPushSubscriptionsHttpResponse } from '../response/map-get-my-web-push-subscriptions-response';
-import { mapGetVapidPublicKeyHttpResponse } from '../response/map-get-vapid-public-key-response';
-import { mapUpsertWebPushSubscriptionHttpResponse } from '../response/map-upsert-web-push-subscription-response';
+import { requestParamsToDeleteWebPushSubscriptionUseCaseInput } from '../request-mappers/web-push-subscription/request-params-to-delete-web-push-subscription-use-case-input';
+import { requestParamsToGetMyWebPushSubscriptionsUseCaseInput } from '../request-mappers/web-push-subscription/request-params-to-get-my-web-push-subscriptions-use-case-input';
+import { requestBodyToUpsertWebPushSubscriptionUseCaseInput } from '../request-mappers/web-push-subscription/request-body-to-upsert-web-push-subscription-use-case-input';
+import { mapDeleteWebPushSubscriptionHttpResponse } from '../http-responses/map-delete-web-push-subscription-response';
+import { mapGetMyWebPushSubscriptionsHttpResponse } from '../http-responses/map-get-my-web-push-subscriptions-response';
+import { mapGetVapidPublicKeyHttpResponse } from '../http-responses/map-get-vapid-public-key-response';
+import { mapUpsertWebPushSubscriptionHttpResponse } from '../http-responses/map-upsert-web-push-subscription-response';
 import { idParamSchema } from '../validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '../validation/schemas/id-param.types';
 import { upsertWebPushSubscriptionPayloadSchema } from '../validation/schemas/upsert-web-push-subscription-payload.schema';
@@ -46,7 +46,7 @@ export class WebPushSubscriptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMyWebPushSubscriptionsInput(
+    const input = requestParamsToGetMyWebPushSubscriptionsUseCaseInput(
       user,
       metadata.isStaffUser,
     );
@@ -63,7 +63,7 @@ export class WebPushSubscriptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpsertWebPushSubscriptionInput(
+    const input = requestBodyToUpsertWebPushSubscriptionUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -82,7 +82,7 @@ export class WebPushSubscriptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteWebPushSubscriptionInput(
+    const input = requestParamsToDeleteWebPushSubscriptionUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

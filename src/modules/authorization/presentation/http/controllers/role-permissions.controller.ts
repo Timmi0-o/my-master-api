@@ -17,11 +17,11 @@ import {
   normalizeIdParam,
   normalizeParams,
 } from '@shared/presentation/http/helpers/normalize-id-param';
-import { payloadToGrantRolePermissionInput } from '../mappers/role-permission/payload-to-grant-role-permission-input';
-import { paramsToRevokeRolePermissionInput } from '../mappers/role-permission/params-to-revoke-role-permission-input';
-import { mapGetRolePermissionsHttpResponse } from '../response/map-get-role-permissions-response';
-import { mapGrantRolePermissionHttpResponse } from '../response/map-grant-role-permission-response';
-import { mapRevokeRolePermissionHttpResponse } from '../response/map-revoke-role-permission-response';
+import { requestBodyToGrantRolePermissionUseCaseInput } from '../request-mappers/role-permission/request-body-to-grant-role-permission-use-case-input';
+import { paramsToRevokeRolePermissionUseCaseInput } from '../request-mappers/role-permission/params-to-revoke-role-permission-use-case-input';
+import { mapGetRolePermissionsHttpResponse } from '../http-responses/map-get-role-permissions-response';
+import { mapGrantRolePermissionHttpResponse } from '../http-responses/map-grant-role-permission-response';
+import { mapRevokeRolePermissionHttpResponse } from '../http-responses/map-revoke-role-permission-response';
 
 @Controller({ path: 'roles/:roleId/permissions', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -60,7 +60,7 @@ export class RolePermissionsController {
     })
     payload: IGrantRolePermissionPayload,
   ) {
-    const input = payloadToGrantRolePermissionInput(params.roleId, payload);
+    const input = requestBodyToGrantRolePermissionUseCaseInput(params.roleId, payload);
     const output = await this.grantRolePermissionUseCase.execute(input);
     return mapGrantRolePermissionHttpResponse(output);
   }
@@ -74,7 +74,7 @@ export class RolePermissionsController {
     })
     params: IRolePermissionParamsPayload,
   ) {
-    const input = paramsToRevokeRolePermissionInput(
+    const input = paramsToRevokeRolePermissionUseCaseInput(
       params.roleId,
       params.permissionId,
     );

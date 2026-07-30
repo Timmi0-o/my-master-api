@@ -24,16 +24,16 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-create-master-schedule-exception-input';
-import { payloadToDeleteMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-delete-master-schedule-exception-input';
-import { queryParamsToFindManyParams } from '../mappers/master-schedule-exception/query-params-to-find-many-params.mapper';
-import { payloadToGetMasterScheduleExceptionByIdInput } from '../mappers/master-schedule-exception/payload-to-get-master-schedule-exception-by-id-input';
-import { payloadToUpdateMasterScheduleExceptionInput } from '../mappers/master-schedule-exception/payload-to-update-master-schedule-exception-input';
-import { mapCreateMasterScheduleExceptionHttpResponse } from '../response/map-create-master-schedule-exception-response';
-import { mapDeleteMasterScheduleExceptionHttpResponse } from '../response/map-delete-master-schedule-exception-response';
-import { mapGetMasterScheduleExceptionByIdHttpResponse } from '../response/map-get-master-schedule-exception-by-id-response';
-import { mapGetMasterScheduleExceptionsHttpResponse } from '../response/map-get-master-schedule-exceptions-response';
-import { mapUpdateMasterScheduleExceptionHttpResponse } from '../response/map-update-master-schedule-exception-response';
+import { requestBodyToCreateMasterScheduleExceptionUseCaseInput } from '../request-mappers/master-schedule-exception/request-body-to-create-master-schedule-exception-use-case-input';
+import { requestParamsToDeleteMasterScheduleExceptionUseCaseInput } from '../request-mappers/master-schedule-exception/request-params-to-delete-master-schedule-exception-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-schedule-exception/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterScheduleExceptionByIdUseCaseInput } from '../request-mappers/master-schedule-exception/request-query-params-to-get-master-schedule-exception-by-id-use-case-input';
+import { requestBodyToUpdateMasterScheduleExceptionUseCaseInput } from '../request-mappers/master-schedule-exception/request-body-to-update-master-schedule-exception-use-case-input';
+import { mapCreateMasterScheduleExceptionHttpResponse } from '../http-responses/map-create-master-schedule-exception-response';
+import { mapDeleteMasterScheduleExceptionHttpResponse } from '../http-responses/map-delete-master-schedule-exception-response';
+import { mapGetMasterScheduleExceptionByIdHttpResponse } from '../http-responses/map-get-master-schedule-exception-by-id-response';
+import { mapGetMasterScheduleExceptionsHttpResponse } from '../http-responses/map-get-master-schedule-exceptions-response';
+import { mapUpdateMasterScheduleExceptionHttpResponse } from '../http-responses/map-update-master-schedule-exception-response';
 
 @Controller({ path: 'master-schedule-exceptions', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -57,7 +57,7 @@ export class MasterScheduleExceptionsController {
     queryParams: IGetMasterScheduleExceptionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output =
       await this.getMasterScheduleExceptionsUseCase.execute(params);
     return mapGetMasterScheduleExceptionsHttpResponse(output, queryParams);
@@ -78,7 +78,7 @@ export class MasterScheduleExceptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterScheduleExceptionByIdInput(
+    const input = requestQueryParamsToGetMasterScheduleExceptionByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -100,7 +100,7 @@ export class MasterScheduleExceptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateMasterScheduleExceptionInput(
+    const input = requestBodyToCreateMasterScheduleExceptionUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -126,7 +126,7 @@ export class MasterScheduleExceptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateMasterScheduleExceptionInput(
+    const input = requestBodyToUpdateMasterScheduleExceptionUseCaseInput(
       params.id,
       payload,
       user,
@@ -148,7 +148,7 @@ export class MasterScheduleExceptionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterScheduleExceptionInput(
+    const input = requestParamsToDeleteMasterScheduleExceptionUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

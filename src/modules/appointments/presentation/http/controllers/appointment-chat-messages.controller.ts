@@ -26,14 +26,14 @@ import {
 } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateAppointmentChatMessageInput } from '../mappers/appointment-chat-message/payload-to-create-appointment-chat-message-input';
-import { payloadToDeleteAppointmentChatMessageInput } from '../mappers/appointment-chat-message/payload-to-delete-appointment-chat-message-input';
-import { queryParamsToFindManyParams } from '../mappers/appointment-chat-message/query-params-to-find-many-params.mapper';
-import { payloadToGetAppointmentChatMessageByIdInput } from '../mappers/appointment-chat-message/payload-to-get-appointment-chat-message-by-id-input';
-import { mapCreateAppointmentChatMessageHttpResponse } from '../response/map-create-appointment-chat-message-response';
-import { mapDeleteAppointmentChatMessageHttpResponse } from '../response/map-delete-appointment-chat-message-response';
-import { mapGetAppointmentChatMessageByIdHttpResponse } from '../response/map-get-appointment-chat-message-by-id-response';
-import { mapGetAppointmentChatMessagesHttpResponse } from '../response/map-get-appointment-chat-messages-response';
+import { requestBodyToCreateAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-body-to-create-appointment-chat-message-use-case-input';
+import { requestParamsToDeleteAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-params-to-delete-appointment-chat-message-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat-message/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetAppointmentChatMessageByIdUseCaseInput } from '../request-mappers/appointment-chat-message/request-query-params-to-get-appointment-chat-message-by-id-use-case-input';
+import { mapCreateAppointmentChatMessageHttpResponse } from '../http-responses/map-create-appointment-chat-message-response';
+import { mapDeleteAppointmentChatMessageHttpResponse } from '../http-responses/map-delete-appointment-chat-message-response';
+import { mapGetAppointmentChatMessageByIdHttpResponse } from '../http-responses/map-get-appointment-chat-message-by-id-response';
+import { mapGetAppointmentChatMessagesHttpResponse } from '../http-responses/map-get-appointment-chat-messages-response';
 
 @Controller({ path: 'appointment-chat-messages', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -58,7 +58,7 @@ export class AppointmentChatMessagesController {
     queryParams: IGetAppointmentChatMessagesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
 
     const output = await this.getAppointmentChatMessagesUseCase.execute(params);
     return mapGetAppointmentChatMessagesHttpResponse(output, queryParams);
@@ -82,7 +82,7 @@ export class AppointmentChatMessagesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetAppointmentChatMessageByIdInput(
+    const input = requestQueryParamsToGetAppointmentChatMessageByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -105,7 +105,7 @@ export class AppointmentChatMessagesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateAppointmentChatMessageInput(
+    const input = requestBodyToCreateAppointmentChatMessageUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -126,7 +126,7 @@ export class AppointmentChatMessagesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteAppointmentChatMessageInput(
+    const input = requestParamsToDeleteAppointmentChatMessageUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

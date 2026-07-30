@@ -22,18 +22,18 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeGetFolderQueryRaw } from '../helpers/normalize-get-folder-query-raw';
-import { payloadToCreateFolderInput } from '../mappers/folder/payload-to-create-folder-input';
-import { payloadToDeleteFolderInput } from '../mappers/folder/payload-to-delete-folder-input';
-import { payloadToGetFolderInput } from '../mappers/folder/payload-to-get-folder-input';
-import { payloadToMoveFolderInput } from '../mappers/folder/payload-to-move-folder-input';
-import { payloadToUpdateFolderInput } from '../mappers/folder/payload-to-update-folder-input';
+import { requestBodyToCreateFolderUseCaseInput } from '../request-mappers/folder/request-body-to-create-folder-use-case-input';
+import { requestParamsToDeleteFolderUseCaseInput } from '../request-mappers/folder/request-params-to-delete-folder-use-case-input';
+import { requestQueryParamsToGetFolderUseCaseInput } from '../request-mappers/folder/request-query-params-to-get-folder-use-case-input';
+import { requestBodyToMoveFolderUseCaseInput } from '../request-mappers/folder/request-body-to-move-folder-use-case-input';
+import { requestBodyToUpdateFolderUseCaseInput } from '../request-mappers/folder/request-body-to-update-folder-use-case-input';
 import {
   mapCreateFolderHttpResponse,
   mapDeleteFolderHttpResponse,
   mapGetFolderHttpResponse,
   mapMoveFolderHttpResponse,
   mapUpdateFolderHttpResponse,
-} from '../response/map-folder-response';
+} from '../http-responses/map-folder-response';
 import {
   createFolderPayloadSchema,
   moveFolderPayloadSchema,
@@ -69,7 +69,7 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetFolderInput(payload, user, metadata);
+    const input = requestQueryParamsToGetFolderUseCaseInput(payload, user, metadata);
     const output = await this.getFolderUseCase.execute(input);
     return mapGetFolderHttpResponse(output);
   }
@@ -84,7 +84,7 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateFolderInput(payload, user, metadata);
+    const input = requestBodyToCreateFolderUseCaseInput(payload, user, metadata);
     const output = await this.createFolderUseCase.execute(input);
     return mapCreateFolderHttpResponse(output);
   }
@@ -104,7 +104,7 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateFolderInput(params.id, payload, user, metadata);
+    const input = requestBodyToUpdateFolderUseCaseInput(params.id, payload, user, metadata);
     const output = await this.updateFolderUseCase.execute(input);
     return mapUpdateFolderHttpResponse(output);
   }
@@ -124,7 +124,7 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToMoveFolderInput(params.id, payload, user, metadata);
+    const input = requestBodyToMoveFolderUseCaseInput(params.id, payload, user, metadata);
     const output = await this.moveFolderUseCase.execute(input);
     return mapMoveFolderHttpResponse(output);
   }
@@ -140,7 +140,7 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteFolderInput(params.id, user, metadata);
+    const input = requestParamsToDeleteFolderUseCaseInput(params.id, user, metadata);
     const output = await this.deleteFolderUseCase.execute(input);
     return mapDeleteFolderHttpResponse(output);
   }

@@ -19,12 +19,12 @@ import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToDeleteMasterServiceReviewReactionInput } from '../mappers/master-service-review-reaction/payload-to-delete-master-service-review-reaction-input';
-import { queryParamsToFindManyParams } from '../mappers/master-service-review-reaction/query-params-to-find-many-params.mapper';
-import { payloadToUpsertMasterServiceReviewReactionInput } from '../mappers/master-service-review-reaction/payload-to-upsert-master-service-review-reaction-input';
-import { mapDeleteMasterServiceReviewReactionHttpResponse } from '../response/map-delete-master-service-review-reaction-response';
-import { mapGetMasterServiceReviewReactionsHttpResponse } from '../response/map-get-master-service-review-reactions-response';
-import { mapUpsertMasterServiceReviewReactionHttpResponse } from '../response/map-upsert-master-service-review-reaction-response';
+import { requestParamsToDeleteMasterServiceReviewReactionUseCaseInput } from '../request-mappers/master-service-review-reaction/request-params-to-delete-master-service-review-reaction-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review-reaction/request-query-params-to-find-many-params.mapper';
+import { requestBodyToUpsertMasterServiceReviewReactionUseCaseInput } from '../request-mappers/master-service-review-reaction/request-body-to-upsert-master-service-review-reaction-use-case-input';
+import { mapDeleteMasterServiceReviewReactionHttpResponse } from '../http-responses/map-delete-master-service-review-reaction-response';
+import { mapGetMasterServiceReviewReactionsHttpResponse } from '../http-responses/map-get-master-service-review-reactions-response';
+import { mapUpsertMasterServiceReviewReactionHttpResponse } from '../http-responses/map-upsert-master-service-review-reaction-response';
 
 @Controller({ path: 'master-service-review-reactions', version: '1' })
 export class MasterServiceReviewReactionsController {
@@ -45,7 +45,7 @@ export class MasterServiceReviewReactionsController {
     queryParams: IGetMasterServiceReviewReactionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output =
       await this.getMasterServiceReviewReactionsUseCase.execute(params);
     return mapGetMasterServiceReviewReactionsHttpResponse(output, queryParams);
@@ -62,7 +62,7 @@ export class MasterServiceReviewReactionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpsertMasterServiceReviewReactionInput(
+    const input = requestBodyToUpsertMasterServiceReviewReactionUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -84,7 +84,7 @@ export class MasterServiceReviewReactionsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterServiceReviewReactionInput(
+    const input = requestParamsToDeleteMasterServiceReviewReactionUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

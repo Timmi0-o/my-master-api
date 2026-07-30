@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { FileUploadedUseCase } from '@modules/files/application/use-cases/file/file-uploaded.use-case';
 import { InternalWebhookGuard } from '@modules/files/presentation/guards/internal-webhook.guard';
-import { mapProcessMinioEventHttpResponse } from '../response/map-process-minio-event-response';
+import { mapProcessMinioEventHttpResponse } from '../http-responses/map-process-minio-event-response';
 
 type MinioWebhookPayload = {
   EventName: string;

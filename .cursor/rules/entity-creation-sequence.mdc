@@ -122,7 +122,7 @@ Prisma-ошибки (`P20xx`) мапить в доменные/прикладн�
 
 ## 5. Presentation (HTTP)
 
-Для **каждого** endpoint — цепочка: `@HttpBody`/`@HttpQuery`/`@HttpParams` → `payload-to-*` → `useCase.execute` → response mapper.
+Для **каждого** endpoint — цепочка: `@HttpBody`/`@HttpQuery`/`@HttpParams` → `request-body-to-*` / `request-query-params-to-*` / `request-params-to-*` → `useCase.execute` → response mapper.
 
 ### 5.1 Валидация
 
@@ -140,19 +140,20 @@ Mutate: `create-*-payload.schema.ts`, не `*-body.schema.ts`.
 
 ### 5.2 Mappers (query / mutate)
 
-`presentation/http/mappers/<entity>/`:
+`presentation/http/request-mappers/<entity>/`:
 
 | Операция | Файлы |
 |----------|--------|
-| GET list | `extract-<entity>-filter.ts`, `preset-to-select-options.mapper.ts`, `query-params-to-find-many-params.mapper.ts` |
-| GET by id | `payload-to-get-<entity>-by-id-input.ts` |
-| POST/PATCH/DELETE | `payload-to-create-*-input.ts`, `payload-to-update-*-input.ts`, `payload-to-delete-*-input.ts` |
+| GET list | `extract-<entity>-filter.ts`, `preset-to-select-options.mapper.ts`, `request-query-params-to-find-many-params.mapper.ts` |
+| GET by id | `request-query-params-to-get-<entity>-by-id-use-case-input.ts` |
+| POST/PATCH (body) | `request-body-to-create-*-use-case-input.ts`, `request-body-to-update-*-use-case-input.ts` |
+| DELETE / action без body | `request-params-to-delete-*-use-case-input.ts`, `request-params-to-*-use-case-input.ts` |
 
-Shared: `mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.
+Shared: `request-mappers/shared/to-master-actor.ts`, `pick-patch.util.ts` для PATCH.
 
 ### 5.3 Response
 
-`presentation/http/response/map-get-<entities>-response.ts` — `{ data, meta }` для list; single — `{ data: item }` в controller или отдельный mapper.
+`presentation/http/http-responses/map-get-<entities>-response.ts` — `{ data, meta }` для list; single — `{ data: item }` в controller или отдельный mapper.
 
 ### 5.4 Controller
 
@@ -196,8 +197,8 @@ src/modules/<feature>/
   application/use-cases/<entity>/    # get many, get by id, create, update, delete
   application/helpers/               # при необходимости
   presentation/http/validation/schemas/
-  presentation/http/mappers/<entity>/
-  presentation/http/response/
+  presentation/http/request-mappers/<entity>/
+  presentation/http/http-responses/
   presentation/http/controllers/
   <feature>.module.ts
 ```
@@ -206,7 +207,7 @@ src/modules/<feature>/
 
 | Сценарий | Пропустить |
 |----------|------------|
-| Только create/read без list | `extract-*-filter`, `query-params-to-find-many-params`, `get-*-many` use-case, list response mapper |
+| Только create/read без list | `extract-*-filter`, `request-query-params-to-find-many-params`, `get-*-many` use-case, list response mapper |
 | Нет relations в ответе | `i-*-relations.ts`, `include` в preset, `relationConfig` (минимальный `select` only) |
 | Auth token/session | Нет `IReadRepository`; нет preset/query layer |
 

@@ -1,4 +1,3 @@
-import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
@@ -15,21 +14,26 @@ import { getFavoriteMasterServicesQuerySchema } from '@modules/masters/presentat
 import type { IGetFavoriteMasterServicesQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-favorite-master-services-query.types';
 import { idParamSchema } from '@modules/masters/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/masters/presentation/http/validation/schemas/id-param.types';
+import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateFavoriteMasterServiceInput } from '../mappers/favorite-master-service/payload-to-create-favorite-master-service-input';
-import { payloadToDeleteFavoriteMasterServiceInput } from '../mappers/favorite-master-service/payload-to-delete-favorite-master-service-input';
-import { queryParamsToFindManyParams } from '../mappers/favorite-master-service/query-params-to-find-many-params.mapper';
-import { payloadToGetFavoriteMasterServiceByIdInput } from '../mappers/favorite-master-service/payload-to-get-favorite-master-service-by-id-input';
-import { mapCreateFavoriteMasterServiceHttpResponse } from '../response/map-create-favorite-master-service-response';
-import { mapDeleteFavoriteMasterServiceHttpResponse } from '../response/map-delete-favorite-master-service-response';
-import { mapGetFavoriteMasterServiceByIdHttpResponse } from '../response/map-get-favorite-master-service-by-id-response';
-import { mapGetFavoriteMasterServicesHttpResponse } from '../response/map-get-favorite-master-services-response';
+import { mapCreateFavoriteMasterServiceHttpResponse } from '../http-responses/map-create-favorite-master-service-response';
+import { mapDeleteFavoriteMasterServiceHttpResponse } from '../http-responses/map-delete-favorite-master-service-response';
+import { mapGetFavoriteMasterServiceByIdHttpResponse } from '../http-responses/map-get-favorite-master-service-by-id-response';
+import { mapGetFavoriteMasterServicesHttpResponse } from '../http-responses/map-get-favorite-master-services-response';
+import { requestBodyToCreateFavoriteMasterServiceUseCaseInput } from '../request-mappers/favorite-master-service/request-body-to-create-favorite-master-service-use-case-input';
+import { requestParamsToDeleteFavoriteMasterServiceUseCaseInput } from '../request-mappers/favorite-master-service/request-params-to-delete-favorite-master-service-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/favorite-master-service/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetFavoriteMasterServiceByIdUseCaseInput } from '../request-mappers/favorite-master-service/request-query-params-to-get-favorite-master-service-by-id-use-case-input';
 
 @Controller({ path: 'favorite-master-services', version: '1' })
 export class FavoriteMasterServicesController {
@@ -51,7 +55,7 @@ export class FavoriteMasterServicesController {
     queryParams: IGetFavoriteMasterServicesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getFavoriteMasterServicesUseCase.execute(params);
     return mapGetFavoriteMasterServicesHttpResponse(output, queryParams);
   }
@@ -70,7 +74,7 @@ export class FavoriteMasterServicesController {
     queryPayload: IGetByIdQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetFavoriteMasterServiceByIdInput(
+    const input = requestQueryParamsToGetFavoriteMasterServiceByIdUseCaseInput(
       params.id,
       queryPayload,
       metadata.isStaffUser,
@@ -90,7 +94,7 @@ export class FavoriteMasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateFavoriteMasterServiceInput(
+    const input = requestBodyToCreateFavoriteMasterServiceUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -111,7 +115,7 @@ export class FavoriteMasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteFavoriteMasterServiceInput(
+    const input = requestParamsToDeleteFavoriteMasterServiceUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

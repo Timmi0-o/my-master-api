@@ -7,10 +7,10 @@ import type { ISessionUser } from '@shared/domain/i-session-user';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpBody, HttpParams } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
-import { payloadToCreateBugReportInput } from '../mappers/bug-report/payload-to-create-bug-report-input';
-import { payloadToPresignBugReportImagesInput } from '../mappers/bug-report/payload-to-presign-bug-report-images-input';
-import { mapCreateBugReportHttpResponse } from '../response/map-create-bug-report-response';
-import { mapPresignBugReportImagesHttpResponse } from '../response/map-presign-bug-report-images-response';
+import { requestBodyToCreateBugReportUseCaseInput } from '../request-mappers/bug-report/request-body-to-create-bug-report-use-case-input';
+import { requestBodyToPresignBugReportImagesUseCaseInput } from '../request-mappers/bug-report/request-body-to-presign-bug-report-images-use-case-input';
+import { mapCreateBugReportHttpResponse } from '../http-responses/map-create-bug-report-response';
+import { mapPresignBugReportImagesHttpResponse } from '../http-responses/map-presign-bug-report-images-response';
 import { createBugReportPayloadSchema } from '../validation/schemas/create-bug-report-payload.schema';
 import type { ICreateBugReportPayload } from '../validation/schemas/create-bug-report-payload.types';
 import { idParamSchema } from '../validation/schemas/id-param.schema';
@@ -35,7 +35,7 @@ export class BugReportsController {
     payload: ICreateBugReportPayload,
     @CurrentUser() user: ISessionUser | null,
   ) {
-    const input = payloadToCreateBugReportInput(payload, user);
+    const input = requestBodyToCreateBugReportUseCaseInput(payload, user);
     const output = await this.createBugReportUseCase.execute(input);
     return mapCreateBugReportHttpResponse(output);
   }
@@ -53,7 +53,7 @@ export class BugReportsController {
     })
     payload: IPresignBugReportImagesPayload,
   ) {
-    const input = payloadToPresignBugReportImagesInput(params.id, payload);
+    const input = requestBodyToPresignBugReportImagesUseCaseInput(params.id, payload);
     const output = await this.presignBugReportImagesUseCase.execute(input);
     return mapPresignBugReportImagesHttpResponse(output);
   }

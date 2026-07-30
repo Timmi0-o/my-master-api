@@ -9,8 +9,8 @@ import { roleIdParamSchema } from '@modules/authorization/presentation/http/vali
 import type { IRoleIdParamPayload } from '@modules/authorization/presentation/http/validation/schemas/role-id-param.types';
 import { HttpParams } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
-import { mapGetRoleByIdHttpResponse } from '../response/map-get-role-by-id-response';
-import { mapGetRolesHttpResponse } from '../response/map-get-roles-response';
+import { mapGetRoleByIdHttpResponse } from '../http-responses/map-get-role-by-id-response';
+import { mapGetRolesHttpResponse } from '../http-responses/map-get-roles-response';
 
 @Controller({ path: 'roles', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)

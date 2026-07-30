@@ -35,25 +35,25 @@ import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { outputCreateMasterProfileToCreateRootFolderInput } from '../mappers/master-profile/output-create-master-profile-to-create-root-folder-input';
-import { payloadToCreateMasterProfileInput } from '../mappers/master-profile/payload-to-create-master-profile-input';
-import { payloadToDeleteMasterProfileImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-images-input';
-import { payloadToDeleteMasterProfileBannerImagesInput } from '../mappers/master-profile/payload-to-delete-master-profile-banner-images-input';
-import { payloadToDeleteMasterProfileInput } from '../mappers/master-profile/payload-to-delete-master-profile-input';
-import { queryParamsToFindManyParams } from '../mappers/master-profile/query-params-to-find-many-params.mapper';
-import { payloadToGetMasterProfileByIdInput } from '../mappers/master-profile/payload-to-get-master-profile-by-id-input';
-import { payloadToGetMyMasterProfileInput } from '../mappers/master-profile/payload-to-get-my-master-profile-input';
-import { payloadToPresignMasterProfileImagesInput } from '../mappers/master-profile/payload-to-presign-master-profile-images-input';
-import { payloadToPresignMasterProfileBannerImagesInput } from '../mappers/master-profile/payload-to-presign-master-profile-banner-images-input';
-import { payloadToUpdateMasterProfileInput } from '../mappers/master-profile/payload-to-update-master-profile-input';
-import { mapCreateMasterProfileHttpResponse } from '../response/map-create-master-profile-response';
-import { mapDeleteMasterProfileHttpResponse } from '../response/map-delete-master-profile-response';
-import { mapDeleteMasterProfileImagesHttpResponse } from '../response/map-delete-master-profile-images-response';
-import { mapGetMasterProfileByIdHttpResponse } from '../response/map-get-master-profile-by-id-response';
-import { mapGetMasterProfilesHttpResponse } from '../response/map-get-master-profiles-response';
-import { mapGetMyMasterProfileHttpResponse } from '../response/map-get-my-master-profile-response';
-import { mapPresignMasterProfileImagesHttpResponse } from '../response/map-presign-master-profile-images-response';
-import { mapUpdateMasterProfileHttpResponse } from '../response/map-update-master-profile-response';
+import { outputCreateMasterProfileToCreateRootFolderUseCaseInput } from '../request-mappers/master-profile/output-create-master-profile-to-create-root-folder-use-case-input';
+import { requestBodyToCreateMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-body-to-create-master-profile-use-case-input';
+import { requestBodyToDeleteMasterProfileImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-delete-master-profile-images-use-case-input';
+import { requestBodyToDeleteMasterProfileBannerImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-delete-master-profile-banner-images-use-case-input';
+import { requestParamsToDeleteMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-params-to-delete-master-profile-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-profile/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterProfileByIdUseCaseInput } from '../request-mappers/master-profile/request-query-params-to-get-master-profile-by-id-use-case-input';
+import { requestQueryParamsToGetMyMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-query-params-to-get-my-master-profile-use-case-input';
+import { requestBodyToPresignMasterProfileImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-presign-master-profile-images-use-case-input';
+import { requestBodyToPresignMasterProfileBannerImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-presign-master-profile-banner-images-use-case-input';
+import { requestBodyToUpdateMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-body-to-update-master-profile-use-case-input';
+import { mapCreateMasterProfileHttpResponse } from '../http-responses/map-create-master-profile-response';
+import { mapDeleteMasterProfileHttpResponse } from '../http-responses/map-delete-master-profile-response';
+import { mapDeleteMasterProfileImagesHttpResponse } from '../http-responses/map-delete-master-profile-images-response';
+import { mapGetMasterProfileByIdHttpResponse } from '../http-responses/map-get-master-profile-by-id-response';
+import { mapGetMasterProfilesHttpResponse } from '../http-responses/map-get-master-profiles-response';
+import { mapGetMyMasterProfileHttpResponse } from '../http-responses/map-get-my-master-profile-response';
+import { mapPresignMasterProfileImagesHttpResponse } from '../http-responses/map-presign-master-profile-images-response';
+import { mapUpdateMasterProfileHttpResponse } from '../http-responses/map-update-master-profile-response';
 
 @Controller({ path: 'master-profiles', version: '1' })
 export class MasterProfilesController {
@@ -82,7 +82,7 @@ export class MasterProfilesController {
     @GetMetadata() metadata: IGetMetadata,
     @CurrentUser() user: ISessionUser | null,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterProfilesUseCase.execute(
       params,
       user?.id,
@@ -101,7 +101,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMyMasterProfileInput(
+    const input = requestQueryParamsToGetMyMasterProfileUseCaseInput(
       queryPayload,
       user,
       metadata.isStaffUser,
@@ -126,7 +126,7 @@ export class MasterProfilesController {
     @CurrentUser() user: ISessionUser | null,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterProfileByIdInput(
+    const input = requestQueryParamsToGetMasterProfileByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -147,7 +147,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateMasterProfileInput(
+    const input = requestBodyToCreateMasterProfileUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -155,7 +155,7 @@ export class MasterProfilesController {
     const output = await this.createMasterProfileUseCase.execute(input);
 
     await this.createRootFolderUseCase.execute(
-      outputCreateMasterProfileToCreateRootFolderInput(output, input),
+      outputCreateMasterProfileToCreateRootFolderUseCaseInput(output, input),
     );
 
     return mapCreateMasterProfileHttpResponse(output);
@@ -177,7 +177,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToPresignMasterProfileImagesInput(
+    const input = requestBodyToPresignMasterProfileImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -203,7 +203,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterProfileImagesInput(
+    const input = requestBodyToDeleteMasterProfileImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -229,7 +229,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToPresignMasterProfileBannerImagesInput(
+    const input = requestBodyToPresignMasterProfileBannerImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -255,7 +255,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterProfileBannerImagesInput(
+    const input = requestBodyToDeleteMasterProfileBannerImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -281,7 +281,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateMasterProfileInput(
+    const input = requestBodyToUpdateMasterProfileUseCaseInput(
       params.id,
       payload,
       user,
@@ -303,7 +303,7 @@ export class MasterProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterProfileInput(
+    const input = requestParamsToDeleteMasterProfileUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

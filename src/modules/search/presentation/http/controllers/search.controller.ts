@@ -2,8 +2,8 @@ import { BadRequestException, Controller, Get } from '@nestjs/common';
 import { SearchByTextUseCase } from 'src/modules/search/application/use-cases/search-by-text.use-case';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpQuery } from '@shared/presentation/http/decorators';
-import { payloadToSearchByTextInput } from '../mappers/payload-to-search-by-text-input';
-import { mapSearchHttpResponse } from '../response/map-search-http-response';
+import { requestQueryParamsToSearchByTextUseCaseInput } from '../request-mappers/request-query-params-to-search-by-text-use-case-input';
+import { mapSearchHttpResponse } from '../http-responses/map-search-http-response';
 import { getSearchQuerySchema } from '../validation/schemas/get-search-query.schema';
 import type { IGetSearchQueryPayload } from '../validation/schemas/get-search-query.types';
 
@@ -28,7 +28,7 @@ export class SearchController {
       );
     }
 
-    const input = payloadToSearchByTextInput(payload);
+    const input = requestQueryParamsToSearchByTextUseCaseInput(payload);
     const output = await this.searchByTextUseCase.execute(input);
     return mapSearchHttpResponse(output);
   }

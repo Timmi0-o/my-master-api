@@ -21,14 +21,14 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateUserBlockInput } from '../mappers/user-block/payload-to-create-user-block-input';
-import { payloadToDeleteUserBlockInput } from '../mappers/user-block/payload-to-delete-user-block-input';
-import { queryParamsToFindManyParams } from '../mappers/user-block/query-params-to-find-many-params.mapper';
-import { payloadToGetUserBlockByIdInput } from '../mappers/user-block/payload-to-get-user-block-by-id-input';
-import { mapCreateUserBlockHttpResponse } from '../response/map-create-user-block-response';
-import { mapDeleteUserBlockHttpResponse } from '../response/map-delete-user-block-response';
-import { mapGetUserBlockByIdHttpResponse } from '../response/map-get-user-block-by-id-response';
-import { mapGetUserBlocksHttpResponse } from '../response/map-get-user-blocks-response';
+import { requestBodyToCreateUserBlockUseCaseInput } from '../request-mappers/user-block/request-body-to-create-user-block-use-case-input';
+import { requestParamsToDeleteUserBlockUseCaseInput } from '../request-mappers/user-block/request-params-to-delete-user-block-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/user-block/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetUserBlockByIdUseCaseInput } from '../request-mappers/user-block/request-query-params-to-get-user-block-by-id-use-case-input';
+import { mapCreateUserBlockHttpResponse } from '../http-responses/map-create-user-block-response';
+import { mapDeleteUserBlockHttpResponse } from '../http-responses/map-delete-user-block-response';
+import { mapGetUserBlockByIdHttpResponse } from '../http-responses/map-get-user-block-by-id-response';
+import { mapGetUserBlocksHttpResponse } from '../http-responses/map-get-user-blocks-response';
 
 @Controller({ path: 'user-blocks', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -51,7 +51,7 @@ export class UserBlocksController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata, user.id);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata, user.id);
     const output = await this.getUserBlocksUseCase.execute(params);
     return mapGetUserBlocksHttpResponse(output, queryParams);
   }
@@ -70,7 +70,7 @@ export class UserBlocksController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetUserBlockByIdInput(
+    const input = requestQueryParamsToGetUserBlockByIdUseCaseInput(
       params.id,
       queryPayload,
       metadata.isStaffUser,
@@ -89,7 +89,7 @@ export class UserBlocksController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateUserBlockInput(
+    const input = requestBodyToCreateUserBlockUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -108,7 +108,7 @@ export class UserBlocksController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteUserBlockInput(
+    const input = requestParamsToDeleteUserBlockUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

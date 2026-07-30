@@ -14,7 +14,7 @@ alwaysApply: false
 ## Разрешено
 
 - Inject только use-cases.
-- Flow: HTTP payload → `payload-to-*-input` → `useCase.execute` → HTTP response mapper.
+- Flow: HTTP → `request-mappers/` (`request-body-to-*` / `request-query-params-to-*` / `request-params-to-*`) → `useCase.execute` → `http-responses/`.
 - Несколько use-case подряд в одном handler (оркестрация), без репозиториев между ними.
 
 ## Куда переносить логику

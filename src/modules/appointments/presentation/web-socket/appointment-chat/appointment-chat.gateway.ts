@@ -21,7 +21,7 @@ import type { AppointmentChatAuthenticatedSocket } from './guards/appointment-ch
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { mapAppointmentChatMessageToWsPayload } from './mappers/map-appointment-chat-message-to-ws-payload';
 import { mapWsErrorResponse } from './mappers/map-ws-error-response';
-import { payloadToAssertAppointmentChatAccessInput } from './mappers/payload-to-assert-appointment-chat-access-input';
+import { requestBodyToAssertAppointmentChatAccessUseCaseInput } from './mappers/request-body-to-assert-appointment-chat-access-use-case-input';
 import { validateJoinAppointmentChatPayload } from './validation/validate-join-appointment-chat-payload';
 
 @WebSocketGateway({
@@ -125,7 +125,7 @@ export class AppointmentChatGateway
       );
 
       await this.assertAccessUseCase.execute(
-        payloadToAssertAppointmentChatAccessInput(payload, client.data.user),
+        requestBodyToAssertAppointmentChatAccessUseCaseInput(payload, client.data.user),
       );
 
       await client.join(APPOINTMENT_CHAT_WS_ROOM_NAME(payload.chatId));

@@ -24,16 +24,16 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-create-master-weekly-schedule-input';
-import { payloadToDeleteMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-delete-master-weekly-schedule-input';
-import { queryParamsToFindManyParams } from '../mappers/master-weekly-schedule/query-params-to-find-many-params.mapper';
-import { payloadToGetMasterWeeklyScheduleByIdInput } from '../mappers/master-weekly-schedule/payload-to-get-master-weekly-schedule-by-id-input';
-import { payloadToUpdateMasterWeeklyScheduleInput } from '../mappers/master-weekly-schedule/payload-to-update-master-weekly-schedule-input';
-import { mapCreateMasterWeeklyScheduleHttpResponse } from '../response/map-create-master-weekly-schedule-response';
-import { mapDeleteMasterWeeklyScheduleHttpResponse } from '../response/map-delete-master-weekly-schedule-response';
-import { mapGetMasterWeeklyScheduleByIdHttpResponse } from '../response/map-get-master-weekly-schedule-by-id-response';
-import { mapGetMasterWeeklySchedulesHttpResponse } from '../response/map-get-master-weekly-schedules-response';
-import { mapUpdateMasterWeeklyScheduleHttpResponse } from '../response/map-update-master-weekly-schedule-response';
+import { requestBodyToCreateMasterWeeklyScheduleUseCaseInput } from '../request-mappers/master-weekly-schedule/request-body-to-create-master-weekly-schedule-use-case-input';
+import { requestParamsToDeleteMasterWeeklyScheduleUseCaseInput } from '../request-mappers/master-weekly-schedule/request-params-to-delete-master-weekly-schedule-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-weekly-schedule/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterWeeklyScheduleByIdUseCaseInput } from '../request-mappers/master-weekly-schedule/request-query-params-to-get-master-weekly-schedule-by-id-use-case-input';
+import { requestBodyToUpdateMasterWeeklyScheduleUseCaseInput } from '../request-mappers/master-weekly-schedule/request-body-to-update-master-weekly-schedule-use-case-input';
+import { mapCreateMasterWeeklyScheduleHttpResponse } from '../http-responses/map-create-master-weekly-schedule-response';
+import { mapDeleteMasterWeeklyScheduleHttpResponse } from '../http-responses/map-delete-master-weekly-schedule-response';
+import { mapGetMasterWeeklyScheduleByIdHttpResponse } from '../http-responses/map-get-master-weekly-schedule-by-id-response';
+import { mapGetMasterWeeklySchedulesHttpResponse } from '../http-responses/map-get-master-weekly-schedules-response';
+import { mapUpdateMasterWeeklyScheduleHttpResponse } from '../http-responses/map-update-master-weekly-schedule-response';
 
 @Controller({ path: 'master-weekly-schedules', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -57,7 +57,7 @@ export class MasterWeeklySchedulesController {
     queryParams: IGetMasterWeeklySchedulesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterWeeklySchedulesUseCase.execute(params);
     return mapGetMasterWeeklySchedulesHttpResponse(output, queryParams);
   }
@@ -77,7 +77,7 @@ export class MasterWeeklySchedulesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterWeeklyScheduleByIdInput(
+    const input = requestQueryParamsToGetMasterWeeklyScheduleByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -98,7 +98,7 @@ export class MasterWeeklySchedulesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateMasterWeeklyScheduleInput(
+    const input = requestBodyToCreateMasterWeeklyScheduleUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -123,7 +123,7 @@ export class MasterWeeklySchedulesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateMasterWeeklyScheduleInput(
+    const input = requestBodyToUpdateMasterWeeklyScheduleUseCaseInput(
       params.id,
       payload,
       user,
@@ -145,7 +145,7 @@ export class MasterWeeklySchedulesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterWeeklyScheduleInput(
+    const input = requestParamsToDeleteMasterWeeklyScheduleUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

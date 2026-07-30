@@ -28,20 +28,20 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCompleteAppointmentInput } from '../mappers/appointment/payload-to-complete-appointment-input';
-import { payloadToCreateAppointmentInput } from '../mappers/appointment/payload-to-create-appointment-input';
-import { payloadToDeleteAppointmentInput } from '../mappers/appointment/payload-to-delete-appointment-input';
-import { queryParamsToFindManyParams } from '../mappers/appointment/query-params-to-find-many-params.mapper';
-import { payloadToGetAppointmentByIdInput } from '../mappers/appointment/payload-to-get-appointment-by-id-input';
-import { payloadToGetMyAppointmentsInput } from '../mappers/appointment/payload-to-get-my-appointments-input';
-import { payloadToGetMyClientsAppointmentsInput } from '../mappers/appointment/payload-to-get-my-clients-appointments-input';
-import { payloadToUpdateAppointmentInput } from '../mappers/appointment/payload-to-update-appointment-input';
-import { mapGetAppointmentsHttpResponse } from '../response/map-get-appointments-response';
-import { mapGetAppointmentByIdHttpResponse } from '../response/map-get-appointment-by-id-response';
-import { mapCreateAppointmentHttpResponse } from '../response/map-create-appointment-response';
-import { mapCompleteAppointmentHttpResponse } from '../response/map-complete-appointment-response';
-import { mapUpdateAppointmentHttpResponse } from '../response/map-update-appointment-response';
-import { mapDeleteAppointmentHttpResponse } from '../response/map-delete-appointment-response';
+import { requestParamsToCompleteAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-complete-appointment-use-case-input';
+import { requestBodyToCreateAppointmentUseCaseInput } from '../request-mappers/appointment/request-body-to-create-appointment-use-case-input';
+import { requestParamsToDeleteAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-delete-appointment-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetAppointmentByIdUseCaseInput } from '../request-mappers/appointment/request-query-params-to-get-appointment-by-id-use-case-input';
+import { findManyParamsToGetMyAppointmentsUseCaseInput } from '../request-mappers/appointment/find-many-params-to-get-my-appointments-use-case-input';
+import { findManyParamsToGetMyClientsAppointmentsUseCaseInput } from '../request-mappers/appointment/find-many-params-to-get-my-clients-appointments-use-case-input';
+import { requestBodyToUpdateAppointmentUseCaseInput } from '../request-mappers/appointment/request-body-to-update-appointment-use-case-input';
+import { mapGetAppointmentsHttpResponse } from '../http-responses/map-get-appointments-response';
+import { mapGetAppointmentByIdHttpResponse } from '../http-responses/map-get-appointment-by-id-response';
+import { mapCreateAppointmentHttpResponse } from '../http-responses/map-create-appointment-response';
+import { mapCompleteAppointmentHttpResponse } from '../http-responses/map-complete-appointment-response';
+import { mapUpdateAppointmentHttpResponse } from '../http-responses/map-update-appointment-response';
+import { mapDeleteAppointmentHttpResponse } from '../http-responses/map-delete-appointment-response';
 
 @Controller({ path: 'appointments', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -71,8 +71,8 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
-    const input = payloadToGetMyAppointmentsInput(params, user, metadata.isStaffUser);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
+    const input = findManyParamsToGetMyAppointmentsUseCaseInput(params, user, metadata.isStaffUser);
     const output = await this.getMyAppointmentsUseCase.execute(input);
     return mapGetAppointmentsHttpResponse(output, queryParams);
   }
@@ -91,8 +91,8 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
-    const input = payloadToGetMyClientsAppointmentsInput(
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
+    const input = findManyParamsToGetMyClientsAppointmentsUseCaseInput(
       params,
       user,
       metadata.isStaffUser,
@@ -111,7 +111,7 @@ export class AppointmentsController {
     queryParams: IGetAppointmentsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getAppointmentsUseCase.execute(params);
     return mapGetAppointmentsHttpResponse(output, queryParams);
   }
@@ -134,7 +134,7 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetAppointmentByIdInput(
+    const input = requestQueryParamsToGetAppointmentByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -157,7 +157,7 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateAppointmentInput(
+    const input = requestBodyToCreateAppointmentUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -177,7 +177,7 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCompleteAppointmentInput(
+    const input = requestParamsToCompleteAppointmentUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,
@@ -204,7 +204,7 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateAppointmentInput(
+    const input = requestBodyToUpdateAppointmentUseCaseInput(
       params.id,
       payload,
       user,
@@ -225,7 +225,7 @@ export class AppointmentsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteAppointmentInput(
+    const input = requestParamsToDeleteAppointmentUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

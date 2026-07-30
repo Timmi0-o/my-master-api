@@ -37,24 +37,24 @@ import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToCreateMasterServiceInput } from '../mappers/master-service/payload-to-create-master-service-input';
-import { payloadToDeleteMasterServiceImagesInput } from '../mappers/master-service/payload-to-delete-master-service-images-input';
-import { payloadToDeleteMasterServiceInput } from '../mappers/master-service/payload-to-delete-master-service-input';
-import { queryParamsToFindManyParams } from '../mappers/master-service/query-params-to-find-many-params.mapper';
-import { payloadToFindMyServicesParams } from '../mappers/master-service/payload-to-find-my-services-params.mapper';
-import { payloadToGetMasterServiceByIdInput } from '../mappers/master-service/payload-to-get-master-service-by-id-input';
-import { payloadToGetMyServicesInput } from '../mappers/master-service/payload-to-get-my-services-input';
-import { payloadToPresignMasterServiceImagesInput } from '../mappers/master-service/payload-to-presign-master-service-images-input';
-import { payloadToUpdateMasterServiceInput } from '../mappers/master-service/payload-to-update-master-service-input';
-import { mapCreateMasterServiceHttpResponse } from '../response/map-create-master-service-response';
-import { mapDeleteMasterServiceImagesHttpResponse } from '../response/map-delete-master-service-images-response';
-import { mapDeleteMasterServiceHttpResponse } from '../response/map-delete-master-service-response';
-import { mapGetMasterServiceAvailableSlotsHttpResponse } from '../response/map-get-master-service-available-slots-response';
-import { mapGetMasterServiceByIdHttpResponse } from '../response/map-get-master-service-by-id-response';
-import { mapGetMasterServicesHttpResponse } from '../response/map-get-master-services-response';
-import { mapGetMyServicesHttpResponse } from '../response/map-get-my-services-response';
-import { mapPresignMasterServiceImagesHttpResponse } from '../response/map-presign-master-service-images-response';
-import { mapUpdateMasterServiceHttpResponse } from '../response/map-update-master-service-response';
+import { requestBodyToCreateMasterServiceUseCaseInput } from '../request-mappers/master-service/request-body-to-create-master-service-use-case-input';
+import { requestBodyToDeleteMasterServiceImagesUseCaseInput } from '../request-mappers/master-service/request-body-to-delete-master-service-images-use-case-input';
+import { requestParamsToDeleteMasterServiceUseCaseInput } from '../request-mappers/master-service/request-params-to-delete-master-service-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToFindMyServicesParams } from '../request-mappers/master-service/request-query-params-to-find-my-services-params.mapper';
+import { requestQueryParamsToGetMasterServiceByIdUseCaseInput } from '../request-mappers/master-service/request-query-params-to-get-master-service-by-id-use-case-input';
+import { findManyParamsToGetMyServicesUseCaseInput } from '../request-mappers/master-service/find-many-params-to-get-my-services-use-case-input';
+import { requestBodyToPresignMasterServiceImagesUseCaseInput } from '../request-mappers/master-service/request-body-to-presign-master-service-images-use-case-input';
+import { requestBodyToUpdateMasterServiceUseCaseInput } from '../request-mappers/master-service/request-body-to-update-master-service-use-case-input';
+import { mapCreateMasterServiceHttpResponse } from '../http-responses/map-create-master-service-response';
+import { mapDeleteMasterServiceImagesHttpResponse } from '../http-responses/map-delete-master-service-images-response';
+import { mapDeleteMasterServiceHttpResponse } from '../http-responses/map-delete-master-service-response';
+import { mapGetMasterServiceAvailableSlotsHttpResponse } from '../http-responses/map-get-master-service-available-slots-response';
+import { mapGetMasterServiceByIdHttpResponse } from '../http-responses/map-get-master-service-by-id-response';
+import { mapGetMasterServicesHttpResponse } from '../http-responses/map-get-master-services-response';
+import { mapGetMyServicesHttpResponse } from '../http-responses/map-get-my-services-response';
+import { mapPresignMasterServiceImagesHttpResponse } from '../http-responses/map-presign-master-service-images-response';
+import { mapUpdateMasterServiceHttpResponse } from '../http-responses/map-update-master-service-response';
 
 @Controller({ path: 'master-services', version: '1' })
 export class MasterServicesController {
@@ -80,7 +80,7 @@ export class MasterServicesController {
     queryParams: IGetMasterServicesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getMasterServicesUseCase.execute(params);
     return mapGetMasterServicesHttpResponse(output, queryParams);
   }
@@ -97,8 +97,8 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = payloadToFindMyServicesParams(payload, metadata);
-    const input = payloadToGetMyServicesInput(
+    const params = requestQueryParamsToFindMyServicesParams(payload, metadata);
+    const input = findManyParamsToGetMyServicesUseCaseInput(
       params,
       user,
       metadata.isStaffUser,
@@ -144,7 +144,7 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMasterServiceByIdInput(
+    const input = requestQueryParamsToGetMasterServiceByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -165,7 +165,7 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateMasterServiceInput(
+    const input = requestBodyToCreateMasterServiceUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
@@ -190,7 +190,7 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToPresignMasterServiceImagesInput(
+    const input = requestBodyToPresignMasterServiceImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -216,7 +216,7 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterServiceImagesInput(
+    const input = requestBodyToDeleteMasterServiceImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -242,7 +242,7 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateMasterServiceInput(
+    const input = requestBodyToUpdateMasterServiceUseCaseInput(
       params.id,
       payload,
       user,
@@ -264,7 +264,7 @@ export class MasterServicesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteMasterServiceInput(
+    const input = requestParamsToDeleteMasterServiceUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

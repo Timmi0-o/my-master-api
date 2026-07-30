@@ -19,12 +19,12 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToDeleteAppointmentChatInput } from '../mappers/appointment-chat/payload-to-delete-appointment-chat-input';
-import { queryParamsToFindManyParams } from '../mappers/appointment-chat/query-params-to-find-many-params.mapper';
-import { payloadToGetAppointmentChatByIdInput } from '../mappers/appointment-chat/payload-to-get-appointment-chat-by-id-input';
-import { mapDeleteAppointmentChatHttpResponse } from '../response/map-delete-appointment-chat-response';
-import { mapGetAppointmentChatByIdHttpResponse } from '../response/map-get-appointment-chat-by-id-response';
-import { mapGetAppointmentChatsHttpResponse } from '../response/map-get-appointment-chats-response';
+import { requestParamsToDeleteAppointmentChatUseCaseInput } from '../request-mappers/appointment-chat/request-params-to-delete-appointment-chat-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetAppointmentChatByIdUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-by-id-use-case-input';
+import { mapDeleteAppointmentChatHttpResponse } from '../http-responses/map-delete-appointment-chat-response';
+import { mapGetAppointmentChatByIdHttpResponse } from '../http-responses/map-get-appointment-chat-by-id-response';
+import { mapGetAppointmentChatsHttpResponse } from '../http-responses/map-get-appointment-chats-response';
 
 @Controller({ path: 'appointment-chats', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -45,7 +45,7 @@ export class AppointmentChatsController {
     queryParams: IGetAppointmentChatsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getAppointmentChatsUseCase.execute(params);
     return mapGetAppointmentChatsHttpResponse(output, queryParams);
   }
@@ -68,7 +68,7 @@ export class AppointmentChatsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetAppointmentChatByIdInput(
+    const input = requestQueryParamsToGetAppointmentChatByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -89,7 +89,7 @@ export class AppointmentChatsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteAppointmentChatInput(
+    const input = requestParamsToDeleteAppointmentChatUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,

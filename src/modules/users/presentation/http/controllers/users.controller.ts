@@ -18,10 +18,10 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { payloadToAssignUserRoleInput } from '../mappers/user/payload-to-assign-user-role-input';
-import { queryParamsToFindManyParams } from '../mappers/user/query-params-to-find-many-params.mapper';
-import { mapGetUsersHttpResponse } from '../response/map-get-users-response';
-import { mapAssignUserRoleHttpResponse } from '../response/map-assign-user-role-response';
+import { requestBodyToAssignUserRoleUseCaseInput } from '../request-mappers/user/request-body-to-assign-user-role-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/user/request-query-params-to-find-many-params.mapper';
+import { mapGetUsersHttpResponse } from '../http-responses/map-get-users-response';
+import { mapAssignUserRoleHttpResponse } from '../http-responses/map-assign-user-role-response';
 
 @Controller({ path: 'users', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -41,7 +41,7 @@ export class UsersController {
     queryParams: IGetUsersQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getUsersUseCase.execute(params);
     return mapGetUsersHttpResponse(output, queryParams);
   }
@@ -61,7 +61,7 @@ export class UsersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToAssignUserRoleInput(
+    const input = requestBodyToAssignUserRoleUseCaseInput(
       params.id,
       payload,
       user,

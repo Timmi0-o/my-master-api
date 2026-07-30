@@ -33,25 +33,25 @@ import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { outputCreateUserProfileToCreateRootFolderInput } from '../mappers/user-profile/output-create-user-profile-to-create-root-folder-input';
-import { payloadToCreateUserProfileInput } from '../mappers/user-profile/payload-to-create-user-profile-input';
-import { payloadToDeleteUserProfileImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-images-input';
-import { payloadToDeleteUserProfileBannerImagesInput } from '../mappers/user-profile/payload-to-delete-user-profile-banner-images-input';
-import { payloadToDeleteUserProfileInput } from '../mappers/user-profile/payload-to-delete-user-profile-input';
-import { queryParamsToFindManyParams } from '../mappers/user-profile/query-params-to-find-many-params.mapper';
-import { payloadToGetMyUserProfileInput } from '../mappers/user-profile/payload-to-get-my-user-profile-input';
-import { payloadToGetUserProfileByIdInput } from '../mappers/user-profile/payload-to-get-user-profile-by-id-input';
-import { payloadToPresignUserProfileImagesInput } from '../mappers/user-profile/payload-to-presign-user-profile-images-input';
-import { payloadToPresignUserProfileBannerImagesInput } from '../mappers/user-profile/payload-to-presign-user-profile-banner-images-input';
-import { payloadToUpdateUserProfileInput } from '../mappers/user-profile/payload-to-update-user-profile-input';
-import { mapCreateUserProfileHttpResponse } from '../response/map-create-user-profile-response';
-import { mapDeleteUserProfileHttpResponse } from '../response/map-delete-user-profile-response';
-import { mapDeleteUserProfileImagesHttpResponse } from '../response/map-delete-user-profile-images-response';
-import { mapGetMyUserProfileHttpResponse } from '../response/map-get-my-user-profile-response';
-import { mapGetUserProfileByIdHttpResponse } from '../response/map-get-user-profile-by-id-response';
-import { mapGetUserProfilesHttpResponse } from '../response/map-get-user-profiles-response';
-import { mapPresignUserProfileImagesHttpResponse } from '../response/map-presign-user-profile-images-response';
-import { mapUpdateUserProfileHttpResponse } from '../response/map-update-user-profile-response';
+import { outputCreateUserProfileToCreateRootFolderUseCaseInput } from '../request-mappers/user-profile/output-create-user-profile-to-create-root-folder-use-case-input';
+import { requestBodyToCreateUserProfileUseCaseInput } from '../request-mappers/user-profile/request-body-to-create-user-profile-use-case-input';
+import { requestBodyToDeleteUserProfileImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-delete-user-profile-images-use-case-input';
+import { requestBodyToDeleteUserProfileBannerImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-delete-user-profile-banner-images-use-case-input';
+import { requestParamsToDeleteUserProfileUseCaseInput } from '../request-mappers/user-profile/request-params-to-delete-user-profile-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/user-profile/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMyUserProfileUseCaseInput } from '../request-mappers/user-profile/request-query-params-to-get-my-user-profile-use-case-input';
+import { requestQueryParamsToGetUserProfileByIdUseCaseInput } from '../request-mappers/user-profile/request-query-params-to-get-user-profile-by-id-use-case-input';
+import { requestBodyToPresignUserProfileImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-presign-user-profile-images-use-case-input';
+import { requestBodyToPresignUserProfileBannerImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-presign-user-profile-banner-images-use-case-input';
+import { requestBodyToUpdateUserProfileUseCaseInput } from '../request-mappers/user-profile/request-body-to-update-user-profile-use-case-input';
+import { mapCreateUserProfileHttpResponse } from '../http-responses/map-create-user-profile-response';
+import { mapDeleteUserProfileHttpResponse } from '../http-responses/map-delete-user-profile-response';
+import { mapDeleteUserProfileImagesHttpResponse } from '../http-responses/map-delete-user-profile-images-response';
+import { mapGetMyUserProfileHttpResponse } from '../http-responses/map-get-my-user-profile-response';
+import { mapGetUserProfileByIdHttpResponse } from '../http-responses/map-get-user-profile-by-id-response';
+import { mapGetUserProfilesHttpResponse } from '../http-responses/map-get-user-profiles-response';
+import { mapPresignUserProfileImagesHttpResponse } from '../http-responses/map-presign-user-profile-images-response';
+import { mapUpdateUserProfileHttpResponse } from '../http-responses/map-update-user-profile-response';
 
 @Controller({ path: 'user-profiles', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -83,7 +83,7 @@ export class UserProfilesController {
     @GetMetadata() metadata: IGetMetadata,
     @AuthenticatedUser() user: ISessionUser,
   ) {
-    const params = queryParamsToFindManyParams(queryParams, metadata);
+    const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getUserProfilesUseCase.execute(params, user.id);
     return mapGetUserProfilesHttpResponse(output, queryParams);
   }
@@ -98,7 +98,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetMyUserProfileInput(
+    const input = requestQueryParamsToGetMyUserProfileUseCaseInput(
       queryPayload,
       user,
       metadata.isStaffUser,
@@ -125,7 +125,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToGetUserProfileByIdInput(
+    const input = requestQueryParamsToGetUserProfileByIdUseCaseInput(
       params.id,
       queryPayload,
       user,
@@ -148,14 +148,14 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToCreateUserProfileInput(
+    const input = requestBodyToCreateUserProfileUseCaseInput(
       payload,
       user,
       metadata.isStaffUser,
     );
     const output = await this.createUserProfileUseCase.execute(input);
     await this.createRootFolderUseCase.execute(
-      outputCreateUserProfileToCreateRootFolderInput(output, input),
+      outputCreateUserProfileToCreateRootFolderUseCaseInput(output, input),
     );
     return mapCreateUserProfileHttpResponse(output);
   }
@@ -175,7 +175,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToPresignUserProfileImagesInput(
+    const input = requestBodyToPresignUserProfileImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -200,7 +200,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteUserProfileImagesInput(
+    const input = requestBodyToDeleteUserProfileImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -225,7 +225,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToPresignUserProfileBannerImagesInput(
+    const input = requestBodyToPresignUserProfileBannerImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -250,7 +250,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteUserProfileBannerImagesInput(
+    const input = requestBodyToDeleteUserProfileBannerImagesUseCaseInput(
       params.id,
       payload,
       user,
@@ -278,7 +278,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToUpdateUserProfileInput(
+    const input = requestBodyToUpdateUserProfileUseCaseInput(
       params.id,
       payload,
       user,
@@ -302,7 +302,7 @@ export class UserProfilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = payloadToDeleteUserProfileInput(
+    const input = requestParamsToDeleteUserProfileUseCaseInput(
       params.id,
       user,
       metadata.isStaffUser,
