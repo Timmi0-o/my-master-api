@@ -21,3 +21,21 @@ export interface ILoginMetadataInput {
   ipAddress?: string | null;
   userAgent?: string | null;
 }
+
+export interface ISendResetPasswordEmailPayload {
+  email: string;
+}
+
+export interface IValidateResetPasswordTokenPayload {
+  token: string;
+}
+
+export interface IResetPasswordPayload {
+  token: string;
+  password: string;
+}
+
+export interface IChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
