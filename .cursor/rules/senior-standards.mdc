@@ -1,0 +1,39 @@
+---
+description: Senior response style and Clean Architecture / SOLID / DRY baseline
+alwaysApply: true
+---
+
+# Senior standards
+
+## Responses
+
+- No filler phrases. Get to the point immediately.
+- Don't repeat the user's request. Prefer a short paragraph over unnecessary lists.
+- Explain only when it helps the solution.
+
+## Clean Architecture
+
+- Dependencies inward only. `domain` must not import `infrastructure`, Nest, or Prisma.
+- Feature-based modules: `src/modules/<feature>/{domain,application,infrastructure,presentation}`.
+- New code: define port/interface first, implementation in infrastructure.
+- Use-cases depend on ports, not concrete adapters.
+
+## SOLID / DRY / KISS
+
+- One class/file — one responsibility; split when it does "both X and Y".
+- Narrow ISP repository ports; inject abstractions via tokens.
+- Same 3+ lines in two places — extract helper/policy.
+- Prefer explicit simple code; no pattern without benefit.
+
+## Code quality
+
+- No stubs (`TODO`, `throw new Error('not implemented')`) in final code unless agreed.
+- Errors: handle deliberately; never empty `catch`.
+- Prefer typed domain/application errors over bare `Error`.
+---
+
+# Cross-refs
+
+- `.cursor/rules/architecture-ddd-clean.mdc`
+- `.cursor/rules/engineering-quality-backend.mdc`
+- `.cursor/rules/entity-creation-sequence.mdc`

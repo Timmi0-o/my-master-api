@@ -1,0 +1,30 @@
+---
+description: Hard rules for domain entities (model, policies, select-fields, errors)
+globs: src/modules/**/domain/entities/**/*.ts
+alwaysApply: false
+---
+
+# Domain entities
+
+Layout: `domain/entities/<entity>/` (kebab-case, singular). Etalon: `masters/.../master-service`.
+
+## Files
+
+- `i-<entity>.entity.ts` — `I*Entity` / `I*PublicEntity`; money → `string`
+- `i-<entity>-relations.ts` — only if real includes exist
+- `i-create-<entity>.input.ts` / `i-update-<entity>.input.ts`
+- `<entity>-select-fields.ts` — `*_SELECT_FIELDS` + `*_STAFF_ONLY_FIELDS`
+- enums/constants, `policies/`, `errors/`, `index.ts`
+
+## Shape
+
+- Entity = **interface**, not class-aggregate
+- Behavior = **pure** policies (`ensure*`, `build*`, `resolve*`)
+- Update: all optional; `null` = clear, `undefined` = leave; no id/timestamps
+- Select lists — SoT here; presets live in presentation mappers
+
+## Do not
+
+- Import Nest / Prisma / application ports / infrastructure
+- Put I/O or orchestration in policies
+- Duplicate select field arrays in presentation as a second SoT

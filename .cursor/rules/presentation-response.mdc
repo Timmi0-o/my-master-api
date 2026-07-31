@@ -1,0 +1,24 @@
+---
+description: Hard rules for HTTP response mappers
+globs: src/modules/**/presentation/http/http-responses/**/*.ts
+alwaysApply: false
+---
+
+# Presentation response mappers
+
+## Naming
+
+- `map-*-response.ts` / `map-get-*-response.ts` / `map-create-*-response.ts`
+- Pure functions: `mapCancelAppointmentHttpResponse`, …
+
+## Rules
+
+- Pure sync: application output → `{ data }` or `{ data, meta }`
+- List: reuse `buildPaginatedListResponse` / established helpers; empty → `{ data: [], meta }` (200)
+- Strip/omit only for wire shape / already-decided staff visibility — ACL stays in domain
+- No I/O, ports, Nest DI, Prisma
+
+## Refs
+
+- Etalon: `masters/presentation/http/http-responses/`
+- Query/list notes: `query-layer-and-presets.mdc`

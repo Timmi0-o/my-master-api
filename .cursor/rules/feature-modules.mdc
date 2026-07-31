@@ -1,0 +1,31 @@
+---
+description: Hard rules for Nest feature and entity modules (useFactory, tokens)
+globs: src/modules/**/*.module.ts
+alwaysApply: false
+---
+
+# Feature / entity modules
+
+## Tier model
+
+```
+shared (Prisma, TX, filters, HTTP decorators)
+feature facade (<feature>.module.ts)     → imports entity modules + controllers
+entity module (infrastructure/modules/)  → repo TOKEN, UC useFactory, app ports
+AppModule                                → imports feature facades
+```
+
+## Rules
+
+- UC: plain class; `{ provide: UseCase, useFactory, inject }` — order = ctor
+- Repo: `{ provide: *_REPOSITORY_TOKEN, useClass: Prisma* }`
+- Application ports: bind adapter next to UC that needs them
+- Do **not** re-provide Prisma / TRANSACTION_MANAGER globally
+- Controllers inject **only** use-cases (see `controllers-no-repositories.mdc`)
+- Export tokens/UC only when another module needs them
+- New feature → `AppModule.imports`
+
+## Refs
+
+- Etalon: `masters/infrastructure/modules/master-service/master-service.module.ts`
+- Skill: `feature-module`

@@ -1,0 +1,41 @@
+---
+description: Hard rules for Prisma repositories and row-mappers in feature modules
+globs: src/modules/**/infrastructure/persistence/repositories/**/*.ts,src/modules/**/infrastructure/persistence/row-mappers/**/*.ts
+alwaysApply: false
+---
+
+# Prisma repositories
+
+## Layout
+
+```
+persistence/repositories/<entity>/
+  prisma-<entity>.repository.ts
+  <entity>.relations.ts
+  <entity>-write-error.mapper.ts
+
+persistence/row-mappers/<entity>/
+  <entity>.row.types.ts
+  map-<entity>-row.ts
+  index.ts
+```
+
+Bind TOKEN in `infrastructure/modules/<entity>/` — not ad-hoc in controllers.
+
+## Rules
+
+- `extends PrismaReadRepository` + `implements` domain `I*Repository` (list/preset entities)
+- `getDelegate(scope?)`: `unwrapPrismaTxFromScope(scope)` or `this.prisma`
+- Writes require `scope`; try/catch → write-error mapper
+- Update: only keys `!== undefined`, including `null`
+- Row mapper: only Prisma → domain; nest via other `map*Row`
+- Write-error: `P2002`→AlreadyExists, `P2025`→NotFound, `P2003`→FK NotFound
+- No ACL / enrichment / HTTP shaping
+- `@prisma/client` stays in infrastructure
+
+## Refs
+
+- Etalon: `masters/.../repositories/master-service/`, `row-mappers/master-service/`
+- Shared base: `shared/infrastructure/persistence/repositories/base/`
+- Also: `prisma-boundary-and-types.mdc`, `query-layer-and-presets.mdc`
+- Skill: `prisma-repository`

@@ -1,0 +1,26 @@
+---
+description: Hard rules for domain → HTTP error mapping
+globs: src/modules/**/infrastructure/filters/**/*.ts,src/modules/shared/infrastructure/filters/**/*.ts
+alwaysApply: false
+---
+
+# Presentation / filter errors
+
+## Pipeline
+
+1. UC/domain throws typed domain error
+2. `DomainExceptionFilter` + domain-error mappers
+3. Per-feature mappers under shared/filters as established
+4. Fallback: validation → 400; unknown → 500
+
+## Rules
+
+- **Only** filter/mapper layer maps domain → HTTP status/body
+- New domain codes: extend the relevant domain-error mapper
+- Never map transport errors inside domain or use-cases
+- Do not leak Prisma `P20xx` to clients (map in write-error mapper first)
+
+## Refs
+
+- `shared/infrastructure/filters/`
+- `engineering-quality-backend.mdc`

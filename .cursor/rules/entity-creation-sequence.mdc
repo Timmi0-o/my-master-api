@@ -8,8 +8,8 @@ alwaysApply: false
 
 Следовать **снизу вверх по зависимостям**: схема БД → контракт домена → адаптер → прикладной слой → HTTP.
 
-Сквозной поток запросов и контракт ответа — `../../.cursor/rules/project-data-flow.mdc`.  
-Пресеты, `FindManyParams`, row-mappers — `query-layer-and-presets.mdc`, `prisma-boundary-and-types.mdc`.
+Пресеты, `FindManyParams`, row-mappers — `query-layer-and-presets.mdc`, `prisma-boundary-and-types.mdc`.  
+Workflows: skills `read-endpoint` / `write-endpoint` (+ building-block skills).
 
 ## Схема
 

@@ -1,0 +1,29 @@
+---
+description: Hard rules for feature infrastructure layer (folder map, adapters)
+globs: src/modules/**/infrastructure/**/*.ts
+alwaysApply: false
+---
+
+# Infrastructure (feature module)
+
+## Dependency rule
+
+Allowed: feature `domain` / `application` ports, `@shared/*`, Nest, Prisma (inside persistence), Socket.IO/SSE adapters.
+
+Forbidden: presentation DTO shaping inside repos; `@prisma/client` leaked outside infrastructure; silent contract fallbacks; business policies in adapters.
+
+## Folders
+
+| Path | Role |
+|---|---|
+| `modules/<entity>/` | Nest composition (repos, UC useFactory, ports) |
+| `persistence/repositories/` | Prisma repos, relations validation, write-error mappers |
+| `persistence/row-mappers/` | Prisma row → domain |
+| `web-socket/` / `sse/` | Realtime publisher adapters |
+| other adapters | Implement application ports only |
+
+## Do not
+
+- ACL / orchestration → domain / application
+- HTTP response shaping → presentation
+- Re-register globals (`PrismaService`, `TRANSACTION_MANAGER_TOKEN`) in every feature

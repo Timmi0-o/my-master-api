@@ -1,0 +1,36 @@
+---
+description: Hard rules for HTTP controllers (Authorize, thin adapters)
+globs: src/modules/**/presentation/http/controllers/**/*.ts
+alwaysApply: false
+---
+
+# Presentation controllers
+
+## Handler pattern
+
+```ts
+@Post()
+@Authorize({ kind: 'authenticated' })
+async create(
+  @HttpBody(schema) body: IPayload,
+  @AuthenticatedUser() user: IAuthenticatedUser,
+): Promise<{ data: … }> {
+  const input = requestBodyToCreateXUseCaseInput(body, user);
+  const output = await this.createUseCase.execute(input);
+  return mapCreateXHttpResponse(output);
+}
+```
+
+## Rules
+
+- Inject **only** application use-cases
+- Flow: mapper → `execute` → response mapper — nothing else
+- `@Controller({ path: '<kebab-plural>', version: '1' })`
+- `@UseFilters(DomainExceptionFilter)` where established
+- Orchestration of multiple UC allowed; use `output-*-to-*-use-case-input` between them
+- Class naming: `<Entities>Controller` matching neighbors
+
+## Do not
+
+- Prisma, repos, policies, Nest Logger business logic
+- Infer permissions from payload flags

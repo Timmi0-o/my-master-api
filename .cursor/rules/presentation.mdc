@@ -1,0 +1,35 @@
+---
+description: Hard rules for presentation HTTP layer (thin adapters)
+globs: src/modules/**/presentation/**/*.ts
+alwaysApply: false
+---
+
+# Presentation HTTP
+
+## Role
+
+Wire adapt only: AJV validate → request map → application UC → response map.  
+Auth via guards + `@Authorize` / `@PublicEndpoint`.
+
+## Folders
+
+| Path | Role |
+|---|---|
+| `http/controllers/` | Thin `*.controller.ts` |
+| `http/validation/schemas/` | AJV schemas + types |
+| `http/request-mappers/` | HTTP → UC input / FindManyParams |
+| `http/http-responses/` | UC output → `{ data, meta? }` |
+| `web-socket/` | Gateways (transport only) |
+| guards / decorators | auth/authorization feature |
+
+## Forbidden
+
+- Prisma / repository ports
+- Domain ACL policies / business invariants
+- Ad-hoc select field lists that duplicate domain `*_SELECT_FIELDS` as a second SoT
+- Prefix `payload-to-*` for request mappers (use `request-body-to-*` / `request-query-params-to-*` / `request-params-to-*`)
+
+## Refs
+
+- `http-request-mappers.mdc`, `controllers-no-repositories.mdc`
+- Skills: `presentation-http`, `read-endpoint`, `write-endpoint`

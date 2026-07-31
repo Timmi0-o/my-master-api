@@ -1,0 +1,33 @@
+---
+description: Hard rules for authorization kinds, callers, and permission policies
+globs: src/modules/authorization/domain/**/*.ts,src/modules/**/presentation/**/*.ts
+alwaysApply: false
+---
+
+# Domain / HTTP auth
+
+## Authorize options
+
+`TAuthorizeOptions` discriminated by `kind`:
+
+- `authenticated` — active user
+- `staff-only` — `ADMIN` | `SUPER_ADMIN`
+- `permissions` — OR list from `Permissions.*`; `SUPER_ADMIN` bypass
+
+## HTTP wiring
+
+- `@UseGuards(JwtAuthGuard, AuthorizeGuard)` + `@Authorize({ kind, permissions? })`
+- Public: `@PublicEndpoint()`
+- Caller: `@AuthorizedCaller()` / `@AuthenticatedUser()`
+
+## Rules
+
+- Permissions only from `authorization/domain/permissions/permission-names.ts`
+- Business access (`ensure*Accessible`) stays in domain policies inside UC
+- Do not invent Nest guard chains for what `@Authorize` already covers
+- Empty `permissions` → deny
+
+## Refs
+
+- `authorization/domain/auth/authorize-options.ts`
+- Skill: `authorize-kind`

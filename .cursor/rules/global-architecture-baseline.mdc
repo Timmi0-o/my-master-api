@@ -14,9 +14,15 @@ alwaysApply: true
 ## Required References
 
 - Применять правила из:
-  - `../../.cursor/rules/project-data-flow.mdc` (сквозной поток данных монорепо)
+  - `.cursor/rules/senior-standards.mdc`
   - `.cursor/rules/entity-creation-sequence.mdc` (порядок создания сущности)
   - `.cursor/rules/architecture-ddd-clean.mdc`
   - `.cursor/rules/query-layer-and-presets.mdc`
   - `.cursor/rules/prisma-boundary-and-types.mdc`
   - `.cursor/rules/engineering-quality-backend.mdc`
+
+## Skills (workflows)
+
+- Vertical slices: `read-endpoint`, `write-endpoint`
+- Building blocks: `domain-entity`, `domain-repository`, `prisma-repository`, `feature-module`, `presentation-http`, `authorize-kind`
+- Side-effects: `application-port` (WS/SSE publishers — не outbox/RPC)

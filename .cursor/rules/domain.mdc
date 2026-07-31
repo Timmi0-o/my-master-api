@@ -1,0 +1,29 @@
+---
+description: Hard rules for feature domain layer (clean arch, folder map)
+globs: src/modules/**/domain/**/*.ts
+alwaysApply: false
+---
+
+# Domain (feature module)
+
+## Boundaries
+
+- **No** Nest, Prisma, AJV, Socket.IO, HTTP DTOs, presentation, infrastructure
+- Imports: same feature `domain/*`, `@shared/domain/*`, other features' **domain** types only when necessary
+- Path: `src/modules/<feature>/domain/...`
+
+## Where things live
+
+| What | Where |
+|---|---|
+| Fields, enums, policies, entity errors, select-fields | `entities/<entity>/` |
+| DB ports + tokens | `repositories/<entity>/` |
+| Auth kinds / caller types (authorization feature) | `authorization/domain/auth/` |
+| Shared ISP repos, query types, TX | `@shared/domain/...` |
+
+## Canonical
+
+- Etalon entity: `masters/domain/entities/master-service`
+- Etalon repo port: `masters/domain/repositories/master-service`
+- Full sequence: `entity-creation-sequence.mdc`
+- Skill: `domain-entity`, `domain-repository`

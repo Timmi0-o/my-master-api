@@ -1,0 +1,34 @@
+---
+description: Hard rules for domain repository ports (ISP + tokens)
+globs: src/modules/**/domain/repositories/**/*.ts
+alwaysApply: false
+---
+
+# Domain repositories
+
+Layout: `domain/repositories/<entity>/`. Ports only — Prisma impl in infrastructure.
+
+## Port shape
+
+```ts
+export const X_REPOSITORY_TOKEN = Symbol('X_REPOSITORY_TOKEN');
+
+export type IXRepository = IReadRepository<IPublic, string, IRelations> &
+  ICreateRepository<IEntity, ICreateInput> &
+  IUpdateRepository<IEntity, string, IUpdateInput> &
+  ISoftDeleteRepository<IEntity, string> & {
+    findEntityById(id: string, scope?: TransactionScope): Promise<IEntity | null>;
+  };
+```
+
+- Prefer **type intersection** of `@shared/domain/repositories` capability ports
+- One repository per aggregate (read + write together)
+- Write methods require `TransactionScope`
+- Auth-only without list: flat port without `IReadRepository`
+
+## Do not
+
+- Import Prisma / Nest / presentation
+- Fat god CRUD interface instead of ISP
+- Split read/write into two repositories for the same aggregate
+- Use `PrismaCrudRepository`

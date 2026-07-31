@@ -1,0 +1,31 @@
+---
+description: Hard rules for AJV HTTP validation schemas
+globs: src/modules/**/presentation/http/validation/**/*.ts
+alwaysApply: false
+---
+
+# Presentation schemas
+
+## Layout
+
+```
+http/validation/schemas/
+  <verb>-<entity>-payload.schema.ts
+  <verb>-<entity>-payload.types.ts
+  *-filters-preset.schema.ts          # list filters if needed
+```
+
+## Rules
+
+- `JSONSchemaType<I*Payload>`
+- Decorators: `@HttpBody` / `@HttpQuery` / `@HttpParams` from `@shared/presentation/http/decorators`
+- List query preprocess: `normalizeListQueryRaw`; id params: `normalizeIdParam`
+- Mutate: `create-*-payload.schema.ts`, **not** `*-body.schema.ts`
+- Enums/filter field names from domain, not Prisma
+- Reuse shared helpers; don't fork nullable-id / list-query builders
+- Do **not** hardcode select lists that belong in domain `*_SELECT_FIELDS`
+
+## Refs
+
+- Etalon: `masters/presentation/http/validation/schemas/`
+- Architecture HTTP validation section: `architecture-ddd-clean.mdc`
