@@ -76,6 +76,10 @@ describe('ConfirmAppointmentUseCase', () => {
       }),
     };
 
+    const scheduleAppointmentRemindersUseCase = {
+      execute: jest.fn().mockResolvedValue([]),
+    };
+
     const useCase = new ConfirmAppointmentUseCase(
       createMockTransactionManager(),
       appointmentRepository,
@@ -84,6 +88,7 @@ describe('ConfirmAppointmentUseCase', () => {
       realtimeAppointmentPublisher as never,
       createNotificationUseCase as never,
       sendWebPushToUserUseCase as never,
+      scheduleAppointmentRemindersUseCase as never,
     );
 
     const result = await useCase.execute({
@@ -103,6 +108,12 @@ describe('ConfirmAppointmentUseCase', () => {
         body: 'Запись подтверждена',
       }),
       expect.anything(),
+    );
+    expect(scheduleAppointmentRemindersUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appointmentId: 'appt-1',
+        startsAt: pending.startsAt,
+      }),
     );
     expect(createNotificationUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -136,6 +147,7 @@ describe('ConfirmAppointmentUseCase', () => {
       { appointmentUpdated: jest.fn() } as never,
       { execute: jest.fn() } as never,
       { execute: jest.fn() } as never,
+      { execute: jest.fn() } as never,
     );
 
     await expect(
@@ -163,6 +175,7 @@ describe('ConfirmAppointmentUseCase', () => {
         }),
       } as never,
       { appointmentUpdated: jest.fn() } as never,
+      { execute: jest.fn() } as never,
       { execute: jest.fn() } as never,
       { execute: jest.fn() } as never,
     );

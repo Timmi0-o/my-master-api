@@ -40,6 +40,7 @@ function createUseCase(deps: {
   createNotificationUseCase?: { execute: jest.Mock };
   sendWebPushToUserUseCase?: { execute: jest.Mock };
   realtimeAppointmentPublisher?: { appointmentUpdated: jest.Mock };
+  cancelAppointmentRemindersUseCase?: { execute: jest.Mock };
 }) {
   return new CancelAppointmentUseCase(
     createMockTransactionManager(),
@@ -66,6 +67,9 @@ function createUseCase(deps: {
         failed: 0,
         expired: 0,
       }),
+    }) as never,
+    (deps.cancelAppointmentRemindersUseCase ?? {
+      execute: jest.fn().mockResolvedValue(0),
     }) as never,
   );
 }
@@ -98,10 +102,15 @@ describe('CancelAppointmentUseCase', () => {
       }),
     };
 
+    const cancelAppointmentRemindersUseCase = {
+      execute: jest.fn().mockResolvedValue(2),
+    };
+
     const useCase = createUseCase({
       appointmentRepository,
       createNotificationUseCase,
       sendWebPushToUserUseCase,
+      cancelAppointmentRemindersUseCase,
     });
 
     const result = await useCase.execute({
@@ -119,6 +128,9 @@ describe('CancelAppointmentUseCase', () => {
         cancelledAt: expect.any(Date),
       }),
       expect.anything(),
+    );
+    expect(cancelAppointmentRemindersUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ appointmentId: 'appt-1' }),
     );
     expect(createNotificationUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({

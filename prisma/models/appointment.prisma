@@ -28,6 +28,7 @@ model Appointment {
   clientUser    User             @relation("ClientAppointments", fields: [clientUserId], references: [id])
   chat          AppointmentChat? @relation(fields: [chatId], references: [id])
   review        MasterServiceReview?
+  reminderJobs  AppointmentReminderJob[]
 
   @@index([chatId])
 

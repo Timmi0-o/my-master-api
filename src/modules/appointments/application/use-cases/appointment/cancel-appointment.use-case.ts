@@ -24,6 +24,7 @@ import {
 import type { ICancelAppointmentApplicationInput } from '../../dtos/appointment/cancel-appointment.input';
 import type { ICancelAppointmentApplicationOutput } from '../../dtos/appointment/cancel-appointment.output';
 import type { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
+import type { CancelAppointmentRemindersUseCase } from './cancel-appointment-reminders.use-case';
 
 function resolveCancelledBy(
   actor: ICancelAppointmentApplicationInput['actor'],
@@ -51,6 +52,7 @@ export class CancelAppointmentUseCase {
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+    private readonly cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
   ) {}
 
   async execute(
@@ -100,6 +102,11 @@ export class CancelAppointmentUseCase {
             scope,
           );
         }
+
+        await this.cancelAppointmentRemindersUseCase.execute({
+          appointmentId: appointment.id,
+          scope,
+        });
 
         return appointment;
       },

@@ -1,0 +1,41 @@
+model AppointmentReminderJob {
+  id            String @id @default(uuid())
+  appointmentId String @map("appointment_id")
+
+  type  AppointmentReminderJobType
+  runAt DateTime                   @map("run_at")
+
+  status   AppointmentReminderJobStatus @default(PENDING)
+  attempts Int                          @default(0)
+
+  lastError String?   @map("last_error")
+  sentAt    DateTime? @map("sent_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@unique([appointmentId, type])
+  @@index([status, runAt])
+  @@index([appointmentId])
+  @@map("AppointmentReminderJobs")
+}
+
+enum AppointmentReminderJobType {
+  REMINDER_48H
+  REMINDER_24H
+  REMINDER_12H
+  REMINDER_6H
+  REMINDER_4H
+  REMINDER_2H
+  REMINDER_30M
+}
+
+enum AppointmentReminderJobStatus {
+  PENDING
+  PROCESSING
+  SENT
+  CANCELLED
+  FAILED
+}

@@ -27,8 +27,9 @@ import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from '../../../../users/domain/re
 import type { IUserRepository } from '../../../../users/domain/repositories/user/i-user.repository';
 import { USER_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user/user.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
-import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
+import { CancelAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/cancel-appointment-reminders.use-case';
 import { CancelAppointmentUseCase } from '../../../application/use-cases/appointment/cancel-appointment.use-case';
+import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
 import { ConfirmAppointmentUseCase } from '../../../application/use-cases/appointment/confirm-appointment.use-case';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/appointment/create-appointment.use-case';
 import { DeleteAppointmentByIdUseCase } from '../../../application/use-cases/appointment/delete-appointment-by-id.use-case';
@@ -36,14 +37,20 @@ import { GetAppointmentByIdUseCase } from '../../../application/use-cases/appoin
 import { GetAppointmentsUseCase } from '../../../application/use-cases/appointment/get-appointments.use-case';
 import { GetMyAppointmentsUseCase } from '../../../application/use-cases/appointment/get-my-appointments.use-case';
 import { GetMyClientsAppointmentsUseCase } from '../../../application/use-cases/appointment/get-my-clients-appointments.use-case';
+import { ProcessDueAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/process-due-appointment-reminders.use-case';
+import { ScheduleAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/schedule-appointment-reminders.use-case';
 import { UpdateAppointmentByIdUseCase } from '../../../application/use-cases/appointment/update-appointment-by-id.use-case';
 import { APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-message/appointment-chat-message.repository.tokens';
 import type { IAppointmentChatMessageRepository } from '../../../domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat/appointment-chat.repository.tokens';
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
+import { APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-reminder-job/appointment-reminder-job.repository.tokens';
+import type { IAppointmentReminderJobRepository } from '../../../domain/repositories/appointment-reminder-job/i-appointment-reminder-job.repository';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
+import { PrismaAppointmentReminderJobRepository } from '../../persistence/repositories/appointment-reminder-job/prisma-appointment-reminder-job.repository';
 import { PrismaAppointmentRepository } from '../../persistence/repositories/appointment/prisma-appointment.repository';
+import { AppointmentRemindersScheduler } from '../../schedulers/appointment-reminders.scheduler';
 import { AppointmentRealtimeEventBus } from '../../web-socket/appointment/appointment-realtime.event-bus';
 import { SocketIoAppointmentRealtimePublisher } from '../../web-socket/appointment/socket-io-appointment-realtime.publisher';
 import { AppointmentChatMessageModule } from '../appointment-chat-message/appointment-chat-message.module';
@@ -72,6 +79,47 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       provide: APPOINTMENT_REPOSITORY_TOKEN,
       useClass: PrismaAppointmentRepository,
     },
+    {
+      provide: APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN,
+      useClass: PrismaAppointmentReminderJobRepository,
+    },
+    {
+      provide: ScheduleAppointmentRemindersUseCase,
+      useFactory: (repo: IAppointmentReminderJobRepository) =>
+        new ScheduleAppointmentRemindersUseCase(repo),
+      inject: [APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN],
+    },
+    {
+      provide: CancelAppointmentRemindersUseCase,
+      useFactory: (repo: IAppointmentReminderJobRepository) =>
+        new CancelAppointmentRemindersUseCase(repo),
+      inject: [APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN],
+    },
+    {
+      provide: ProcessDueAppointmentRemindersUseCase,
+      useFactory: (
+        reminderJobRepo: IAppointmentReminderJobRepository,
+        appointmentRepo: IAppointmentRepository,
+        profileRepo: IMasterProfileRepository,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+      ) =>
+        new ProcessDueAppointmentRemindersUseCase(
+          reminderJobRepo,
+          appointmentRepo,
+          profileRepo,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+        ),
+      inject: [
+        APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+      ],
+    },
+    AppointmentRemindersScheduler,
     {
       provide: GetAppointmentsUseCase,
       useFactory: (repo: IAppointmentRepository) =>
@@ -176,6 +224,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        scheduleAppointmentRemindersUseCase: ScheduleAppointmentRemindersUseCase,
       ) =>
         new ConfirmAppointmentUseCase(
           transactionManager,
@@ -185,6 +234,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           realtimeAppointmentPublisher,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          scheduleAppointmentRemindersUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -194,6 +244,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        ScheduleAppointmentRemindersUseCase,
       ],
     },
     {
@@ -206,6 +257,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
       ) =>
         new CancelAppointmentUseCase(
           transactionManager,
@@ -215,6 +267,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           realtimeAppointmentPublisher,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          cancelAppointmentRemindersUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -224,6 +277,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        CancelAppointmentRemindersUseCase,
       ],
     },
     {

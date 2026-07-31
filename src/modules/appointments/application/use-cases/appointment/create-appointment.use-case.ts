@@ -20,8 +20,8 @@ import {
   isMasterStartsAtAvailable,
 } from 'src/modules/masters/application/services/calculate-master-available-slots';
 import {
-  ensureMasterProfileExists,
   ensureMasterOwnerEmailVerified,
+  ensureMasterProfileExists,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
@@ -179,8 +179,7 @@ export class CreateAppointmentUseCase {
             weeklySchedules as IMasterWeeklySchedulePublicEntity[],
           exceptions: exceptions as IMasterScheduleExceptionPublicEntity[],
           appointments: dayAppointments as IAppointmentPublicEntity[],
-          clientAppointments:
-            clientAppointments as IAppointmentPublicEntity[],
+          clientAppointments: clientAppointments as IAppointmentPublicEntity[],
           startsAt: input.startsAt,
           now,
         });

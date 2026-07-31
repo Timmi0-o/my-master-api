@@ -23,6 +23,7 @@ import {
 import type { IConfirmAppointmentApplicationInput } from '../../dtos/appointment/confirm-appointment.input';
 import type { IConfirmAppointmentApplicationOutput } from '../../dtos/appointment/confirm-appointment.output';
 import type { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
+import type { ScheduleAppointmentRemindersUseCase } from './schedule-appointment-reminders.use-case';
 
 export class ConfirmAppointmentUseCase {
   constructor(
@@ -33,6 +34,7 @@ export class ConfirmAppointmentUseCase {
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+    private readonly scheduleAppointmentRemindersUseCase: ScheduleAppointmentRemindersUseCase,
   ) {}
 
   async execute(
@@ -73,6 +75,12 @@ export class ConfirmAppointmentUseCase {
             scope,
           );
         }
+
+        await this.scheduleAppointmentRemindersUseCase.execute({
+          appointmentId: appointment.id,
+          startsAt: appointment.startsAt,
+          scope,
+        });
 
         return appointment;
       },
