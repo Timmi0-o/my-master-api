@@ -22,6 +22,7 @@ function mapUserBase(row: UserRow): IUserPublicEntity {
     name: row.name,
     surname: row.surname,
     patronymic: row.patronymic,
+    emailVerifiedAt: row.emailVerifiedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt,

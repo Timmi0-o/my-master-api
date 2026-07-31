@@ -19,7 +19,10 @@ import {
   getLocalDayBoundsUtc,
   isMasterStartsAtAvailable,
 } from 'src/modules/masters/application/services/calculate-master-available-slots';
-import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
+import {
+  ensureMasterProfileExists,
+  ensureMasterOwnerEmailVerified,
+} from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
@@ -35,6 +38,7 @@ import {
 } from 'src/modules/notifications/domain/entities/notification';
 import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { ICreateAppointmentApplicationInput } from '../../dtos/appointment/create-appointment.input';
 import type { ICreateAppointmentApplicationOutput } from '../../dtos/appointment/create-appointment.output';
 import { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
@@ -50,6 +54,7 @@ export class CreateAppointmentUseCase {
     private readonly masterWeeklyScheduleRepository: IMasterWeeklyScheduleRepository,
     private readonly masterScheduleExceptionRepository: IMasterScheduleExceptionRepository,
     private readonly userBlockRepository: IUserBlockRepository,
+    private readonly userRepository: IUserRepository,
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
@@ -70,6 +75,9 @@ export class CreateAppointmentUseCase {
     ensureMasterProfileExists(profile, input.masterProfileId);
 
     ensureMasterProfileIsDifferent(profile, input.actor);
+
+    const owner = await this.userRepository.findEntityById(profile.userId);
+    ensureMasterOwnerEmailVerified(profile.id, owner?.emailVerifiedAt);
 
     await ensureUsersNotBlocked(
       this.userBlockRepository,

@@ -10,6 +10,8 @@ model User {
 
   passwordHash String @map("password_hash")
 
+  emailVerifiedAt DateTime? @map("email_verified_at")
+
   name       String  @map("name")
   surname    String  @map("surname")
   patronymic String? @map("patronymic")
@@ -28,6 +30,7 @@ model User {
   sessions                Session[]
   refreshTokens           RefreshToken[]
   passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
   clientAppointments      Appointment[]            @relation("ClientAppointments")
   clientAppointmentChats  AppointmentChat[]        @relation("ClientAppointmentChats")
   appointmentChatMessages AppointmentChatMessage[] @relation("AppointmentChatMessages")

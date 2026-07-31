@@ -1,5 +1,6 @@
 import type { IFilePublicEntity } from 'src/modules/files/domain/entities/file';
 import type { ReadResult } from 'src/modules/shared/domain/query';
+import type { IUserPublicEntity } from 'src/modules/users/domain/entities/user';
 import type { IProfileAvatarView } from '../image';
 import type { IMasterProfilePublicEntity } from '../master-profile';
 
@@ -18,6 +19,8 @@ export type IMasterServiceImageView = {
 
 export type IMasterServiceMasterProfileRelations = {
   avatar?: IProfileAvatarView | null;
+  /** Owner user — for where filters (e.g. emailVerifiedAt). */
+  user?: IUserPublicEntity;
 };
 
 export type IMasterServiceMasterProfileView = ReadResult<

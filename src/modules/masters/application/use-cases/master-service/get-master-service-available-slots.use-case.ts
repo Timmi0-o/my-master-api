@@ -3,7 +3,10 @@ import { formatInTimeZone } from 'date-fns-tz';
 import type { IAppointmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
-import { MasterProfileNotFoundError } from 'src/modules/masters/domain/entities/master-profile';
+import {
+  ensureMasterOwnerEmailVerified,
+  MasterProfileNotFoundError,
+} from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
@@ -11,6 +14,7 @@ import type { IMasterProfileRepository } from 'src/modules/masters/domain/reposi
 import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
 import type { IMasterWeeklyScheduleRepository } from 'src/modules/masters/domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IGetMasterServiceAvailableSlotsInput } from '../../dtos/master-service/get-master-service-available-slots.input';
 import type { IGetMasterServiceAvailableSlotsOutput } from '../../dtos/master-service/get-master-service-available-slots.output';
 import {
@@ -25,6 +29,7 @@ export class GetMasterServiceAvailableSlotsUseCase {
     private readonly masterWeeklyScheduleRepository: IMasterWeeklyScheduleRepository,
     private readonly masterScheduleExceptionRepository: IMasterScheduleExceptionRepository,
     private readonly appointmentRepository: IAppointmentRepository,
+    private readonly userRepository: IUserRepository,
   ) {}
 
   async execute(
@@ -44,8 +49,10 @@ export class GetMasterServiceAvailableSlotsUseCase {
       throw new MasterProfileNotFoundError(service.masterProfileId);
     }
 
-    const timezone = profile.timezone || 'Europe/Moscow';
+    const owner = await this.userRepository.findEntityById(profile.userId);
+    ensureMasterOwnerEmailVerified(profile.id, owner?.emailVerifiedAt);
 
+    const timezone = profile.timezone || 'Europe/Moscow';
     const now = new Date();
     const date = input.date ?? formatInTimeZone(now, timezone, 'yyyy-MM-dd');
 

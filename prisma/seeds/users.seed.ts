@@ -1,11 +1,11 @@
 import type { Language, PrismaClient, Status } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
 import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
+import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
 import type { SeedRunner } from './index';
 
 const USERS_COUNT = 180;
-const SEED_PASSWORD = 'password';
+const SEED_PASSWORD = 'rieugqierhg93nqyoih98ngq3y98rgnqy3';
 const SEED_BCRYPT_ROUNDS = 10;
 
 const buildRoleId = (index: number): string => {
@@ -34,6 +34,7 @@ const buildUserData = (index: number, passwordHash: string) => {
     surname: `Surname${padded}`,
     patronymic: index % 2 === 0 ? `Patronymic${padded}` : null,
     language: 'RU' as Language,
+    emailVerifiedAt: new Date(),
   };
 };
 
@@ -58,6 +59,7 @@ export const usersSeed: SeedRunner = async (
         surname: userData.surname,
         patronymic: userData.patronymic,
         language: userData.language,
+        emailVerifiedAt: userData.emailVerifiedAt,
         deletedAt: null,
       },
     });

@@ -1,9 +1,13 @@
+import {
+  MASTER_OWNER_EMAIL_VERIFIED_WHERE,
+  MASTER_SERVICE_OWNER_EMAIL_VERIFIED_WHERE,
+} from 'src/modules/masters/domain/entities/master-profile/filters/master-owner-email-verified.where';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service';
-import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
 import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-profile/preset-to-select-options.mapper';
 import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-service/preset-to-select-options.mapper';
 import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
+import { mapPaginationToSlice } from 'src/modules/shared/presentation/http/query/map-pagination-to-slice';
 import type {
   ISearchByTextApplicationInput,
   ISearchByTextApplicationOutput,
@@ -25,6 +29,7 @@ function buildMasterWhere(
 ): Record<string, unknown> {
   const base: Record<string, unknown> = {
     deletedAt: { isNull: true },
+    ...MASTER_OWNER_EMAIL_VERIFIED_WHERE,
   };
 
   if (!q && category == null) {
@@ -115,6 +120,7 @@ export class SearchByTextUseCase {
 
     const serviceWhere: Record<string, unknown> = {
       deletedAt: { isNull: true },
+      ...MASTER_SERVICE_OWNER_EMAIL_VERIFIED_WHERE,
       ...(serviceTextOr ? { or: serviceTextOr } : {}),
       ...(category != null ? { category } : {}),
     };
@@ -123,12 +129,16 @@ export class SearchByTextUseCase {
       this.masterProfileRepository.findMany({
         where: buildMasterWhere(q, category),
         slice,
-        ...splitPresetReadOptions(masterProfilePresetToSelectOptions('BASE', false)),
+        ...splitPresetReadOptions(
+          masterProfilePresetToSelectOptions('BASE', false),
+        ),
       }),
       this.masterServiceRepository.findMany({
         where: serviceWhere,
         slice,
-        ...splitPresetReadOptions(masterServicePresetToSelectOptions('BASE', false)),
+        ...splitPresetReadOptions(
+          masterServicePresetToSelectOptions('BASE', false),
+        ),
       }),
     ]);
 

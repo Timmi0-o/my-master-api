@@ -3,6 +3,7 @@ import type { DomainErrorMapper } from './domain-error-mapper.types';
 import {
   MasterProfileForbiddenError,
   MasterProfileNotFoundError,
+  MasterEmailNotVerifiedError,
 } from 'src/modules/masters/domain/entities/master-profile';
 import {
   MasterServiceForbiddenError,
@@ -84,7 +85,8 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterSubscriptionForbiddenError ||
     error instanceof MasterSubscriptionCannotSubscribeToSelfError ||
     error instanceof MasterSubscriptionBlockedUserError ||
-    error instanceof FavoriteMasterServiceForbiddenError
+    error instanceof FavoriteMasterServiceForbiddenError ||
+    error instanceof MasterEmailNotVerifiedError
   ) {
     return new ForbiddenException(error.message);
   }

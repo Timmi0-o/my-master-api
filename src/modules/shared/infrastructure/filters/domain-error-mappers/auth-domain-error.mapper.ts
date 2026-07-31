@@ -1,5 +1,6 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { DomainErrorMapper } from './domain-error-mapper.types';
+import { InvalidEmailVerificationTokenError } from 'src/modules/auth/domain/entities/email-verification-token';
 import {
   InvalidCurrentPasswordError,
   InvalidResetPasswordTokenError,
@@ -14,6 +15,9 @@ export const mapAuthDomainError: DomainErrorMapper = (error) => {
     return new BadRequestException(error.message);
   }
   if (error instanceof InvalidCurrentPasswordError) {
+    return new BadRequestException(error.message);
+  }
+  if (error instanceof InvalidEmailVerificationTokenError) {
     return new BadRequestException(error.message);
   }
   return null;

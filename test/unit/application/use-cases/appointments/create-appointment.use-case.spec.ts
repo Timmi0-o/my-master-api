@@ -5,6 +5,7 @@ import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/en
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
+import { MasterEmailNotVerifiedError } from 'src/modules/masters/domain/entities/master-profile';
 import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile/master-profile-booking.enum';
 import { EDayOfWeek } from 'src/modules/masters/domain/entities/master-weekly-schedule/master-weekly-schedule.enum';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
@@ -78,6 +79,7 @@ function createUseCase(deps: {
   masterServiceRepository?: IMasterServiceRepository;
   masterWeeklyScheduleRepository?: IMasterWeeklyScheduleRepository;
   masterScheduleExceptionRepository?: IMasterScheduleExceptionRepository;
+  ownerEmailVerifiedAt?: Date | null;
 }) {
   return new CreateAppointmentUseCase(
     createMockTransactionManager(),
@@ -112,6 +114,15 @@ function createUseCase(deps: {
     deps.masterWeeklyScheduleRepository ?? createWeeklyScheduleRepo(),
     deps.masterScheduleExceptionRepository ?? createEmptyExceptionRepo(),
     { existsActiveBetweenUsers: jest.fn().mockResolvedValue(false) } as never,
+    {
+      findEntityById: jest.fn().mockResolvedValue({
+        id: 'master-1',
+        emailVerifiedAt:
+          deps.ownerEmailVerifiedAt === undefined
+            ? new Date('2026-01-01T00:00:00.000Z')
+            : deps.ownerEmailVerifiedAt,
+      }),
+    } as never,
     { appointmentCreated: jest.fn().mockResolvedValue(undefined) } as never,
     { execute: jest.fn().mockResolvedValue({ id: 'notif-1' }) } as never,
     {
@@ -345,5 +356,27 @@ describe('CreateAppointmentUseCase', () => {
         startsAt: SLOT_STARTS_AT,
       }),
     ).rejects.toBeInstanceOf(AppointmentNotAvailableError);
+  });
+
+  it('throws when master owner email is not verified', async () => {
+    const appointmentRepository = {
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn(),
+    } as unknown as IAppointmentRepository;
+
+    const useCase = createUseCase({
+      appointmentRepository,
+      ownerEmailVerifiedAt: null,
+    });
+
+    await expect(
+      useCase.execute({
+        actor: { userId: 'client-1', isStaffUser: false },
+        masterProfileId: 'mp-1',
+        masterServiceId: 'svc-1',
+        startsAt: SLOT_STARTS_AT,
+      }),
+    ).rejects.toBeInstanceOf(MasterEmailNotVerifiedError);
+    expect(appointmentRepository.create).not.toHaveBeenCalled();
   });
 });

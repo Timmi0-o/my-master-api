@@ -4,6 +4,7 @@ import { ICreateUserProfileInput } from '@modules/users/domain/entities';
 import { IUserProfileRepository } from '@modules/users/domain/repositories';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import * as bcrypt from 'bcrypt';
+import { Logger } from '@nestjs/common';
 import { ERoleIdentifier } from 'src/modules/authorization/domain/entities/role/role.enum';
 import { SYSTEM_ROLE_IDS } from 'src/modules/authorization/domain/entities/role/system-role-ids';
 import {
@@ -14,6 +15,7 @@ import {
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IAuthResponse } from '../../domain/auth.types';
 import type { LoginUseCase } from './login.use-case';
+import type { SendVerificationEmailUseCase } from './send-verification-email.use-case';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -29,12 +31,15 @@ interface ILoginMetadata {
 }
 
 export class RegisterUseCase {
+  private readonly logger = new Logger(RegisterUseCase.name);
+
   constructor(
     private readonly transactionManager: ITransactionManager,
     private readonly userRepository: IUserRepository,
     private readonly loginUseCase: LoginUseCase,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly userProfileRepository: IUserProfileRepository,
+    private readonly sendVerificationEmailUseCase: SendVerificationEmailUseCase,
   ) {}
 
   async execute(
@@ -73,6 +78,7 @@ export class RegisterUseCase {
             language: EUserLanguage.RU,
             phone: null,
             patronymic: null,
+            emailVerifiedAt: null,
           },
           scope,
         );
@@ -100,6 +106,16 @@ export class RegisterUseCase {
         return createdUser;
       },
     );
+
+    try {
+      await this.sendVerificationEmailUseCase.sendForUser(user.id, user.email);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to send verification email to ${user.email}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
 
     return this.loginUseCase.execute(user, metadata);
   }

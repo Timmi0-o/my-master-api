@@ -4,6 +4,9 @@ import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import { AppointmentsModule } from '../../../../appointments/appointments.module';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../../appointments/domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../../appointments/domain/repositories/appointment/i-appointment.repository';
+import type { IUserRepository } from '../../../../users/domain/repositories/user/i-user.repository';
+import { USER_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user/user.repository.tokens';
+import { UsersModule } from '../../../../users/users.module';
 import { CreateMasterServiceUseCase } from '../../../application/use-cases/master-service/create-master-service.use-case';
 import { DeleteMasterServiceByIdUseCase } from '../../../application/use-cases/master-service/delete-master-service-by-id.use-case';
 import { GetMasterServiceAvailableSlotsUseCase } from '../../../application/use-cases/master-service/get-master-service-available-slots.use-case';
@@ -34,6 +37,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
     MasterWeeklyScheduleModule,
     MasterScheduleExceptionModule,
     forwardRef(() => AppointmentsModule),
+    forwardRef(() => UsersModule),
   ],
   providers: [
     {
@@ -71,6 +75,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
         weeklyRepo: IMasterWeeklyScheduleRepository,
         exceptionRepo: IMasterScheduleExceptionRepository,
         appointmentRepo: IAppointmentRepository,
+        userRepo: IUserRepository,
       ) =>
         new GetMasterServiceAvailableSlotsUseCase(
           serviceRepo,
@@ -78,6 +83,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
           weeklyRepo,
           exceptionRepo,
           appointmentRepo,
+          userRepo,
         ),
       inject: [
         MASTER_SERVICE_REPOSITORY_TOKEN,
@@ -85,6 +91,7 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
         MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
         MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
       ],
     },
     {

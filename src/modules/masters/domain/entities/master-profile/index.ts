@@ -9,9 +9,11 @@ export { EMasterBookingStatus } from './master-profile-booking.enum';
 export {
   MasterProfileNotFoundError,
   MasterProfileForbiddenError,
+  MasterEmailNotVerifiedError,
 } from './errors';
 export {
   ensureMasterProfileExists,
   ensureMasterProfileAccessible,
+  ensureMasterOwnerEmailVerified,
   type IMasterProfileActor,
 } from './policies';

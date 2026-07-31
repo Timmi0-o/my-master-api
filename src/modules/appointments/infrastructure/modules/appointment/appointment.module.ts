@@ -24,6 +24,8 @@ import type { IUserBlockRepository } from '../../../../users/domain/repositories
 import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
 import type { IUserPersonalNoteRepository } from '../../../../users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-personal-note/user-personal-note.repository.tokens';
+import type { IUserRepository } from '../../../../users/domain/repositories/user/i-user.repository';
+import { USER_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user/user.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
 import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
 import { CancelAppointmentUseCase } from '../../../application/use-cases/appointment/cancel-appointment.use-case';
@@ -128,6 +130,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         weeklyScheduleRepo: IMasterWeeklyScheduleRepository,
         scheduleExceptionRepo: IMasterScheduleExceptionRepository,
         userBlockRepo: IUserBlockRepository,
+        userRepo: IUserRepository,
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
@@ -142,6 +145,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           weeklyScheduleRepo,
           scheduleExceptionRepo,
           userBlockRepo,
+          userRepo,
           realtimeAppointmentPublisher,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
@@ -156,6 +160,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
         MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,

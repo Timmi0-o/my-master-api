@@ -12,6 +12,7 @@ export type UserRow = {
   name: string;
   surname: string;
   patronymic: string | null;
+  emailVerifiedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

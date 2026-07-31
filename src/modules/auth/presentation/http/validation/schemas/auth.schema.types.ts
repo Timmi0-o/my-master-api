@@ -39,3 +39,11 @@ export interface IChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
 }
+
+export interface ISendVerificationEmailPayload {
+  email: string;
+}
+
+export interface IVerifyEmailPayload {
+  token: string;
+}

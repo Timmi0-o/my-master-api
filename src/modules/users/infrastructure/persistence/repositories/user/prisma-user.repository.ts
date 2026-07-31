@@ -89,6 +89,7 @@ export class PrismaUserRepository
         username: true,
         roleId: true,
         status: true,
+        emailVerifiedAt: true,
         role: {
           select: {
             roleIdentifier: true,
@@ -118,6 +119,7 @@ export class PrismaUserRepository
         (rolePermission) => rolePermission.permission.name,
       ),
       status: row.status as EUserStatus,
+      emailVerified: row.emailVerifiedAt != null,
     };
   }
 

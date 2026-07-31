@@ -9,4 +9,5 @@ export interface ISessionUser {
   roleIdentifier: ERoleIdentifier;
   permissions: readonly string[];
   status: EUserStatus;
+  emailVerified: boolean;
 }

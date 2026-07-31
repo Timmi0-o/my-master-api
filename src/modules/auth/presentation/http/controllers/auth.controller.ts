@@ -16,7 +16,9 @@ import { RefreshUseCase } from '@modules/auth/application/use-cases/refresh.use-
 import { RegisterUseCase } from '@modules/auth/application/use-cases/register.use-case';
 import { ResetPasswordUseCase } from '@modules/auth/application/use-cases/reset-password.use-case';
 import { SendResetPasswordEmailUseCase } from '@modules/auth/application/use-cases/send-reset-password-email.use-case';
+import { SendVerificationEmailUseCase } from '@modules/auth/application/use-cases/send-verification-email.use-case';
 import { ValidateResetPasswordTokenUseCase } from '@modules/auth/application/use-cases/validate-reset-password-token.use-case';
+import { VerifyEmailUseCase } from '@modules/auth/application/use-cases/verify-email.use-case';
 import type { ILoginPayload } from '@modules/auth/domain/auth.types';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
@@ -26,14 +28,18 @@ import { refreshTokenSchema } from '@modules/auth/presentation/http/validation/s
 import { registerPayloadSchema } from '@modules/auth/presentation/http/validation/schemas/register-payload.schema';
 import { resetPasswordSchema } from '@modules/auth/presentation/http/validation/schemas/reset-password.schema';
 import { sendResetPasswordEmailSchema } from '@modules/auth/presentation/http/validation/schemas/send-reset-password-email.schema';
+import { sendVerificationEmailSchema } from '@modules/auth/presentation/http/validation/schemas/send-verification-email.schema';
 import { validateResetPasswordTokenSchema } from '@modules/auth/presentation/http/validation/schemas/validate-reset-password-token.schema';
+import { verifyEmailSchema } from '@modules/auth/presentation/http/validation/schemas/verify-email.schema';
 import type {
   IChangePasswordPayload,
   IRefreshTokenInput,
   IRegisterPayload,
   IResetPasswordPayload,
   ISendResetPasswordEmailPayload,
+  ISendVerificationEmailPayload,
   IValidateResetPasswordTokenPayload,
+  IVerifyEmailPayload,
 } from '@modules/auth/presentation/http/validation/schemas/auth.schema.types';
 import type { IUserEntity } from '@modules/users/domain/entities/user';
 import type { ISessionUser } from '@shared/domain/i-session-user';
@@ -63,6 +69,8 @@ export class AuthController {
     private readonly validateResetPasswordTokenUseCase: ValidateResetPasswordTokenUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
+    private readonly sendVerificationEmailUseCase: SendVerificationEmailUseCase,
+    private readonly verifyEmailUseCase: VerifyEmailUseCase,
   ) {}
 
   @PublicEndpoint()
@@ -151,6 +159,28 @@ export class AuthController {
     body: IResetPasswordPayload,
   ) {
     return this.resetPasswordUseCase.execute(body);
+  }
+
+  @PublicEndpoint()
+  @Post('send-verification-email')
+  async sendVerificationEmail(
+    @HttpBody(sendVerificationEmailSchema, {
+      errorMessage: 'Некорректный email',
+    })
+    body: ISendVerificationEmailPayload,
+  ) {
+    return this.sendVerificationEmailUseCase.execute(body.email);
+  }
+
+  @PublicEndpoint()
+  @Post('verify-email')
+  async verifyEmail(
+    @HttpBody(verifyEmailSchema, {
+      errorMessage: 'Некорректный токен',
+    })
+    body: IVerifyEmailPayload,
+  ) {
+    return this.verifyEmailUseCase.execute(body.token);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,4 +1,4 @@
-import type { ReadResultEntity } from './query-result.types';
+import type { ReadResultEntity, ReadResultRelations } from './query-result.types';
 
 export type WhereOperator<T> = {
   eq?: T;
@@ -20,7 +20,10 @@ type UnwrapRelationValue<V> =
     : NonNullable<V>;
 
 type RelationWhereFilter<R extends object> = {
-  [K in keyof R]?: WhereFilter<ReadResultEntity<UnwrapRelationValue<R[K]>>>;
+  [K in keyof R]?: WhereFilter<
+    ReadResultEntity<UnwrapRelationValue<R[K]>>,
+    ReadResultRelations<UnwrapRelationValue<R[K]>>
+  >;
 };
 
 export type WhereFilter<T, R extends object = Record<never, never>> = {

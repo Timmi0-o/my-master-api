@@ -24,17 +24,22 @@ import { RefreshUseCase } from './application/use-cases/refresh.use-case';
 import { RegisterUseCase } from './application/use-cases/register.use-case';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { SendResetPasswordEmailUseCase } from './application/use-cases/send-reset-password-email.use-case';
+import { SendVerificationEmailUseCase } from './application/use-cases/send-verification-email.use-case';
 import { ValidateResetPasswordTokenUseCase } from './application/use-cases/validate-reset-password-token.use-case';
 import { ValidateUserUseCase } from './application/use-cases/validate-user.use-case';
+import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-case';
 import {
+  EMAIL_VERIFICATION_TOKEN_REPOSITORY_TOKEN,
   PASSWORD_RESET_TOKEN_REPOSITORY_TOKEN,
   REFRESH_TOKEN_REPOSITORY_TOKEN,
   SESSION_REPOSITORY_TOKEN,
 } from './domain/repositories/auth.repository.tokens';
+import type { IEmailVerificationTokenRepository } from './domain/repositories/i-email-verification-token.repository';
 import type { IPasswordResetTokenRepository } from './domain/repositories/i-password-reset-token.repository';
 import type { IRefreshTokenRepository } from './domain/repositories/i-refresh-token.repository';
 import type { ISessionRepository } from './domain/repositories/i-session.repository';
 import { AuthGuardsModule } from './infrastructure/modules/auth-guards/auth-guards.module';
+import { PrismaEmailVerificationTokenRepository } from './infrastructure/persistence/repositories/prisma-email-verification-token.repository';
 import { PrismaPasswordResetTokenRepository } from './infrastructure/persistence/repositories/prisma-password-reset-token.repository';
 import { PrismaRefreshTokenRepository } from './infrastructure/persistence/repositories/prisma-refresh-token.repository';
 import { PrismaSessionRepository } from './infrastructure/persistence/repositories/prisma-session.repository';
@@ -64,6 +69,10 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
     {
       provide: PASSWORD_RESET_TOKEN_REPOSITORY_TOKEN,
       useClass: PrismaPasswordResetTokenRepository,
+    },
+    {
+      provide: EMAIL_VERIFICATION_TOKEN_REPOSITORY_TOKEN,
+      useClass: PrismaEmailVerificationTokenRepository,
     },
     {
       provide: ValidateUserUseCase,
@@ -96,6 +105,49 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
       ],
     },
     {
+      provide: SendVerificationEmailUseCase,
+      useFactory: (
+        userRepository: IUserRepository,
+        emailVerificationTokenRepository: IEmailVerificationTokenRepository,
+        tokenService: TokenService,
+        mailer: IMailer,
+      ) =>
+        new SendVerificationEmailUseCase(
+          userRepository,
+          emailVerificationTokenRepository,
+          tokenService,
+          mailer,
+          loadAppWebUrl(),
+        ),
+      inject: [
+        USER_REPOSITORY_TOKEN,
+        EMAIL_VERIFICATION_TOKEN_REPOSITORY_TOKEN,
+        TokenService,
+        MAILER_TOKEN,
+      ],
+    },
+    {
+      provide: VerifyEmailUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        userRepository: IUserRepository,
+        emailVerificationTokenRepository: IEmailVerificationTokenRepository,
+        tokenService: TokenService,
+      ) =>
+        new VerifyEmailUseCase(
+          transactionManager,
+          userRepository,
+          emailVerificationTokenRepository,
+          tokenService,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        USER_REPOSITORY_TOKEN,
+        EMAIL_VERIFICATION_TOKEN_REPOSITORY_TOKEN,
+        TokenService,
+      ],
+    },
+    {
       provide: RegisterUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
@@ -103,6 +155,7 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         loginUseCase: LoginUseCase,
         masterProfileRepository: IMasterProfileRepository,
         userProfileRepository: IUserProfileRepository,
+        sendVerificationEmailUseCase: SendVerificationEmailUseCase,
       ) =>
         new RegisterUseCase(
           transactionManager,
@@ -110,6 +163,7 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
           loginUseCase,
           masterProfileRepository,
           userProfileRepository,
+          sendVerificationEmailUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -117,6 +171,7 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         LoginUseCase,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         USER_PROFILE_REPOSITORY_TOKEN,
+        SendVerificationEmailUseCase,
       ],
     },
     {
@@ -253,6 +308,8 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
     ValidateResetPasswordTokenUseCase,
     ResetPasswordUseCase,
     ChangePasswordUseCase,
+    SendVerificationEmailUseCase,
+    VerifyEmailUseCase,
   ],
 })
 export class AuthModule {}

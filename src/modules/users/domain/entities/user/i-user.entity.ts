@@ -8,6 +8,7 @@ export interface IUserEntity {
   roleId: string;
   status: EUserStatus;
   passwordHash: string;
+  emailVerifiedAt?: Date | null;
   name: string;
   surname: string;
   patronymic?: string | null;
