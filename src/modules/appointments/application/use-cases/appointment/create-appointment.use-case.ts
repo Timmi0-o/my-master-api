@@ -1,7 +1,12 @@
 import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { addDays } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import type { ICreateAppointmentInput } from 'src/modules/appointments/domain/entities/appointment';
-import { AppointmentNotAvailableError } from 'src/modules/appointments/domain/entities/appointment';
+import {
+  AppointmentNotAvailableError,
+  type IAppointmentPublicEntity,
+} from 'src/modules/appointments/domain/entities/appointment';
 import type { ICreateAppointmentChatInput } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
@@ -10,10 +15,18 @@ import { ensureMasterProfileIsDifferent } from 'src/modules/appointments/domain/
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import {
+  getLocalDayBoundsUtc,
+  isMasterStartsAtAvailable,
+} from 'src/modules/masters/application/services/calculate-master-available-slots';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
+import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
 import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
+import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
+import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
+import type { IMasterWeeklyScheduleRepository } from 'src/modules/masters/domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import type { CreateNotificationUseCase } from 'src/modules/notifications/application/use-cases/notification/create-notification.use-case';
 import {
   NotificationCategory,
@@ -34,6 +47,8 @@ export class CreateAppointmentUseCase {
     private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly masterServiceRepository: IMasterServiceRepository,
+    private readonly masterWeeklyScheduleRepository: IMasterWeeklyScheduleRepository,
+    private readonly masterScheduleExceptionRepository: IMasterScheduleExceptionRepository,
     private readonly userBlockRepository: IUserBlockRepository,
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
@@ -70,23 +85,102 @@ export class CreateAppointmentUseCase {
       throw new MasterServiceNotFoundError(input.masterServiceId);
     }
 
-    const isAvailableSlot =
-      (
-        await this.appointmentRepository.findMany({
-          where: {
-            masterProfileId: input.masterProfileId,
-            masterServiceId: input.masterServiceId,
-            startsAt: input.startsAt,
-          },
-        })
-      )?.length === 0;
-
-    if (!isAvailableSlot) {
-      throw new AppointmentNotAvailableError(input.startsAt);
-    }
-
     const appointment = await this.transactionManager.runInTransaction(
       async (scope) => {
+        const now = new Date();
+        const timezone = profile.timezone || 'Europe/Moscow';
+        const date = formatInTimeZone(input.startsAt, timezone, 'yyyy-MM-dd');
+        const { dayStart, dayEnd } = getLocalDayBoundsUtc(date, timezone);
+        const clientAppointmentsFrom = addDays(dayStart, -1);
+
+        const [
+          weeklySchedules,
+          exceptions,
+          dayAppointments,
+          clientAppointments,
+        ] = await Promise.all([
+          this.masterWeeklyScheduleRepository.findMany(
+            {
+              where: {
+                and: [
+                  { masterProfileId: { eq: profile.id } },
+                  { deletedAt: { isNull: true } },
+                ],
+              },
+            },
+            scope,
+          ),
+          this.masterScheduleExceptionRepository.findMany(
+            {
+              where: {
+                and: [
+                  { masterProfileId: { eq: profile.id } },
+                  { startsAt: { lt: dayEnd } },
+                  { endsAt: { gt: dayStart } },
+                  { deletedAt: { isNull: true } },
+                ],
+              },
+            },
+            scope,
+          ),
+          this.appointmentRepository.findMany(
+            {
+              where: {
+                and: [
+                  { masterProfileId: { eq: profile.id } },
+                  { startsAt: { gte: dayStart, lt: dayEnd } },
+                  { status: { notIn: [EAppointmentStatus.CANCELLED] } },
+                  { deletedAt: { isNull: true } },
+                ],
+              },
+            },
+            scope,
+          ),
+          this.appointmentRepository.findMany(
+            {
+              where: {
+                and: [
+                  { clientUserId: { eq: clientUserId } },
+                  {
+                    startsAt: {
+                      gte: clientAppointmentsFrom,
+                      lt: dayEnd,
+                    },
+                  },
+                  {
+                    status: {
+                      in: [
+                        EAppointmentStatus.PENDING,
+                        EAppointmentStatus.CONFIRMED,
+                      ],
+                    },
+                  },
+                  { deletedAt: { isNull: true } },
+                ],
+              },
+            },
+            scope,
+          ),
+        ]);
+
+        const slotAvailable = isMasterStartsAtAvailable({
+          profile,
+          service,
+          date,
+          weeklySchedules:
+            weeklySchedules as IMasterWeeklySchedulePublicEntity[],
+          exceptions: exceptions as IMasterScheduleExceptionPublicEntity[],
+          appointments: dayAppointments as IAppointmentPublicEntity[],
+          clientAppointments:
+            clientAppointments as IAppointmentPublicEntity[],
+          startsAt: input.startsAt,
+          now,
+        });
+
+        if (!slotAvailable) {
+          throw new AppointmentNotAvailableError(input.startsAt);
+        }
+
         const existingChat =
           await this.appointmentChatRepository.findEntityByMasterProfileAndClient(
             input.masterProfileId,

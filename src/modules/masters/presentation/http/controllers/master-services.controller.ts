@@ -120,10 +120,12 @@ export class MasterServicesController {
       errorMessage: 'Некорректные параметры запроса свободных слотов',
     })
     queryPayload: IGetMasterServiceAvailableSlotsQueryPayload,
+    @AuthenticatedUser() user: ISessionUser,
   ) {
     const output = await this.getMasterServiceAvailableSlotsUseCase.execute({
       masterServiceId: params.id,
       date: queryPayload.date,
+      clientUserId: user.id,
     });
     return mapGetMasterServiceAvailableSlotsHttpResponse(output);
   }

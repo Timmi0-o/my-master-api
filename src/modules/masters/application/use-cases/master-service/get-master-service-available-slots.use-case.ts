@@ -1,3 +1,4 @@
+import { addDays } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { IAppointmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
@@ -49,37 +50,61 @@ export class GetMasterServiceAvailableSlotsUseCase {
     const date = input.date ?? formatInTimeZone(now, timezone, 'yyyy-MM-dd');
 
     const { dayStart, dayEnd } = getLocalDayBoundsUtc(date, timezone);
+    const clientAppointmentsFrom = addDays(dayStart, -1);
 
-    const [weeklySchedules, exceptions, appointments] = await Promise.all([
-      this.masterWeeklyScheduleRepository.findMany({
-        where: {
-          and: [
-            { masterProfileId: { eq: profile.id } },
-            { deletedAt: { isNull: true } },
-          ],
-        },
-      }),
-      this.masterScheduleExceptionRepository.findMany({
-        where: {
-          and: [
-            { masterProfileId: { eq: profile.id } },
-            { startsAt: { lt: dayEnd } },
-            { endsAt: { gt: dayStart } },
-            { deletedAt: { isNull: true } },
-          ],
-        },
-      }),
-      this.appointmentRepository.findMany({
-        where: {
-          and: [
-            { masterProfileId: { eq: profile.id } },
-            { startsAt: { gte: dayStart, lt: dayEnd } },
-            { status: { notIn: [EAppointmentStatus.CANCELLED] } },
-            { deletedAt: { isNull: true } },
-          ],
-        },
-      }),
-    ]);
+    const [weeklySchedules, exceptions, appointments, clientAppointments] =
+      await Promise.all([
+        this.masterWeeklyScheduleRepository.findMany({
+          where: {
+            and: [
+              { masterProfileId: { eq: profile.id } },
+              { deletedAt: { isNull: true } },
+            ],
+          },
+        }),
+        this.masterScheduleExceptionRepository.findMany({
+          where: {
+            and: [
+              { masterProfileId: { eq: profile.id } },
+              { startsAt: { lt: dayEnd } },
+              { endsAt: { gt: dayStart } },
+              { deletedAt: { isNull: true } },
+            ],
+          },
+        }),
+        this.appointmentRepository.findMany({
+          where: {
+            and: [
+              { masterProfileId: { eq: profile.id } },
+              { startsAt: { gte: dayStart, lt: dayEnd } },
+              { status: { notIn: [EAppointmentStatus.CANCELLED] } },
+              { deletedAt: { isNull: true } },
+            ],
+          },
+        }),
+        this.appointmentRepository.findMany({
+          where: {
+            and: [
+              { clientUserId: { eq: input.clientUserId } },
+              {
+                startsAt: {
+                  gte: clientAppointmentsFrom,
+                  lt: dayEnd,
+                },
+              },
+              {
+                status: {
+                  in: [
+                    EAppointmentStatus.PENDING,
+                    EAppointmentStatus.CONFIRMED,
+                  ],
+                },
+              },
+              { deletedAt: { isNull: true } },
+            ],
+          },
+        }),
+      ]);
 
     const slots = calculateMasterAvailableSlots({
       profile,
@@ -88,6 +113,7 @@ export class GetMasterServiceAvailableSlotsUseCase {
       weeklySchedules: weeklySchedules as IMasterWeeklySchedulePublicEntity[],
       exceptions: exceptions as IMasterScheduleExceptionPublicEntity[],
       appointments: appointments as IAppointmentPublicEntity[],
+      clientAppointments: clientAppointments as IAppointmentPublicEntity[],
       now,
     });
 

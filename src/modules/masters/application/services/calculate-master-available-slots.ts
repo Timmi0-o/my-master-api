@@ -1,12 +1,3 @@
-import type { IAppointmentEntity } from 'src/modules/appointments/domain/entities/appointment';
-import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
-import type { IMasterProfileEntity } from 'src/modules/masters/domain/entities/master-profile';
-import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile/master-profile-booking.enum';
-import type { IMasterScheduleExceptionEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
-import { EMasterScheduleExceptionKind } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception.enum';
-import type { IMasterServiceEntity } from 'src/modules/masters/domain/entities/master-service';
-import type { IMasterWeeklyScheduleEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
-import { EDayOfWeek } from 'src/modules/masters/domain/entities/master-weekly-schedule/master-weekly-schedule.enum';
 import {
   addDays,
   addMinutes,
@@ -17,6 +8,15 @@ import {
   min as minDate,
 } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
+import type { IAppointmentEntity } from 'src/modules/appointments/domain/entities/appointment';
+import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
+import type { IMasterProfileEntity } from 'src/modules/masters/domain/entities/master-profile';
+import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile/master-profile-booking.enum';
+import type { IMasterScheduleExceptionEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
+import { EMasterScheduleExceptionKind } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception.enum';
+import type { IMasterServiceEntity } from 'src/modules/masters/domain/entities/master-service';
+import type { IMasterWeeklyScheduleEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
+import { EDayOfWeek } from 'src/modules/masters/domain/entities/master-weekly-schedule/master-weekly-schedule.enum';
 
 export interface IAvailableSlot {
   startsAt: string;
@@ -28,7 +28,13 @@ export interface ICalculateMasterAvailableSlotsInput {
   date: string;
   weeklySchedules: IMasterWeeklyScheduleEntity[];
   exceptions: IMasterScheduleExceptionEntity[];
+  /** Active appointments of this master (any client / service). */
   appointments: IAppointmentEntity[];
+  /**
+   * Active appointments of the booking client (any master / service).
+   * Used to prevent the client from double-booking overlapping time.
+   */
+  clientAppointments?: IAppointmentEntity[];
   now?: Date;
 }
 
@@ -102,12 +108,19 @@ function buildWorkWindows(
     if (!ex.customStartTime || !ex.customEndTime) {
       return false;
     }
-    const localStartDate = formatInTimeZone(ex.startsAt, timezone, 'yyyy-MM-dd');
+    const localStartDate = formatInTimeZone(
+      ex.startsAt,
+      timezone,
+      'yyyy-MM-dd',
+    );
     const localEndDate = formatInTimeZone(ex.endsAt, timezone, 'yyyy-MM-dd');
     return localStartDate <= localDate && localEndDate >= localDate;
   });
 
-  if (customHoursException?.customStartTime && customHoursException.customEndTime) {
+  if (
+    customHoursException?.customStartTime &&
+    customHoursException.customEndTime
+  ) {
     const start = parseLocalDateTime(
       localDate,
       customHoursException.customStartTime,
@@ -119,7 +132,9 @@ function buildWorkWindows(
       timezone,
     );
     if (isBefore(start, end)) {
-      return [{ start: maxDate([start, dayStart]), end: minDate([end, dayEnd]) }];
+      return [
+        { start: maxDate([start, dayStart]), end: minDate([end, dayEnd]) },
+      ];
     }
     return [];
   }
@@ -149,6 +164,11 @@ function overlapsInterval(
   return isBefore(slotStart, intervalEnd) && isAfter(slotEnd, intervalStart);
 }
 
+const CLIENT_BUSY_STATUSES: ReadonlySet<EAppointmentStatus> = new Set([
+  EAppointmentStatus.PENDING,
+  EAppointmentStatus.CONFIRMED,
+]);
+
 function isSlotBlocked(
   slotStart: Date,
   slotEnd: Date,
@@ -165,14 +185,41 @@ function isSlotBlocked(
     }
   }
 
-  for (const appt of appointments) {
-    if (appt.status === EAppointmentStatus.CANCELLED) {
+  for (const appointment of appointments) {
+    if (appointment.status === EAppointmentStatus.CANCELLED) {
       continue;
     }
-    const apptEnd = addMinutes(appt.startsAt, appt.durationMinutes);
-    const blockedStart = addMinutes(appt.startsAt, -bufferMinutes);
-    const blockedEnd = addMinutes(apptEnd, bufferMinutes);
+    const appointmentEnd = addMinutes(
+      appointment.startsAt,
+      appointment.durationMinutes,
+    );
+    const blockedStart = addMinutes(appointment.startsAt, -bufferMinutes);
+    const blockedEnd = addMinutes(appointmentEnd, bufferMinutes);
     if (overlapsInterval(slotStart, slotEnd, blockedStart, blockedEnd)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/** Client cannot book another service while an existing booking still runs. */
+function isSlotBlockedByClientAppointments(
+  slotStart: Date,
+  slotEnd: Date,
+  clientAppointments: IAppointmentEntity[],
+): boolean {
+  for (const appointment of clientAppointments) {
+    if (!CLIENT_BUSY_STATUSES.has(appointment.status)) {
+      continue;
+    }
+    const appointmentEnd = addMinutes(
+      appointment.startsAt,
+      appointment.durationMinutes,
+    );
+    if (
+      overlapsInterval(slotStart, slotEnd, appointment.startsAt, appointmentEnd)
+    ) {
       return true;
     }
   }
@@ -184,8 +231,15 @@ export function calculateMasterAvailableSlots(
   input: ICalculateMasterAvailableSlotsInput,
 ): IAvailableSlot[] {
   const now = input.now ?? new Date();
-  const { profile, service, date, weeklySchedules, exceptions, appointments } =
-    input;
+  const {
+    profile,
+    service,
+    date,
+    weeklySchedules,
+    exceptions,
+    appointments,
+    clientAppointments = [],
+  } = input;
 
   if (!isBookingOpen(profile, now)) {
     return [];
@@ -238,7 +292,8 @@ export function calculateMasterAvailableSlots(
 
       if (
         !isBefore(cursor, minNoticeAt) &&
-        !isSlotBlocked(cursor, slotEnd, buffer, exceptions, appointments)
+        !isSlotBlocked(cursor, slotEnd, buffer, exceptions, appointments) &&
+        !isSlotBlockedByClientAppointments(cursor, slotEnd, clientAppointments)
       ) {
         slots.push({ startsAt: cursor.toISOString() });
       }
@@ -248,4 +303,13 @@ export function calculateMasterAvailableSlots(
   }
 
   return slots;
+}
+
+export function isMasterStartsAtAvailable(
+  input: ICalculateMasterAvailableSlotsInput & { startsAt: Date },
+): boolean {
+  const target = input.startsAt.toISOString();
+  return calculateMasterAvailableSlots(input).some(
+    (slot) => slot.startsAt === target,
+  );
 }

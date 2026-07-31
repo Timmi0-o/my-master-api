@@ -12,8 +12,12 @@ import type { ITransactionManager } from '@shared/domain/transactions';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
+import type { IMasterScheduleExceptionRepository } from '../../../../masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
+import { MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-schedule-exception/master-schedule-exception.repository.tokens';
 import type { IMasterServiceRepository } from '../../../../masters/domain/repositories/master-service/i-master-service.repository';
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-service/master-service.repository.tokens';
+import type { IMasterWeeklyScheduleRepository } from '../../../../masters/domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
+import { MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-weekly-schedule/master-weekly-schedule.repository.tokens';
 import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { MastersModule } from '../../../../masters/masters.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
@@ -76,7 +80,10 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
       ) => new GetMyAppointmentsUseCase(repo, personalNoteRepo),
-      inject: [APPOINTMENT_REPOSITORY_TOKEN, USER_PERSONAL_NOTE_REPOSITORY_TOKEN],
+      inject: [
+        APPOINTMENT_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: GetMyClientsAppointmentsUseCase,
@@ -84,7 +91,10 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
       ) => new GetMyClientsAppointmentsUseCase(repo, personalNoteRepo),
-      inject: [APPOINTMENT_REPOSITORY_TOKEN, USER_PERSONAL_NOTE_REPOSITORY_TOKEN],
+      inject: [
+        APPOINTMENT_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: GetAppointmentByIdUseCase,
@@ -113,6 +123,8 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         messageRepo: IAppointmentChatMessageRepository,
         profileRepo: IMasterProfileRepository,
         serviceRepo: IMasterServiceRepository,
+        weeklyScheduleRepo: IMasterWeeklyScheduleRepository,
+        scheduleExceptionRepo: IMasterScheduleExceptionRepository,
         userBlockRepo: IUserBlockRepository,
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
@@ -125,6 +137,8 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           messageRepo,
           profileRepo,
           serviceRepo,
+          weeklyScheduleRepo,
+          scheduleExceptionRepo,
           userBlockRepo,
           realtimeAppointmentPublisher,
           createNotificationUseCase,
@@ -137,6 +151,8 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         MASTER_SERVICE_REPOSITORY_TOKEN,
+        MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
+        MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
