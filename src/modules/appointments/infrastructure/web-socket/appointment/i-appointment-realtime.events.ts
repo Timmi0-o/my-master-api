@@ -2,6 +2,7 @@ import { IAppointmentPublicEntity } from '@modules/appointments/domain/entities/
 
 export const APPOINTMENT_REALTIME_WS_EVENTS = {
   APPOINTMENT_CREATED: 'appointment.created',
+  APPOINTMENT_UPDATED: 'appointment.updated',
 } as const;
 
 interface AppointmentRealtimeBaseEvent {
@@ -13,4 +14,10 @@ export interface AppointmentRealtimeCreatedEvent extends AppointmentRealtimeBase
   type: 'appointment.created';
 }
 
-export type AppointmentRealtimeEvent = AppointmentRealtimeCreatedEvent;
+export interface AppointmentRealtimeUpdatedEvent extends AppointmentRealtimeBaseEvent {
+  type: 'appointment.updated';
+}
+
+export type AppointmentRealtimeEvent =
+  | AppointmentRealtimeCreatedEvent
+  | AppointmentRealtimeUpdatedEvent;

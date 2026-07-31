@@ -5,4 +5,8 @@ export interface IAppointmentRealtimePublisher {
     appointment: IAppointmentPublicEntity,
     options?: { recipientUserId?: string | null },
   ): Promise<void>;
+  appointmentUpdated(
+    appointment: IAppointmentPublicEntity,
+    options?: { recipientUserId?: string | null },
+  ): Promise<void>;
 }

@@ -40,23 +40,33 @@ export class AppointmentGateway
     this.server = server;
 
     this.eventBusSubscription = this.eventBus.subscribe((event) => {
-      if (event.type === 'appointment.created') {
-        if (!event.recipientUserId) {
-          return;
-        }
-
-        const payload = {
-          result: {
-            data: event.appointment
-              ? mapAppointmentToWsPayload(event.appointment)
-              : null,
-          },
-        };
-
-        server
-          .to(APPOINTMENT_WS_USER_ROOM_NAME(event.recipientUserId))
-          .emit(APPOINTMENT_WS_EVENTS.APPOINTMENT_CREATED, payload);
+      if (
+        event.type !== 'appointment.created' &&
+        event.type !== 'appointment.updated'
+      ) {
+        return;
       }
+
+      if (!event.recipientUserId) {
+        return;
+      }
+
+      const payload = {
+        result: {
+          data: event.appointment
+            ? mapAppointmentToWsPayload(event.appointment)
+            : null,
+        },
+      };
+
+      const wsEvent =
+        event.type === 'appointment.created'
+          ? APPOINTMENT_WS_EVENTS.APPOINTMENT_CREATED
+          : APPOINTMENT_WS_EVENTS.APPOINTMENT_UPDATED;
+
+      server
+        .to(APPOINTMENT_WS_USER_ROOM_NAME(event.recipientUserId))
+        .emit(wsEvent, payload);
     });
   }
 

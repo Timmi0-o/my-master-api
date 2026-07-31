@@ -1,5 +1,6 @@
 export const APPOINTMENT_WS_EVENTS = {
   APPOINTMENT_CREATED: 'appointment.created',
+  APPOINTMENT_UPDATED: 'appointment.updated',
   /** Клиент явно подписывается на inbox (user room) */
   SUBSCRIBE_INBOX: 'appointment.inbox.subscribe',
 } as const;

@@ -8,11 +8,17 @@ export {
   AppointmentNotFoundError,
   AppointmentForbiddenError,
   AppointmentNotCompletableError,
+  AppointmentNotConfirmableError,
+  AppointmentNotCancellableError,
 } from './errors';
 export {
   ensureAppointmentExists,
   ensureAppointmentAccessible,
   ensureAppointmentCompletable,
+  ensureAppointmentConfirmable,
+  ensureAppointmentCancellable,
+  ensureActorCanConfirmAppointment,
+  ensureActorCanCancelAppointment,
   ensureChatHasActiveAppointment,
   isAppointmentEarlyCompletion,
   type IAppointmentActor,

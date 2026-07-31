@@ -26,6 +26,8 @@ import type { IUserPersonalNoteRepository } from '../../../../users/domain/repos
 import { USER_PERSONAL_NOTE_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-personal-note/user-personal-note.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
 import { CompleteAppointmentUseCase } from '../../../application/use-cases/appointment/complete-appointment.use-case';
+import { CancelAppointmentUseCase } from '../../../application/use-cases/appointment/cancel-appointment.use-case';
+import { ConfirmAppointmentUseCase } from '../../../application/use-cases/appointment/confirm-appointment.use-case';
 import { CreateAppointmentUseCase } from '../../../application/use-cases/appointment/create-appointment.use-case';
 import { DeleteAppointmentByIdUseCase } from '../../../application/use-cases/appointment/delete-appointment-by-id.use-case';
 import { GetAppointmentByIdUseCase } from '../../../application/use-cases/appointment/get-appointment-by-id.use-case';
@@ -160,6 +162,66 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       ],
     },
     {
+      provide: ConfirmAppointmentUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        appointmentRepo: IAppointmentRepository,
+        messageRepo: IAppointmentChatMessageRepository,
+        profileRepo: IMasterProfileRepository,
+        realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+      ) =>
+        new ConfirmAppointmentUseCase(
+          transactionManager,
+          appointmentRepo,
+          messageRepo,
+          profileRepo,
+          realtimeAppointmentPublisher,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+      ],
+    },
+    {
+      provide: CancelAppointmentUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        appointmentRepo: IAppointmentRepository,
+        messageRepo: IAppointmentChatMessageRepository,
+        profileRepo: IMasterProfileRepository,
+        realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+      ) =>
+        new CancelAppointmentUseCase(
+          transactionManager,
+          appointmentRepo,
+          messageRepo,
+          profileRepo,
+          realtimeAppointmentPublisher,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+      ],
+    },
+    {
       provide: CompleteAppointmentUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
@@ -222,6 +284,8 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     GetMyClientsAppointmentsUseCase,
     GetAppointmentByIdUseCase,
     CreateAppointmentUseCase,
+    ConfirmAppointmentUseCase,
+    CancelAppointmentUseCase,
     CompleteAppointmentUseCase,
     UpdateAppointmentByIdUseCase,
     DeleteAppointmentByIdUseCase,

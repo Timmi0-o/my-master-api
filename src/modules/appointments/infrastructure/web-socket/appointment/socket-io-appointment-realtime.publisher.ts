@@ -18,4 +18,16 @@ export class SocketIoAppointmentRealtimePublisher implements IAppointmentRealtim
       recipientUserId: options?.recipientUserId ?? null,
     });
   }
+
+  //eslint-disable-next-line @typescript-eslint/require-await
+  async appointmentUpdated(
+    appointment: IAppointmentPublicEntity,
+    options?: { recipientUserId?: string | null },
+  ): Promise<void> {
+    this.eventBus.publish({
+      type: 'appointment.updated',
+      appointment,
+      recipientUserId: options?.recipientUserId ?? null,
+    });
+  }
 }
