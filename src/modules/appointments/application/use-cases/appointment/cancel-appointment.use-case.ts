@@ -9,8 +9,14 @@ import {
   ensureAppointmentExists,
   type IUpdateAppointmentInput,
 } from 'src/modules/appointments/domain/entities/appointment';
-import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
-import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import type {
+  IAppointmentChatMessageEntity,
+  ICreateAppointmentChatMessageInput,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import {
+  EAppointmentChatMessageActor,
+  EAppointmentChatSystemAction,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
@@ -21,9 +27,13 @@ import {
   NotificationRelatedEntityType,
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification';
+import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
+import { EUserLanguage } from 'src/modules/users/domain/entities/user';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { ICancelAppointmentApplicationInput } from '../../dtos/appointment/cancel-appointment.input';
 import type { ICancelAppointmentApplicationOutput } from '../../dtos/appointment/cancel-appointment.output';
 import type { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
+import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 import type { CancelAppointmentRemindersUseCase } from './cancel-appointment-reminders.use-case';
 
 function resolveCancelledBy(
@@ -49,9 +59,12 @@ export class CancelAppointmentUseCase {
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly userRepository: IUserRepository,
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+    private readonly realtimeChatPublisher: IAppointmentChatRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+    private readonly notificationMessageCatalog: NotificationMessageCatalog,
     private readonly cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
   ) {}
 
@@ -82,7 +95,7 @@ export class CancelAppointmentUseCase {
       cancelReason: input.cancelReason?.trim() || null,
     };
 
-    const updated = await this.transactionManager.runInTransaction(
+    const result = await this.transactionManager.runInTransaction(
       async (scope) => {
         const appointment = await this.appointmentRepository.update(
           input.id,
@@ -90,14 +103,17 @@ export class CancelAppointmentUseCase {
           scope,
         );
 
+        let systemMessage: IAppointmentChatMessageEntity | null = null;
         if (appointment.chatId) {
           const systemMessageInput: ICreateAppointmentChatMessageInput = {
             chatId: appointment.chatId,
             senderUserId: null,
             actor: EAppointmentChatMessageActor.SYSTEM,
-            body: 'Запись отменена',
+            body: null,
+            systemAction: EAppointmentChatSystemAction.APPOINTMENT_CANCELLED,
+            payload: { serviceName: appointment.serviceName },
           };
-          await this.appointmentChatMessageRepository.create(
+          systemMessage = await this.appointmentChatMessageRepository.create(
             systemMessageInput,
             scope,
           );
@@ -108,12 +124,23 @@ export class CancelAppointmentUseCase {
           scope,
         });
 
-        return appointment;
+        return { appointment, systemMessage };
       },
     );
 
-    const title = 'Запись отменена';
-    const body = `Запись «${updated.serviceName}» отменена`;
+    const updated = result.appointment;
+
+    if (result.systemMessage) {
+      await Promise.all([
+        this.realtimeChatPublisher.messageCreated(result.systemMessage, {
+          recipientUserId: updated.clientUserId,
+        }),
+        this.realtimeChatPublisher.messageCreated(result.systemMessage, {
+          recipientUserId: profile.userId,
+        }),
+      ]);
+    }
+
     const actionUrl = `/record/${updated.id}`;
     const payload = {
       type: 'appointment_cancelled',
@@ -129,6 +156,15 @@ export class CancelAppointmentUseCase {
           : [updated.clientUserId];
 
     for (const userId of notifyUserIds) {
+      const recipient = await this.userRepository.findEntityById(userId);
+      const { title, body } = this.notificationMessageCatalog.resolve(
+        recipient?.language ?? EUserLanguage.RU,
+        {
+          type: NotificationType.APPOINTMENT_CANCELLED,
+          serviceName: updated.serviceName,
+        },
+      );
+
       void this.createNotificationUseCase
         .execute({
           userId,

@@ -1,4 +1,5 @@
 import type { JSONSchemaType } from 'ajv';
+import { EUserLanguage } from 'src/modules/users/domain/entities/user';
 import type { IRegisterPayload } from './auth.schema.types';
 
 export const registerPayloadSchema: JSONSchemaType<IRegisterPayload> = {
@@ -7,7 +8,17 @@ export const registerPayloadSchema: JSONSchemaType<IRegisterPayload> = {
   required: ['email', 'username', 'password'],
   properties: {
     email: { type: 'string', format: 'email', minLength: 1 },
-    username: { type: 'string', minLength: 3, maxLength: 32, pattern: '^[a-zA-Z0-9_]+$' },
+    username: {
+      type: 'string',
+      minLength: 3,
+      maxLength: 32,
+      pattern: '^[a-zA-Z0-9_]+$',
+    },
     password: { type: 'string', minLength: 8 },
+    language: {
+      type: 'string',
+      enum: Object.values(EUserLanguage),
+      nullable: true,
+    },
   },
 };

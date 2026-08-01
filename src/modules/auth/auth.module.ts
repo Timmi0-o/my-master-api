@@ -11,6 +11,7 @@ import type { IMailer } from '@shared/domain/mailer';
 import { MAILER_TOKEN } from '@shared/domain/mailer';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
+import { EmailMessageFactory } from '@shared/infrastructure/mailer/email-message.factory';
 import { MailerModule } from '@shared/infrastructure/mailer/mailer.module';
 import { loadAppWebUrl } from '@shared/infrastructure/mailer/mail.config';
 import type { IUserRepository } from '../users/domain/repositories/user/i-user.repository';
@@ -111,12 +112,14 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         emailVerificationTokenRepository: IEmailVerificationTokenRepository,
         tokenService: TokenService,
         mailer: IMailer,
+        emailMessageFactory: EmailMessageFactory,
       ) =>
         new SendVerificationEmailUseCase(
           userRepository,
           emailVerificationTokenRepository,
           tokenService,
           mailer,
+          emailMessageFactory,
           loadAppWebUrl(),
         ),
       inject: [
@@ -124,6 +127,7 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         EMAIL_VERIFICATION_TOKEN_REPOSITORY_TOKEN,
         TokenService,
         MAILER_TOKEN,
+        EmailMessageFactory,
       ],
     },
     {
@@ -226,12 +230,14 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         passwordResetTokenRepository: IPasswordResetTokenRepository,
         tokenService: TokenService,
         mailer: IMailer,
+        emailMessageFactory: EmailMessageFactory,
       ) =>
         new SendResetPasswordEmailUseCase(
           userRepository,
           passwordResetTokenRepository,
           tokenService,
           mailer,
+          emailMessageFactory,
           loadAppWebUrl(),
         ),
       inject: [
@@ -239,6 +245,7 @@ import { AuthController } from './presentation/http/controllers/auth.controller'
         PASSWORD_RESET_TOKEN_REPOSITORY_TOKEN,
         TokenService,
         MAILER_TOKEN,
+        EmailMessageFactory,
       ],
     },
     {

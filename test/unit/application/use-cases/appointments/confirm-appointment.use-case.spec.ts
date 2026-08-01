@@ -85,9 +85,19 @@ describe('ConfirmAppointmentUseCase', () => {
       appointmentRepository,
       appointmentChatMessageRepository,
       masterProfileRepository,
+      {
+        findEntityById: jest.fn().mockResolvedValue({ language: 'RU' }),
+      } as never,
       realtimeAppointmentPublisher as never,
+      { messageCreated: jest.fn().mockResolvedValue(undefined) } as never,
       createNotificationUseCase as never,
       sendWebPushToUserUseCase as never,
+      {
+        resolve: jest.fn().mockReturnValue({
+          title: 'Запись подтверждена',
+          body: 'Мастер подтвердил запись «Haircut»',
+        }),
+      } as never,
       scheduleAppointmentRemindersUseCase as never,
     );
 
@@ -105,7 +115,9 @@ describe('ConfirmAppointmentUseCase', () => {
     expect(appointmentChatMessageRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         chatId: 'chat-1',
-        body: 'Запись подтверждена',
+        body: null,
+        systemAction: 'APPOINTMENT_CONFIRMED',
+        payload: { serviceName: 'Haircut' },
       }),
       expect.anything(),
     );
@@ -144,9 +156,12 @@ describe('ConfirmAppointmentUseCase', () => {
           userId: 'master-1',
         }),
       } as never,
+      { findEntityById: jest.fn() } as never,
       { appointmentUpdated: jest.fn() } as never,
+      { messageCreated: jest.fn() } as never,
       { execute: jest.fn() } as never,
       { execute: jest.fn() } as never,
+      { resolve: jest.fn() } as never,
       { execute: jest.fn() } as never,
     );
 
@@ -174,9 +189,12 @@ describe('ConfirmAppointmentUseCase', () => {
           userId: 'master-1',
         }),
       } as never,
+      { findEntityById: jest.fn() } as never,
       { appointmentUpdated: jest.fn() } as never,
+      { messageCreated: jest.fn() } as never,
       { execute: jest.fn() } as never,
       { execute: jest.fn() } as never,
+      { resolve: jest.fn() } as never,
       { execute: jest.fn() } as never,
     );
 

@@ -433,7 +433,9 @@ export const appointmentsSeed: SeedRunner = async (
               chatId,
               senderUserId: null,
               actor: 'SYSTEM',
-              body: `Услуга ${draft.serviceName} создана`,
+              body: null,
+              systemAction: 'APPOINTMENT_CREATED',
+              payload: { serviceName: draft.serviceName },
             },
             ...draft.messageBodies.map((message) => ({
               chatId,

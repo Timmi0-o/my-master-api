@@ -3,7 +3,10 @@ import { IAppointmentRealtimePublisher } from '@modules/appointments/application
 import { AppointmentGateway } from '@modules/appointments/presentation/web-socket/appointment/appointment.gateway';
 import { WsJwtAuthGuard } from '@modules/appointments/presentation/web-socket/appointment/guards/ws-jwt-auth.guard';
 import { CreateNotificationUseCase } from '@modules/notifications/application/use-cases/notification/create-notification.use-case';
+import { NotificationMessageCatalog } from '@modules/notifications/infrastructure/i18n/notification-message-catalog';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
+import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
+import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import { WebPushSubscriptionsModule } from '@modules/web-push-subscriptions/web-push-subscriptions.module';
 import { Module, forwardRef } from '@nestjs/common';
@@ -101,22 +104,28 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         reminderJobRepo: IAppointmentReminderJobRepository,
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
         new ProcessDueAppointmentRemindersUseCase(
           reminderJobRepo,
           appointmentRepo,
           profileRepo,
+          userRepo,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          notificationMessageCatalog,
         ),
       inject: [
         APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
       ],
     },
     AppointmentRemindersScheduler,
@@ -180,8 +189,10 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         userBlockRepo: IUserBlockRepository,
         userRepo: IUserRepository,
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        realtimeChatPublisher: IAppointmentChatRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
         new CreateAppointmentUseCase(
           transactionManager,
@@ -195,8 +206,10 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           userBlockRepo,
           userRepo,
           realtimeAppointmentPublisher,
+          realtimeChatPublisher,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          notificationMessageCatalog,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -210,8 +223,10 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         USER_BLOCK_REPOSITORY_TOKEN,
         USER_REPOSITORY_TOKEN,
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
       ],
     },
     {
@@ -221,9 +236,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         appointmentRepo: IAppointmentRepository,
         messageRepo: IAppointmentChatMessageRepository,
         profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        realtimeChatPublisher: IAppointmentChatRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
         scheduleAppointmentRemindersUseCase: ScheduleAppointmentRemindersUseCase,
       ) =>
         new ConfirmAppointmentUseCase(
@@ -231,9 +249,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           appointmentRepo,
           messageRepo,
           profileRepo,
+          userRepo,
           realtimeAppointmentPublisher,
+          realtimeChatPublisher,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          notificationMessageCatalog,
           scheduleAppointmentRemindersUseCase,
         ),
       inject: [
@@ -241,9 +262,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         APPOINTMENT_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
         ScheduleAppointmentRemindersUseCase,
       ],
     },
@@ -254,9 +278,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         appointmentRepo: IAppointmentRepository,
         messageRepo: IAppointmentChatMessageRepository,
         profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
         realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        realtimeChatPublisher: IAppointmentChatRealtimePublisher,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
         cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
       ) =>
         new CancelAppointmentUseCase(
@@ -264,9 +291,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
           appointmentRepo,
           messageRepo,
           profileRepo,
+          userRepo,
           realtimeAppointmentPublisher,
+          realtimeChatPublisher,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          notificationMessageCatalog,
           cancelAppointmentRemindersUseCase,
         ),
       inject: [
@@ -274,9 +304,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         APPOINTMENT_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
         APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
         CancelAppointmentRemindersUseCase,
       ],
     },

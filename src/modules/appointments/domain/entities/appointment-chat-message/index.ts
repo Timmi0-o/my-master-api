@@ -2,6 +2,9 @@ export type { IAppointmentChatMessageEntity, IAppointmentChatMessagePublicEntity
 export type { ICreateAppointmentChatMessageInput } from './i-create-appointment-chat-message.input';
 export type { IUpdateAppointmentChatMessageInput } from './i-update-appointment-chat-message.input';
 export type { IAppointmentChatMessageRelations } from './i-appointment-chat-message-relations';
-export { EAppointmentChatMessageActor } from './appointment-chat-message.enum';
+export {
+  EAppointmentChatMessageActor,
+  EAppointmentChatSystemAction,
+} from './appointment-chat-message.enum';
 export { AppointmentChatMessageNotFoundError, AppointmentChatMessageForbiddenError } from './errors';
 export { ensureAppointmentChatMessageExists } from './policies';

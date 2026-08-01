@@ -171,8 +171,15 @@ describe('ProcessDueAppointmentRemindersUseCase', () => {
           userId: 'master-1',
         }),
       } as unknown as IMasterProfileRepository,
+      { findEntityById: jest.fn() } as never,
       { execute: createNotification } as never,
       { execute: sendWebPush } as never,
+      {
+        resolve: jest.fn().mockReturnValue({
+          title: 'Appointment reminder',
+          body: 'Reminder body',
+        }),
+      } as never,
     );
 
     const result = await useCase.execute({ now });
@@ -215,8 +222,17 @@ describe('ProcessDueAppointmentRemindersUseCase', () => {
           userId: 'master-1',
         }),
       } as unknown as IMasterProfileRepository,
+      {
+        findEntityById: jest.fn().mockResolvedValue({ language: 'RU' }),
+      } as never,
       { execute: createNotification } as never,
       { execute: sendWebPush } as never,
+      {
+        resolve: jest.fn().mockReturnValue({
+          title: 'Напоминание о записи',
+          body: 'Запись «Haircut» через 2 часа',
+        }),
+      } as never,
     );
 
     const result = await useCase.execute({ now });

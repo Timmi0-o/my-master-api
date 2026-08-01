@@ -27,6 +27,8 @@ const PRESETS: Record<
       'senderUserId',
       'actor',
       'body',
+      'systemAction',
+      'payload',
       'createdAt',
       'updatedAt',
     ],

@@ -1,4 +1,5 @@
 import type { ISessionUser } from 'src/modules/shared/domain/i-session-user';
+import type { EUserLanguage } from 'src/modules/users/domain/entities/user';
 
 export interface IJwtAccessPayload {
   sub: string;
@@ -14,6 +15,7 @@ export interface IRegisterPayload {
   email: string;
   username: string;
   password: string;
+  language?: EUserLanguage;
 }
 
 export interface IRefreshPayload {

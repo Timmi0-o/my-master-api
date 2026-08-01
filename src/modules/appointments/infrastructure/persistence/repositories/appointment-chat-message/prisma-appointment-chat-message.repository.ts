@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
 import type { TransactionScope } from '@shared/domain/transactions';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
@@ -22,6 +23,20 @@ import {
   APPOINTMENT_CHAT_MESSAGE_VALIDATION_CONFIG,
 } from './appointment-chat-message.relations';
 import { mapAppointmentChatMessageWriteError } from './appointment-chat-message-write-error.mapper';
+
+function toPrismaCreateData(input: ICreateAppointmentChatMessageInput) {
+  return {
+    chatId: input.chatId,
+    senderUserId: input.senderUserId,
+    actor: input.actor,
+    body: input.body,
+    systemAction: input.systemAction,
+    payload:
+      input.payload === undefined || input.payload === null
+        ? undefined
+        : (input.payload as Prisma.InputJsonValue),
+  };
+}
 
 @Injectable()
 export class PrismaAppointmentChatMessageRepository
@@ -76,7 +91,9 @@ export class PrismaAppointmentChatMessageRepository
     const tx = unwrapPrismaTxFromScope(scope);
 
     try {
-      const row = await tx.appointmentChatMessage.create({ data: input });
+      const row = await tx.appointmentChatMessage.create({
+        data: toPrismaCreateData(input),
+      });
       return mapAppointmentChatMessageRow(row as AppointmentChatMessageRow);
     } catch (error) {
       throw mapAppointmentChatMessageWriteError(error, { chatId: input.chatId });
@@ -95,7 +112,7 @@ export class PrismaAppointmentChatMessageRepository
 
     try {
       const rows = await tx.appointmentChatMessage.createManyAndReturn({
-        data: [...inputs],
+        data: inputs.map(toPrismaCreateData),
       });
       return rows.map((row) => mapAppointmentChatMessageRow(row as AppointmentChatMessageRow));
     } catch (error) {
@@ -114,7 +131,15 @@ export class PrismaAppointmentChatMessageRepository
     try {
       const row = await tx.appointmentChatMessage.update({
         where: { id },
-        data: patch,
+        data: {
+          ...patch,
+          payload:
+            patch.payload === undefined
+              ? undefined
+              : patch.payload === null
+                ? Prisma.JsonNull
+                : (patch.payload as Prisma.InputJsonValue),
+        },
       });
       return mapAppointmentChatMessageRow(row as AppointmentChatMessageRow);
     } catch (error) {

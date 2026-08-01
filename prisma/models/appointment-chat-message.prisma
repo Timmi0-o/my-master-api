@@ -4,7 +4,10 @@ model AppointmentChatMessage {
   chatId       String                       @map("chat_id")
   senderUserId String?                      @map("sender_user_id")
   actor        AppointmentChatMessageActor  @default(USER) @map("actor")
-  body         String                       @map("body")
+  /// USER/SUPPORT: message text. SYSTEM: null (clients render via systemAction + payload).
+  body         String?                      @map("body")
+  systemAction AppointmentChatSystemAction? @map("system_action")
+  payload      Json?
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -22,4 +25,10 @@ enum AppointmentChatMessageActor {
   USER
   SYSTEM
   SUPPORT
+}
+
+enum AppointmentChatSystemAction {
+  APPOINTMENT_CREATED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
 }

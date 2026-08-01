@@ -1,3 +1,5 @@
+import type { EUserLanguage } from 'src/modules/users/domain/entities/user';
+
 export interface IValidateUserInput {
   email: string;
   password: string;
@@ -7,6 +9,7 @@ export interface IRegisterPayload {
   email: string;
   username: string;
   password: string;
+  language?: EUserLanguage;
 }
 
 export interface IRefreshTokenInput {

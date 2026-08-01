@@ -20,8 +20,11 @@ import {
   NotificationRelatedEntityType,
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification';
+import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
 import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
+import { EUserLanguage } from 'src/modules/users/domain/entities/user';
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { SendWebPushToUserUseCase } from 'src/modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import type { ICreateAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.input';
 import type { ICreateAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.output';
@@ -36,10 +39,12 @@ export class CreateAppointmentChatMessageUseCase {
     private readonly appointmentChatRepository: IAppointmentChatRepository,
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly userRepository: IUserRepository,
     private readonly realtimeChatPublisher: IAppointmentChatRealtimePublisher,
     private readonly userBlockRepository: IUserBlockRepository,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+    private readonly notificationMessageCatalog: NotificationMessageCatalog,
   ) {}
 
   async execute(
@@ -78,6 +83,8 @@ export class CreateAppointmentChatMessageUseCase {
       senderUserId: input.actor.userId,
       actor: EAppointmentChatMessageActor.USER,
       body: input.body,
+      systemAction: null,
+      payload: null,
     };
 
     const message = await this.transactionManager.runInTransaction((scope) =>
@@ -94,9 +101,15 @@ export class CreateAppointmentChatMessageUseCase {
       recipientUserId,
     });
 
-    if (recipientUserId) {
-      const title = 'Новое сообщение';
-      const body = truncateNotificationBody(message.body);
+    if (recipientUserId && message.body) {
+      const recipient = await this.userRepository.findEntityById(recipientUserId);
+      const { title, body } = this.notificationMessageCatalog.resolve(
+        recipient?.language ?? EUserLanguage.RU,
+        {
+          type: NotificationType.CHAT_MESSAGE,
+          body: truncateNotificationBody(message.body),
+        },
+      );
       const actionUrl = `/chat/${message.chatId}`;
       const payload = {
         type: 'appointment_chat_message',

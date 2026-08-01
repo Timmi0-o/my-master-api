@@ -6,12 +6,15 @@ import { Authorize } from '@modules/authorization/presentation/decorators/author
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { AssignUserRoleUseCase } from '@modules/users/application/use-cases/user/assign-user-role.use-case';
 import { GetUsersUseCase } from '@modules/users/application/use-cases/user/get-users.use-case';
+import { UpdateOwnLanguageUseCase } from '@modules/users/application/use-cases/user/update-own-language.use-case';
 import { assignUserRolePayloadSchema } from '@modules/users/presentation/http/validation/schemas/assign-user-role-payload.schema';
 import type { IAssignUserRolePayload } from '@modules/users/presentation/http/validation/schemas/assign-user-role-payload.types';
 import { getUsersQuerySchema } from '@modules/users/presentation/http/validation/schemas/get-users-query.schema';
 import type { IGetUsersQueryPayload } from '@modules/users/presentation/http/validation/schemas/get-users-query.types';
 import { idParamSchema } from '@modules/users/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/users/presentation/http/validation/schemas/id-param.types';
+import { updateOwnLanguagePayloadSchema } from '@modules/users/presentation/http/validation/schemas/update-own-language-payload.schema';
+import type { IUpdateOwnLanguagePayload } from '@modules/users/presentation/http/validation/schemas/update-own-language-payload.types';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
@@ -22,6 +25,7 @@ import { requestBodyToAssignUserRoleUseCaseInput } from '../request-mappers/user
 import { requestQueryParamsToFindManyParams } from '../request-mappers/user/request-query-params-to-find-many-params.mapper';
 import { mapGetUsersHttpResponse } from '../http-responses/map-get-users-response';
 import { mapAssignUserRoleHttpResponse } from '../http-responses/map-assign-user-role-response';
+import { mapUpdateOwnLanguageHttpResponse } from '../http-responses/map-update-own-language-response';
 
 @Controller({ path: 'users', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
@@ -29,7 +33,24 @@ export class UsersController {
   constructor(
     private readonly getUsersUseCase: GetUsersUseCase,
     private readonly assignUserRoleUseCase: AssignUserRoleUseCase,
+    private readonly updateOwnLanguageUseCase: UpdateOwnLanguageUseCase,
   ) {}
+
+  @Patch('me/language')
+  @Authorize({ kind: 'authenticated' })
+  async updateOwnLanguage(
+    @HttpBody(updateOwnLanguagePayloadSchema, {
+      errorMessage: 'Некорректное тело запроса смены языка',
+    })
+    payload: IUpdateOwnLanguagePayload,
+    @AuthenticatedUser() user: ISessionUser,
+  ) {
+    const output = await this.updateOwnLanguageUseCase.execute({
+      userId: user.id,
+      language: payload.language,
+    });
+    return mapUpdateOwnLanguageHttpResponse(output);
+  }
 
   @Get()
   @Authorize({ kind: 'permissions', permissions: [Permissions.users.read] })

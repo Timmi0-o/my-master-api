@@ -6,6 +6,8 @@ export const APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS = [
   'senderUserId',
   'actor',
   'body',
+  'systemAction',
+  'payload',
   'createdAt',
   'updatedAt',
   'deletedAt',

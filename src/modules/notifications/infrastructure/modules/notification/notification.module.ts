@@ -20,9 +20,11 @@ import {
 import { PrismaNotificationRepository } from '../../persistence/repositories/notification/prisma-notification.repository';
 import { NotificationSseEventBus } from '../../sse/notification-sse.event-bus';
 import { RxjsNotificationRealtimePublisher } from '../../sse/rxjs-notification-realtime.publisher';
+import { NotificationMessageCatalog } from '../../i18n/notification-message-catalog';
 
 @Module({
   providers: [
+    NotificationMessageCatalog,
     {
       provide: NOTIFICATION_REPOSITORY_TOKEN,
       useClass: PrismaNotificationRepository,
@@ -102,6 +104,7 @@ import { RxjsNotificationRealtimePublisher } from '../../sse/rxjs-notification-r
     },
   ],
   exports: [
+    NotificationMessageCatalog,
     NOTIFICATION_REPOSITORY_TOKEN,
     NOTIFICATION_REALTIME_PUBLISHER_TOKEN,
     NotificationSseEventBus,

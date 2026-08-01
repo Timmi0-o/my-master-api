@@ -54,9 +54,13 @@ function createUseCase(deps: {
         userId: 'master-1',
       }),
     } as unknown as IMasterProfileRepository,
+    {
+      findEntityById: jest.fn().mockResolvedValue({ language: 'RU' }),
+    } as never,
     (deps.realtimeAppointmentPublisher ?? {
       appointmentUpdated: jest.fn().mockResolvedValue(undefined),
     }) as never,
+    { messageCreated: jest.fn().mockResolvedValue(undefined) } as never,
     (deps.createNotificationUseCase ?? {
       execute: jest.fn().mockResolvedValue({ id: 'notif-1' }),
     }) as never,
@@ -68,6 +72,12 @@ function createUseCase(deps: {
         expired: 0,
       }),
     }) as never,
+    {
+      resolve: jest.fn().mockReturnValue({
+        title: 'Запись отменена',
+        body: 'Запись «Haircut» отменена',
+      }),
+    } as never,
     (deps.cancelAppointmentRemindersUseCase ?? {
       execute: jest.fn().mockResolvedValue(0),
     }) as never,

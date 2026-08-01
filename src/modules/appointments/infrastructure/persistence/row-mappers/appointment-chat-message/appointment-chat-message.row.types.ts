@@ -1,4 +1,7 @@
-import type { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import type {
+  EAppointmentChatMessageActor,
+  EAppointmentChatSystemAction,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { AppointmentChatRow } from '../appointment-chat/appointment-chat.row.types';
 import type { UserRow } from 'src/modules/users/infrastructure/persistence/row-mappers/user/user.row.types';
 
@@ -7,7 +10,9 @@ export type AppointmentChatMessageRow = {
   chatId: string;
   senderUserId: string | null;
   actor: EAppointmentChatMessageActor;
-  body: string;
+  body: string | null;
+  systemAction: EAppointmentChatSystemAction | null;
+  payload: unknown | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

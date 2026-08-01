@@ -6,8 +6,11 @@ import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repo
 import { MastersModule } from '../../../../masters/masters.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
 import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
+import type { IUserRepository } from '../../../../users/domain/repositories/user/i-user.repository';
+import { USER_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user/user.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
 import { CreateNotificationUseCase } from '../../../../notifications/application/use-cases/notification/create-notification.use-case';
+import { NotificationMessageCatalog } from '../../../../notifications/infrastructure/i18n/notification-message-catalog';
 import { NotificationsModule } from '../../../../notifications/notifications.module';
 import { SendWebPushToUserUseCase } from '../../../../web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import { WebPushSubscriptionsModule } from '../../../../web-push-subscriptions/web-push-subscriptions.module';
@@ -73,10 +76,12 @@ import { AppointmentModule } from '../appointment/appointment.module';
         chatRepo: IAppointmentChatRepository,
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
         userBlockRepo: IUserBlockRepository,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
         new CreateAppointmentChatMessageUseCase(
           transactionManager,
@@ -84,10 +89,12 @@ import { AppointmentModule } from '../appointment/appointment.module';
           chatRepo,
           appointmentRepo,
           profileRepo,
+          userRepo,
           realtimePublisher,
           userBlockRepo,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
+          notificationMessageCatalog,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -95,10 +102,12 @@ import { AppointmentModule } from '../appointment/appointment.module';
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
       ],
     },
     {

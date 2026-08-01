@@ -1,7 +1,10 @@
 import { CreateAppointmentUseCase } from 'src/modules/appointments/application/use-cases/appointment/create-appointment.use-case';
 import { AppointmentNotAvailableError } from 'src/modules/appointments/domain/entities/appointment';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
-import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import {
+  EAppointmentChatMessageActor,
+  EAppointmentChatSystemAction,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
@@ -117,6 +120,7 @@ function createUseCase(deps: {
     {
       findEntityById: jest.fn().mockResolvedValue({
         id: 'master-1',
+        language: 'RU',
         emailVerifiedAt:
           deps.ownerEmailVerifiedAt === undefined
             ? new Date('2026-01-01T00:00:00.000Z')
@@ -124,6 +128,7 @@ function createUseCase(deps: {
       }),
     } as never,
     { appointmentCreated: jest.fn().mockResolvedValue(undefined) } as never,
+    { messageCreated: jest.fn().mockResolvedValue(undefined) } as never,
     { execute: jest.fn().mockResolvedValue({ id: 'notif-1' }) } as never,
     {
       execute: jest.fn().mockResolvedValue({
@@ -131,6 +136,12 @@ function createUseCase(deps: {
         succeeded: 0,
         failed: 0,
         expired: 0,
+      }),
+    } as never,
+    {
+      resolve: jest.fn().mockReturnValue({
+        title: 'У вас новая запись',
+        body: 'Новая запись от 01.08.2026',
       }),
     } as never,
   );
@@ -197,7 +208,9 @@ describe('CreateAppointmentUseCase', () => {
         chatId: 'chat-1',
         senderUserId: null,
         actor: EAppointmentChatMessageActor.SYSTEM,
-        body: 'Услуга Haircut создана',
+        body: null,
+        systemAction: EAppointmentChatSystemAction.APPOINTMENT_CREATED,
+        payload: { serviceName: 'Haircut' },
       }),
       expect.anything(),
     );

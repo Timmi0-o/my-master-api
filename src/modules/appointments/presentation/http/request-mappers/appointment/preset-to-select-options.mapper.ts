@@ -110,6 +110,8 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentPresetOptions> = {
               'senderUserId',
               'actor',
               'body',
+              'systemAction',
+              'payload',
               'createdAt',
               'updatedAt',
               'deletedAt',

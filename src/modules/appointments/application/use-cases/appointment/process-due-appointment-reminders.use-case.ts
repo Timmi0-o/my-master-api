@@ -1,9 +1,6 @@
 import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment';
-import {
-  EAppointmentReminderJobType,
-  type IAppointmentReminderJobEntity,
-} from 'src/modules/appointments/domain/entities/appointment-reminder-job';
+import type { IAppointmentReminderJobEntity } from 'src/modules/appointments/domain/entities/appointment-reminder-job';
 import type { IAppointmentReminderJobRepository } from 'src/modules/appointments/domain/repositories/appointment-reminder-job/i-appointment-reminder-job.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
@@ -13,23 +10,12 @@ import {
   NotificationRelatedEntityType,
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification';
+import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
+import { EUserLanguage } from 'src/modules/users/domain/entities/user';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 
 const DEFAULT_BATCH_SIZE = 50;
 const MAX_ATTEMPTS = 3;
-
-const REMINDER_LABELS: Record<EAppointmentReminderJobType, string> = {
-  [EAppointmentReminderJobType.REMINDER_48H]: 'через 48 часов',
-  [EAppointmentReminderJobType.REMINDER_24H]: 'через 24 часа',
-  [EAppointmentReminderJobType.REMINDER_12H]: 'через 12 часов',
-  [EAppointmentReminderJobType.REMINDER_6H]: 'через 6 часов',
-  [EAppointmentReminderJobType.REMINDER_4H]: 'через 4 часа',
-  [EAppointmentReminderJobType.REMINDER_2H]: 'через 2 часа',
-  [EAppointmentReminderJobType.REMINDER_30M]: 'через 30 минут',
-};
-
-function reminderLabel(type: EAppointmentReminderJobType): string {
-  return REMINDER_LABELS[type];
-}
 
 function retryBackoffMs(attempts: number): number {
   return attempts <= 1 ? 60_000 : 5 * 60_000;
@@ -40,8 +26,10 @@ export class ProcessDueAppointmentRemindersUseCase {
     private readonly appointmentReminderJobRepository: IAppointmentReminderJobRepository,
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly userRepository: IUserRepository,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+    private readonly notificationMessageCatalog: NotificationMessageCatalog,
   ) {}
 
   async execute(input?: { limit?: number; now?: Date }): Promise<{
@@ -103,8 +91,6 @@ export class ProcessDueAppointmentRemindersUseCase {
         return 'cancelled';
       }
 
-      const title = 'Напоминание о записи';
-      const body = `Запись «${appointment.serviceName}» ${reminderLabel(job.type)}`;
       const actionUrl = `/record/${appointment.id}`;
       const payload = {
         type: 'appointment_reminder',
@@ -119,6 +105,16 @@ export class ProcessDueAppointmentRemindersUseCase {
       ].filter((userId, index, all) => all.indexOf(userId) === index);
 
       for (const userId of recipientUserIds) {
+        const recipient = await this.userRepository.findEntityById(userId);
+        const { title, body } = this.notificationMessageCatalog.resolve(
+          recipient?.language ?? EUserLanguage.RU,
+          {
+            type: NotificationType.APPOINTMENT_REMINDER,
+            serviceName: appointment.serviceName,
+            reminderType: job.type,
+          },
+        );
+
         await this.createNotificationUseCase.execute({
           userId,
           actorUserId: null,

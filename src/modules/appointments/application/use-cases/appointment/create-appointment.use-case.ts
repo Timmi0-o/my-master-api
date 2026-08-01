@@ -9,7 +9,10 @@ import {
 } from 'src/modules/appointments/domain/entities/appointment';
 import type { ICreateAppointmentChatInput } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointments/domain/entities/appointment-chat-message';
-import { EAppointmentChatMessageActor } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import {
+  EAppointmentChatMessageActor,
+  EAppointmentChatSystemAction,
+} from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
 import { ensureMasterProfileIsDifferent } from 'src/modules/appointments/domain/entities/appointment/policies/ensure-master-profile-is-different.policy';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
@@ -36,12 +39,15 @@ import {
   NotificationRelatedEntityType,
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification';
+import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
+import { EUserLanguage } from 'src/modules/users/domain/entities/user';
 import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { ICreateAppointmentApplicationInput } from '../../dtos/appointment/create-appointment.input';
 import type { ICreateAppointmentApplicationOutput } from '../../dtos/appointment/create-appointment.output';
 import { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
+import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 
 export class CreateAppointmentUseCase {
   constructor(
@@ -56,8 +62,10 @@ export class CreateAppointmentUseCase {
     private readonly userBlockRepository: IUserBlockRepository,
     private readonly userRepository: IUserRepository,
     private readonly realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+    private readonly realtimeChatPublisher: IAppointmentChatRealtimePublisher,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+    private readonly notificationMessageCatalog: NotificationMessageCatalog,
   ) {}
 
   async execute(
@@ -93,7 +101,7 @@ export class CreateAppointmentUseCase {
       throw new MasterServiceNotFoundError(input.masterServiceId);
     }
 
-    const appointment = await this.transactionManager.runInTransaction(
+    const result = await this.transactionManager.runInTransaction(
       async (scope) => {
         const now = new Date();
         const timezone = profile.timezone || 'Europe/Moscow';
@@ -229,12 +237,15 @@ export class CreateAppointmentUseCase {
           chatId: chat.id,
           senderUserId: null,
           actor: EAppointmentChatMessageActor.SYSTEM,
-          body: `Услуга ${service.name} создана`,
+          body: null,
+          systemAction: EAppointmentChatSystemAction.APPOINTMENT_CREATED,
+          payload: { serviceName: service.name },
         };
-        await this.appointmentChatMessageRepository.create(
-          systemMessageInput,
-          scope,
-        );
+        const systemMessage =
+          await this.appointmentChatMessageRepository.create(
+            systemMessageInput,
+            scope,
+          );
 
         if (input.initialMessage) {
           const messageInput: ICreateAppointmentChatMessageInput = {
@@ -242,6 +253,8 @@ export class CreateAppointmentUseCase {
             senderUserId: input.actor.userId,
             actor: EAppointmentChatMessageActor.USER,
             body: input.initialMessage.body,
+            systemAction: null,
+            payload: null,
           };
           await this.appointmentChatMessageRepository.create(
             messageInput,
@@ -253,22 +266,31 @@ export class CreateAppointmentUseCase {
           recipientUserId: profile.userId,
         });
 
-        return created;
+        return { appointment: created, systemMessage };
       },
     );
 
-    const today = new Date().toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    await Promise.all([
+      this.realtimeChatPublisher.messageCreated(result.systemMessage, {
+        recipientUserId: profile.userId,
+      }),
+      this.realtimeChatPublisher.messageCreated(result.systemMessage, {
+        recipientUserId: clientUserId,
+      }),
+    ]);
 
-    const title = 'У вас новая запись';
-    const body = `Новая запись от ${today}`;
+    const recipient = await this.userRepository.findEntityById(profile.userId);
+    const { title, body } = this.notificationMessageCatalog.resolve(
+      recipient?.language ?? EUserLanguage.RU,
+      {
+        type: NotificationType.APPOINTMENT_CREATED,
+        date: new Date(),
+      },
+    );
     const actionUrl = '/appointments';
     const payload = {
       type: 'appointment_created',
-      appointmentId: appointment.id,
+      appointmentId: result.appointment.id,
       url: actionUrl,
     };
 
@@ -282,9 +304,9 @@ export class CreateAppointmentUseCase {
         body,
         actionUrl,
         relatedEntityType: NotificationRelatedEntityType.APPOINTMENT,
-        relatedEntityId: appointment.id,
+        relatedEntityId: result.appointment.id,
         payload,
-        idempotencyKey: `appointment_created:${appointment.id}`,
+        idempotencyKey: `appointment_created:${result.appointment.id}`,
       })
       .catch(() => undefined);
 
@@ -295,6 +317,6 @@ export class CreateAppointmentUseCase {
       data: payload,
     });
 
-    return appointment;
+    return result.appointment;
   }
 }

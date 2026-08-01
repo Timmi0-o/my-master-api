@@ -64,4 +64,13 @@ enum Status {
 
 enum Language {
   RU
+  EN
+  ES
+  ZH
+  AR
+  FR
+  DE
+  PT
+  JA
+  HI
 }

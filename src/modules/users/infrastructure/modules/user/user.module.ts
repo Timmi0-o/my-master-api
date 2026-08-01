@@ -6,6 +6,7 @@ import type { IRoleRepository } from 'src/modules/authorization/domain/repositor
 import { ROLE_REPOSITORY_TOKEN } from 'src/modules/authorization/domain/repositories/role/role.repository.tokens';
 import { AssignUserRoleUseCase } from '../../../application/use-cases/user/assign-user-role.use-case';
 import { GetUsersUseCase } from '../../../application/use-cases/user/get-users.use-case';
+import { UpdateOwnLanguageUseCase } from '../../../application/use-cases/user/update-own-language.use-case';
 import type { IUserRepository } from '../../../domain/repositories/user/i-user.repository';
 import { USER_REPOSITORY_TOKEN } from '../../../domain/repositories/user/user.repository.tokens';
 import { UserRepositoryModule } from '../user-repository/user-repository.module';
@@ -37,11 +38,20 @@ import { UserRepositoryModule } from '../user-repository/user-repository.module'
         ROLE_REPOSITORY_TOKEN,
       ],
     },
+    {
+      provide: UpdateOwnLanguageUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        userRepository: IUserRepository,
+      ) => new UpdateOwnLanguageUseCase(transactionManager, userRepository),
+      inject: [TRANSACTION_MANAGER_TOKEN, USER_REPOSITORY_TOKEN],
+    },
   ],
   exports: [
     UserRepositoryModule,
     GetUsersUseCase,
     AssignUserRoleUseCase,
+    UpdateOwnLanguageUseCase,
   ],
 })
 export class UserModule {}

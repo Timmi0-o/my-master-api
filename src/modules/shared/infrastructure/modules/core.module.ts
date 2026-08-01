@@ -8,10 +8,11 @@ import { GlobalExceptionFilter } from '../filters/global-exception.filter';
 import { PrismaModule } from '../persistence/prisma/prisma.module';
 import { PrismaTransactionManager } from '../persistence/transactions';
 import { LoggerService } from '../services/logger.service';
+import { TemplatingModule } from '../templating/templating.module';
 
 @Global()
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, TemplatingModule],
   providers: [
     LoggerService,
     PrismaTransactionManager,
@@ -26,6 +27,7 @@ import { LoggerService } from '../services/logger.service';
   ],
   exports: [
     PrismaModule,
+    TemplatingModule,
     ILoggerSymbol,
     LOGGER_TOKEN,
     TRANSACTION_MANAGER_TOKEN,

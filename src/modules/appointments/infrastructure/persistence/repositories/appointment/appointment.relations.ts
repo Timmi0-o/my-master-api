@@ -88,6 +88,8 @@ export const APPOINTMENT_RELATIONS: Record<string, RelationConfig> = {
           'senderUserId',
           'actor',
           'body',
+          'systemAction',
+          'payload',
           'createdAt',
           'updatedAt',
           'deletedAt',

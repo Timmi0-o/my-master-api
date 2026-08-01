@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 import type { IMailer } from '@shared/domain/mailer';
+import type { EmailMessageFactory } from '@shared/infrastructure/mailer/email-message.factory';
 import { EUserStatus } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IPasswordResetTokenRepository } from '../../domain/repositories/i-password-reset-token.repository';
 import type { TokenService } from '../../infrastructure/services/token.service';
-import { buildPasswordResetEmail } from '../services/build-password-reset-email';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
@@ -14,6 +14,7 @@ export class SendResetPasswordEmailUseCase {
     private readonly passwordResetTokenRepository: IPasswordResetTokenRepository,
     private readonly tokenService: TokenService,
     private readonly mailer: IMailer,
+    private readonly emailMessageFactory: EmailMessageFactory,
     private readonly appWebUrl: string,
   ) {}
 
@@ -36,7 +37,10 @@ export class SendResetPasswordEmailUseCase {
     });
 
     const resetUrl = `${this.appWebUrl}/reset-password?token=${rawToken}`;
-    const emailContent = buildPasswordResetEmail(resetUrl);
+    const emailContent = this.emailMessageFactory.buildPasswordReset({
+      language: user.language,
+      resetUrl,
+    });
 
     await this.mailer.sendMail({
       to: user.email,

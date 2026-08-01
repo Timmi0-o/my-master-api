@@ -23,6 +23,7 @@ interface IRegisterInput {
   email: string;
   username: string;
   password: string;
+  language?: EUserLanguage;
 }
 
 interface ILoginMetadata {
@@ -75,7 +76,7 @@ export class RegisterUseCase {
             status: EUserStatus.ACTIVE,
             name: input.username,
             surname: input.username,
-            language: EUserLanguage.RU,
+            language: input.language ?? EUserLanguage.RU,
             phone: null,
             patronymic: null,
             emailVerifiedAt: null,
@@ -108,7 +109,11 @@ export class RegisterUseCase {
     );
 
     try {
-      await this.sendVerificationEmailUseCase.sendForUser(user.id, user.email);
+      await this.sendVerificationEmailUseCase.sendForUser(
+        user.id,
+        user.email,
+        user.language,
+      );
     } catch (error) {
       this.logger.warn(
         `Failed to send verification email to ${user.email}: ${

@@ -78,6 +78,8 @@ export const APPOINTMENT_CHAT_RELATIONS: Record<string, RelationConfig> = {
       'senderUserId',
       'actor',
       'body',
+      'systemAction',
+      'payload',
       'createdAt',
       'updatedAt',
       'deletedAt',
