@@ -2,5 +2,7 @@ import type { IMasterServiceEntity } from './i-master-service.entity';
 
 export type ICreateMasterServiceInput = Omit<
   IMasterServiceEntity,
-  'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
->;
+  'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'rating'
+> & {
+  rating?: number;
+};

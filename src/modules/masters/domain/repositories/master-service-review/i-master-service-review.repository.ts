@@ -36,4 +36,12 @@ export type IMasterServiceReviewRepository = IReadRepository<
       appointmentId: string,
       scope?: TransactionScope,
     ): Promise<IMasterServiceReviewEntity | null>;
+    aggregateAvgRatingByServiceId(
+      masterServiceId: string,
+      scope?: TransactionScope,
+    ): Promise<number>;
+    aggregateAvgRatingByMasterProfileId(
+      masterProfileId: string,
+      scope?: TransactionScope,
+    ): Promise<number>;
   };

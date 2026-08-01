@@ -164,4 +164,45 @@ export class PrismaMasterServiceReviewRepository
       throw mapMasterServiceReviewWriteError(error, { id });
     }
   }
+
+  async aggregateAvgRatingByServiceId(
+    masterServiceId: string,
+    scope?: TransactionScope,
+  ): Promise<number> {
+    const result = await this.getDelegate(scope).aggregate({
+      where: {
+        masterServiceId,
+        deletedAt: null,
+      },
+      _avg: { rating: true },
+    });
+
+    return roundRating(result._avg.rating);
+  }
+
+  async aggregateAvgRatingByMasterProfileId(
+    masterProfileId: string,
+    scope?: TransactionScope,
+  ): Promise<number> {
+    const result = await this.getDelegate(scope).aggregate({
+      where: {
+        deletedAt: null,
+        masterService: {
+          masterProfileId,
+          deletedAt: null,
+        },
+      },
+      _avg: { rating: true },
+    });
+
+    return roundRating(result._avg.rating);
+  }
 }
+
+const roundRating = (value: number | null | undefined): number => {
+  if (value == null || Number.isNaN(value)) {
+    return 0;
+  }
+
+  return Math.round(value * 10) / 10;
+};

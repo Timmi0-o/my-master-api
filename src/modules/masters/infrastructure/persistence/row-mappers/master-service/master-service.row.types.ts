@@ -25,6 +25,7 @@ export type MasterServiceRelationRow = {
   name: string;
   description: string;
   price: number;
+  rating: number;
   durationMinutes: number;
   category: EMasterServiceCategory;
   tags: string[];
@@ -39,6 +40,7 @@ export type MasterServiceRow = {
   name: string;
   description: string;
   price: number;
+  rating: number;
   durationMinutes: number;
   category: EMasterServiceCategory;
   tags: string[];

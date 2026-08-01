@@ -13,6 +13,7 @@ export function mapMasterServiceRow(
     name: row.name,
     description: row.description,
     price: row.price,
+    rating: row.rating,
     durationMinutes: row.durationMinutes,
     category: row.category,
     tags: row.tags ?? [],

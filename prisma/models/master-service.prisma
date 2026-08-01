@@ -3,6 +3,7 @@ model MasterService {
   name            String                @map("name")
   description     String                @map("description")
   price           Float                 @map("price")
+  rating          Float                 @default(0) @map("rating")
   durationMinutes Int                   @default(60) @map("duration_minutes")
   category        MasterServiceCategory @default(SERVICES) @map("category")
   tags            String[]              @default([]) @map("tags")
@@ -19,6 +20,7 @@ model MasterService {
   deletedAt DateTime? @map("deleted_at")
 
   @@index([category])
+  @@index([rating])
   @@map("MasterServices")
 }
 

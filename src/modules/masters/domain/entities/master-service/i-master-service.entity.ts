@@ -5,6 +5,7 @@ export interface IMasterServiceEntity {
   name: string;
   description: string;
   price: number;
+  rating: number;
   durationMinutes: number;
   category: EMasterServiceCategory;
   tags: string[];

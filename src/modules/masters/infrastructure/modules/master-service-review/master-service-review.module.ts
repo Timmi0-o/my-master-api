@@ -8,23 +8,50 @@ import { CreateMasterServiceReviewUseCase } from '../../../application/use-cases
 import { DeleteMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/delete-master-service-review-by-id.use-case';
 import { GetMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/get-master-service-review-by-id.use-case';
 import { GetMasterServiceReviewsUseCase } from '../../../application/use-cases/master-service-review/get-master-service-reviews.use-case';
+import { RecalculateMasterRatingsUseCase } from '../../../application/use-cases/master-service-review/recalculate-master-ratings.use-case';
 import { UpdateMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/update-master-service-review-by-id.use-case';
+import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
+import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-profile/master-profile.repository.tokens';
+import type { IMasterServiceRepository } from '../../../domain/repositories/master-service/i-master-service.repository';
+import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service/master-service.repository.tokens';
 import type { IMasterServiceReviewReactionRepository } from '../../../domain/repositories/master-service-review-reaction/i-master-service-review-reaction.repository';
 import { MASTER_SERVICE_REVIEW_REACTION_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service-review-reaction/master-service-review-reaction.repository.tokens';
 import type { IMasterServiceReviewRepository } from '../../../domain/repositories/master-service-review/i-master-service-review.repository';
 import { MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN } from '../../../domain/repositories/master-service-review/master-service-review.repository.tokens';
 import { PrismaMasterServiceReviewRepository } from '../../persistence/repositories/master-service-review/prisma-master-service-review.repository';
+import { MasterProfileModule } from '../master-profile/master-profile.module';
+import { MasterServiceModule } from '../master-service/master-service.module';
 import { MasterServiceReviewReactionModule } from '../master-service-review-reaction/master-service-review-reaction.module';
 
 @Module({
   imports: [
     forwardRef(() => AppointmentsModule),
     forwardRef(() => MasterServiceReviewReactionModule),
+    forwardRef(() => MasterServiceModule),
+    forwardRef(() => MasterProfileModule),
   ],
   providers: [
     {
       provide: MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
       useClass: PrismaMasterServiceReviewRepository,
+    },
+    {
+      provide: RecalculateMasterRatingsUseCase,
+      useFactory: (
+        reviewRepo: IMasterServiceReviewRepository,
+        serviceRepo: IMasterServiceRepository,
+        profileRepo: IMasterProfileRepository,
+      ) =>
+        new RecalculateMasterRatingsUseCase(
+          reviewRepo,
+          serviceRepo,
+          profileRepo,
+        ),
+      inject: [
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+      ],
     },
     {
       provide: GetMasterServiceReviewsUseCase,
@@ -54,16 +81,19 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
         transactionManager: ITransactionManager,
         reviewRepo: IMasterServiceReviewRepository,
         appointmentRepo: IAppointmentRepository,
+        recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
       ) =>
         new CreateMasterServiceReviewUseCase(
           transactionManager,
           reviewRepo,
           appointmentRepo,
+          recalculateMasterRatingsUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
         MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
+        RecalculateMasterRatingsUseCase,
       ],
     },
     {
@@ -71,24 +101,42 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
       useFactory: (
         transactionManager: ITransactionManager,
         reviewRepo: IMasterServiceReviewRepository,
+        serviceRepo: IMasterServiceRepository,
+        recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
       ) =>
         new UpdateMasterServiceReviewByIdUseCase(
           transactionManager,
           reviewRepo,
+          serviceRepo,
+          recalculateMasterRatingsUseCase,
         ),
-      inject: [TRANSACTION_MANAGER_TOKEN, MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN],
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        RecalculateMasterRatingsUseCase,
+      ],
     },
     {
       provide: DeleteMasterServiceReviewByIdUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
         reviewRepo: IMasterServiceReviewRepository,
+        serviceRepo: IMasterServiceRepository,
+        recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
       ) =>
         new DeleteMasterServiceReviewByIdUseCase(
           transactionManager,
           reviewRepo,
+          serviceRepo,
+          recalculateMasterRatingsUseCase,
         ),
-      inject: [TRANSACTION_MANAGER_TOKEN, MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN],
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        RecalculateMasterRatingsUseCase,
+      ],
     },
   ],
   exports: [

@@ -19,6 +19,7 @@ function mapMasterServiceRelationRow(
       name: row.name,
       description: row.description,
       price: row.price,
+      rating: row.rating ?? 0,
       durationMinutes: row.durationMinutes,
       category: row.category,
       tags: row.tags ?? [],

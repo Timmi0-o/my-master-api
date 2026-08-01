@@ -9,12 +9,14 @@ import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/
 import type { ITransactionManager } from '@shared/domain/transactions';
 import type { ICreateMasterServiceReviewApplicationInput } from '../../dtos/master-service-review/create-master-service-review.input';
 import type { ICreateMasterServiceReviewApplicationOutput } from '../../dtos/master-service-review/create-master-service-review.output';
+import type { RecalculateMasterRatingsUseCase } from './recalculate-master-ratings.use-case';
 
 export class CreateMasterServiceReviewUseCase {
   constructor(
     private readonly transactionManager: ITransactionManager,
     private readonly masterServiceReviewRepository: IMasterServiceReviewRepository,
     private readonly appointmentRepository: IAppointmentRepository,
+    private readonly recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
   ) {}
 
   async execute(
@@ -41,8 +43,19 @@ export class CreateMasterServiceReviewUseCase {
       text: input.text,
     };
 
-    return this.transactionManager.runInTransaction((scope) =>
-      this.masterServiceReviewRepository.create(createInput, scope),
-    );
+    return this.transactionManager.runInTransaction(async (scope) => {
+      const review = await this.masterServiceReviewRepository.create(
+        createInput,
+        scope,
+      );
+
+      await this.recalculateMasterRatingsUseCase.execute({
+        masterServiceId: appointment.masterServiceId,
+        masterProfileId: appointment.masterProfileId,
+        scope,
+      });
+
+      return review;
+    });
   }
 }
