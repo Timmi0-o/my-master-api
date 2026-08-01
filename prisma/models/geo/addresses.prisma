@@ -44,4 +44,5 @@ model Address {
 
 enum AddressEntityType {
   MASTER_PROFILE
+  USER_PROFILE
 }

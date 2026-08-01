@@ -8,6 +8,7 @@ import { UserProfileModule } from './infrastructure/modules/user-profile/user-pr
 import { UserModule } from './infrastructure/modules/user/user.module';
 import { UserBlocksController } from './presentation/http/controllers/user-blocks.controller';
 import { UserPersonalNotesController } from './presentation/http/controllers/user-personal-notes.controller';
+import { UserProfileAddressController } from './presentation/http/controllers/user-profile-address.controller';
 import { UserProfilesController } from './presentation/http/controllers/user-profiles.controller';
 import { UsersController } from './presentation/http/controllers/users.controller';
 
@@ -24,6 +25,7 @@ import { UsersController } from './presentation/http/controllers/users.controlle
   controllers: [
     UsersController,
     UserProfilesController,
+    UserProfileAddressController,
     UserBlocksController,
     UserPersonalNotesController,
   ],
