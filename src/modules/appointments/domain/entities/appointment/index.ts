@@ -21,5 +21,7 @@ export {
   ensureActorCanCancelAppointment,
   ensureChatHasActiveAppointment,
   isAppointmentEarlyCompletion,
+  APPOINTMENT_IN_PROGRESS_STATUSES,
+  isAppointmentInProgress,
   type IAppointmentActor,
 } from './policies';

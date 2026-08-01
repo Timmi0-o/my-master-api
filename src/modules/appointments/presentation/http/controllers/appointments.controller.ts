@@ -13,6 +13,8 @@ import { GetAppointmentByIdUseCase } from '@modules/appointments/application/use
 import { GetAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-appointments.use-case';
 import { GetMyAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-appointments.use-case';
 import { GetMyClientsAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-clients-appointments.use-case';
+import { GetMyInProgressAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-in-progress-appointment.use-case';
+import { GetMyClientsInProgressAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-clients-in-progress-appointment.use-case';
 import { UpdateAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/update-appointment-by-id.use-case';
 import { cancelAppointmentPayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/cancel-appointment-payload.schema';
 import type { ICancelAppointmentPayload } from '@modules/appointments/presentation/http/validation/schemas/cancel-appointment-payload.types';
@@ -39,11 +41,14 @@ import { requestBodyToCreateAppointmentUseCaseInput } from '../request-mappers/a
 import { requestParamsToDeleteAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-delete-appointment-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToGetAppointmentByIdUseCaseInput } from '../request-mappers/appointment/request-query-params-to-get-appointment-by-id-use-case-input';
+import { requestQueryParamsToGetMyInProgressAppointmentUseCaseInput } from '../request-mappers/appointment/request-query-params-to-get-my-in-progress-appointment-use-case-input';
+import { requestQueryParamsToGetMyClientsInProgressAppointmentUseCaseInput } from '../request-mappers/appointment/request-query-params-to-get-my-clients-in-progress-appointment-use-case-input';
 import { findManyParamsToGetMyAppointmentsUseCaseInput } from '../request-mappers/appointment/find-many-params-to-get-my-appointments-use-case-input';
 import { findManyParamsToGetMyClientsAppointmentsUseCaseInput } from '../request-mappers/appointment/find-many-params-to-get-my-clients-appointments-use-case-input';
 import { requestBodyToUpdateAppointmentUseCaseInput } from '../request-mappers/appointment/request-body-to-update-appointment-use-case-input';
 import { mapGetAppointmentsHttpResponse } from '../http-responses/map-get-appointments-response';
 import { mapGetAppointmentByIdHttpResponse } from '../http-responses/map-get-appointment-by-id-response';
+import { mapGetInProgressAppointmentHttpResponse } from '../http-responses/map-get-in-progress-appointment-response';
 import { mapCreateAppointmentHttpResponse } from '../http-responses/map-create-appointment-response';
 import { mapCancelAppointmentHttpResponse } from '../http-responses/map-cancel-appointment-response';
 import { mapCompleteAppointmentHttpResponse } from '../http-responses/map-complete-appointment-response';
@@ -58,6 +63,8 @@ export class AppointmentsController {
     private readonly getAppointmentsUseCase: GetAppointmentsUseCase,
     private readonly getMyAppointmentsUseCase: GetMyAppointmentsUseCase,
     private readonly getMyClientsAppointmentsUseCase: GetMyClientsAppointmentsUseCase,
+    private readonly getMyInProgressAppointmentUseCase: GetMyInProgressAppointmentUseCase,
+    private readonly getMyClientsInProgressAppointmentUseCase: GetMyClientsInProgressAppointmentUseCase,
     private readonly getAppointmentByIdUseCase: GetAppointmentByIdUseCase,
     private readonly createAppointmentUseCase: CreateAppointmentUseCase,
     private readonly confirmAppointmentUseCase: ConfirmAppointmentUseCase,
@@ -87,6 +94,28 @@ export class AppointmentsController {
     return mapGetAppointmentsHttpResponse(output, queryParams);
   }
 
+  @Get('me/in-progress')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.read],
+  })
+  async getMyInProgressAppointment(
+    @HttpQuery(getByIdQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса',
+    })
+    queryPayload: IGetByIdQueryPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestQueryParamsToGetMyInProgressAppointmentUseCaseInput(
+      queryPayload,
+      user,
+      metadata.isStaffUser,
+    );
+    const item = await this.getMyInProgressAppointmentUseCase.execute(input);
+    return mapGetInProgressAppointmentHttpResponse(item);
+  }
+
   @Get('my-clients')
   @Authorize({
     kind: 'permissions',
@@ -109,6 +138,30 @@ export class AppointmentsController {
     );
     const output = await this.getMyClientsAppointmentsUseCase.execute(input);
     return mapGetAppointmentsHttpResponse(output, queryParams);
+  }
+
+  @Get('my-clients/in-progress')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointments.read],
+  })
+  async getMyClientsInProgressAppointment(
+    @HttpQuery(getByIdQuerySchema, {
+      errorMessage: 'Некорректные параметры запроса',
+    })
+    queryPayload: IGetByIdQueryPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input =
+      requestQueryParamsToGetMyClientsInProgressAppointmentUseCaseInput(
+        queryPayload,
+        user,
+        metadata.isStaffUser,
+      );
+    const item =
+      await this.getMyClientsInProgressAppointmentUseCase.execute(input);
+    return mapGetInProgressAppointmentHttpResponse(item);
   }
 
   @Get()

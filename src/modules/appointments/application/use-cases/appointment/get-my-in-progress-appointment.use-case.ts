@@ -1,0 +1,35 @@
+import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
+import { attachPersonalNotesToAppointmentPeers } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
+import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
+import type { IGetMyInProgressAppointmentApplicationInput } from '../../dtos/appointment/get-my-in-progress-appointment.input';
+import type { IGetInProgressAppointmentApplicationOutput } from '../../dtos/appointment/get-in-progress-appointment.output';
+
+export class GetMyInProgressAppointmentUseCase {
+  constructor(
+    private readonly appointmentRepository: IAppointmentRepository,
+    private readonly userPersonalNoteRepository: IUserPersonalNoteRepository,
+  ) {}
+
+  async execute(
+    input: IGetMyInProgressAppointmentApplicationInput,
+  ): Promise<IGetInProgressAppointmentApplicationOutput> {
+    const item = await this.appointmentRepository.findInProgressForClient(
+      input.actor.userId,
+      new Date(),
+      input.params,
+    );
+
+    if (!item || !wantsPersonalNotesEnrich(input.params.enrich)) {
+      return item;
+    }
+
+    const [itemWithNotes] = await attachPersonalNotesToAppointmentPeers(
+      this.userPersonalNoteRepository,
+      input.actor.userId,
+      [item],
+    );
+
+    return itemWithNotes;
+  }
+}

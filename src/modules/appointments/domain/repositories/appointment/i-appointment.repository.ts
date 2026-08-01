@@ -1,3 +1,4 @@
+import type { FindOneParams, ReadResult } from '@shared/domain/query';
 import type {
   ICreateRepository,
   IReadRepository,
@@ -30,4 +31,22 @@ export type IAppointmentRepository = IReadRepository<
       masterServiceId: string,
       scope?: TransactionScope,
     ): Promise<boolean>;
+    findInProgressForClient(
+      clientUserId: string,
+      now: Date,
+      params?: FindOneParams<IAppointmentPublicEntity, IAppointmentRelations>,
+      scope?: TransactionScope,
+    ): Promise<ReadResult<
+      IAppointmentPublicEntity,
+      IAppointmentRelations
+    > | null>;
+    findInProgressForMaster(
+      masterUserId: string,
+      now: Date,
+      params?: FindOneParams<IAppointmentPublicEntity, IAppointmentRelations>,
+      scope?: TransactionScope,
+    ): Promise<ReadResult<
+      IAppointmentPublicEntity,
+      IAppointmentRelations
+    > | null>;
   };

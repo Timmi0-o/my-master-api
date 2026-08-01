@@ -40,6 +40,8 @@ import { GetAppointmentByIdUseCase } from '../../../application/use-cases/appoin
 import { GetAppointmentsUseCase } from '../../../application/use-cases/appointment/get-appointments.use-case';
 import { GetMyAppointmentsUseCase } from '../../../application/use-cases/appointment/get-my-appointments.use-case';
 import { GetMyClientsAppointmentsUseCase } from '../../../application/use-cases/appointment/get-my-clients-appointments.use-case';
+import { GetMyInProgressAppointmentUseCase } from '../../../application/use-cases/appointment/get-my-in-progress-appointment.use-case';
+import { GetMyClientsInProgressAppointmentUseCase } from '../../../application/use-cases/appointment/get-my-clients-in-progress-appointment.use-case';
 import { ProcessDueAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/process-due-appointment-reminders.use-case';
 import { ScheduleAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/schedule-appointment-reminders.use-case';
 import { UpdateAppointmentByIdUseCase } from '../../../application/use-cases/appointment/update-appointment-by-id.use-case';
@@ -152,6 +154,28 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
       ) => new GetMyClientsAppointmentsUseCase(repo, personalNoteRepo),
+      inject: [
+        APPOINTMENT_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
+    },
+    {
+      provide: GetMyInProgressAppointmentUseCase,
+      useFactory: (
+        repo: IAppointmentRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetMyInProgressAppointmentUseCase(repo, personalNoteRepo),
+      inject: [
+        APPOINTMENT_REPOSITORY_TOKEN,
+        USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+      ],
+    },
+    {
+      provide: GetMyClientsInProgressAppointmentUseCase,
+      useFactory: (
+        repo: IAppointmentRepository,
+        personalNoteRepo: IUserPersonalNoteRepository,
+      ) => new GetMyClientsInProgressAppointmentUseCase(repo, personalNoteRepo),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
@@ -374,6 +398,8 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     GetAppointmentsUseCase,
     GetMyAppointmentsUseCase,
     GetMyClientsAppointmentsUseCase,
+    GetMyInProgressAppointmentUseCase,
+    GetMyClientsInProgressAppointmentUseCase,
     GetAppointmentByIdUseCase,
     CreateAppointmentUseCase,
     ConfirmAppointmentUseCase,

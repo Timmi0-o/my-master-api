@@ -7,12 +7,14 @@ import type {
 import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
 import type { TransactionScope } from '@shared/domain/transactions';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
-import type {
-  ICreateAppointmentInput,
-  IAppointmentEntity,
-  IAppointmentPublicEntity,
-  IAppointmentRelations,
-  IUpdateAppointmentInput,
+import {
+  APPOINTMENT_IN_PROGRESS_STATUSES,
+  isAppointmentInProgress,
+  type ICreateAppointmentInput,
+  type IAppointmentEntity,
+  type IAppointmentPublicEntity,
+  type IAppointmentRelations,
+  type IUpdateAppointmentInput,
 } from 'src/modules/appointments/domain/entities/appointment';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
@@ -239,6 +241,81 @@ export class PrismaAppointmentRepository
       where: { clientUserId, masterServiceId, deletedAt: null },
     });
     return count > 0;
+  }
+
+  async findInProgressForClient(
+    clientUserId: string,
+    now: Date,
+    params?: FindOneParams<IAppointmentPublicEntity, IAppointmentRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IAppointmentPublicEntity,
+    IAppointmentRelations
+  > | null> {
+    return this.findInProgressAppointment(
+      {
+        clientUserId: { eq: clientUserId },
+      },
+      now,
+      params,
+      scope,
+    );
+  }
+
+  async findInProgressForMaster(
+    masterUserId: string,
+    now: Date,
+    params?: FindOneParams<IAppointmentPublicEntity, IAppointmentRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IAppointmentPublicEntity,
+    IAppointmentRelations
+  > | null> {
+    return this.findInProgressAppointment(
+      {
+        masterProfile: { userId: { eq: masterUserId } },
+      },
+      now,
+      params,
+      scope,
+    );
+  }
+
+  private async findInProgressAppointment(
+    scopeWhere: FindManyParams<
+      IAppointmentPublicEntity,
+      IAppointmentRelations
+    >['where'],
+    now: Date,
+    params?: FindOneParams<IAppointmentPublicEntity, IAppointmentRelations>,
+    scope?: TransactionScope,
+  ): Promise<ReadResult<
+    IAppointmentPublicEntity,
+    IAppointmentRelations
+  > | null> {
+    const windowStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const candidates = await this.findMany(
+      {
+        where: {
+          ...scopeWhere,
+          status: { in: [...APPOINTMENT_IN_PROGRESS_STATUSES] },
+          deletedAt: { isNull: true },
+          startsAt: { gte: windowStart, lte: now },
+        },
+        orderBy: [{ field: 'startsAt', direction: 'asc' }],
+        slice: { limit: 50 },
+        selectOptions: params?.selectOptions,
+        enrich: params?.enrich,
+      },
+      scope,
+    );
+
+    return (
+      candidates.find((appointment) =>
+        isAppointmentInProgress(appointment, now),
+      ) ?? null
+    );
   }
 
   async create(
