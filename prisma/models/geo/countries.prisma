@@ -1,0 +1,31 @@
+model Country {
+  id          String                                @id @default(uuid())
+  slug        String                                @unique @map("slug")
+  coordinates Unsupported("geometry(Point, 4326)")? @map("coordinates")
+  metadata    Json?                                 @map("metadata")
+
+  name         String  @unique @map("name")
+  descriptions String? @map("descriptions")
+
+  metaTitle        String? @map("meta_title")
+  metaDescriptions String? @map("meta_descriptions")
+  metaKeywords     String? @map("meta_keywords")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  regions           Region[]
+  localities        Locality[]
+  districtRegions   DistrictRegion[]
+  localityDistricts LocalityDistrict[]
+  settlements       Settlement[]
+  streets           Street[]
+  landPlots         LandPlot[]
+  buildings         Building[]
+  addresses         Address[]
+
+  @@index([slug])
+  @@index([coordinates], type: Gist)
+  @@index([name])
+  @@map("Countries")
+}

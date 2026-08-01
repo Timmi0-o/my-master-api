@@ -12,6 +12,7 @@ import { MasterServiceModule } from './infrastructure/modules/master-service/mas
 import { MasterSubscriptionModule } from './infrastructure/modules/master-subscription/master-subscription.module';
 import { MasterWeeklyScheduleModule } from './infrastructure/modules/master-weekly-schedule/master-weekly-schedule.module';
 import { FavoriteMasterServicesController } from './presentation/http/controllers/favorite-master-services.controller';
+import { MasterProfileAddressController } from './presentation/http/controllers/master-profile-address.controller';
 import { MasterProfilesController } from './presentation/http/controllers/master-profiles.controller';
 import { MasterScheduleExceptionsController } from './presentation/http/controllers/master-schedule-exceptions.controller';
 import { MasterServiceReviewReactionsController } from './presentation/http/controllers/master-service-review-reactions.controller';
@@ -19,6 +20,7 @@ import { MasterServiceReviewsController } from './presentation/http/controllers/
 import { MasterServicesController } from './presentation/http/controllers/master-services.controller';
 import { MasterSubscriptionsController } from './presentation/http/controllers/master-subscriptions.controller';
 import { MasterWeeklySchedulesController } from './presentation/http/controllers/master-weekly-schedules.controller';
+import { PublicMasterProfileAddressController } from './presentation/http/controllers/public-master-profile-address.controller';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { MasterWeeklySchedulesController } from './presentation/http/controllers
   ],
   controllers: [
     MasterProfilesController,
+    MasterProfileAddressController,
+    PublicMasterProfileAddressController,
     MasterServicesController,
     MasterServiceReviewsController,
     MasterServiceReviewReactionsController,

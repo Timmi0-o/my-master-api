@@ -1,0 +1,39 @@
+model LocalityDistrict {
+  id                String                                @id @default(uuid())
+  countryId         String?                               @map("country_id")
+  regionId          String                                @map("region_id")
+  localityId        String?                               @map("locality_id")
+  garObjectId       BigInt?                               @unique @map("gar_object_id")
+  garObjectGuid     String?                               @unique @map("gar_object_guid")
+  garLevel          Int?                                  @map("gar_level")
+  garTypeName       String?                               @map("gar_type_name")
+  parentGarObjectId BigInt?                               @map("parent_gar_object_id")
+  slug              String                                @unique @map("slug")
+  coordinates       Unsupported("geometry(Point, 4326)")? @map("coordinates")
+  metadata          Json?                                 @map("metadata")
+
+  name         String  @map("name")
+  descriptions String? @map("descriptions")
+
+  metaTitle        String? @map("meta_title")
+  metaDescriptions String? @map("meta_descriptions")
+  metaKeywords     String? @map("meta_keywords")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  country   Country?  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  region    Region    @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  locality  Locality? @relation(fields: [localityId], references: [id], onDelete: Cascade)
+  streets   Street[]
+  addresses Address[]
+
+  @@index([parentGarObjectId])
+  @@index([countryId])
+  @@index([regionId])
+  @@index([localityId])
+  @@index([slug])
+  @@index([coordinates], type: Gist)
+  @@index([name])
+  @@map("LocalityDistricts")
+}

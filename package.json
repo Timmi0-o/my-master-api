@@ -25,6 +25,8 @@
     "prisma:seed": "prisma db seed",
     "prisma:seed:force-images": "SEED_FORCE_SERVICE_IMAGES=true prisma db seed",
     "prisma:seed:force-profile-avatars": "SEED_FORCE_PROFILE_AVATARS=true prisma db seed",
+    "geo:db:restore": "ts-node -r tsconfig-paths/register prisma/scripts/db/geo-db-restore.ts",
+    "geo:db:restore:host": "bash scripts/geo-db-restore-host.sh",
     "deploy:prod": "bash scripts/deploy-prod.sh"
   },
   "dependencies": {

@@ -1,0 +1,26 @@
+model Apartment {
+  id                String  @id @default(uuid())
+  buildingId        String  @map("building_id")
+  garObjectId       BigInt  @unique @map("gar_object_id")
+  garObjectGuid     String  @unique @map("gar_object_guid")
+  garApartmentId    BigInt? @unique @map("gar_apartment_id")
+  garLevel          Int     @map("gar_level")
+  garTypeName       String? @map("gar_type_name")
+  parentGarObjectId BigInt? @map("parent_gar_object_id")
+  metadata          Json?   @map("metadata")
+
+  number    String? @map("number")
+  apartType String? @map("apart_type")
+  name      String  @map("name")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  building  Building  @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  addresses Address[]
+
+  @@index([buildingId])
+  @@index([parentGarObjectId])
+  @@index([name])
+  @@map("Apartments")
+}

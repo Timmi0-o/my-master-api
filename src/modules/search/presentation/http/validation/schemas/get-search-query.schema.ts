@@ -18,6 +18,11 @@ export const getSearchQuerySchema: JSONSchemaType<IGetSearchQueryPayload> = {
       enum: Object.values(EMasterServiceCategory),
       nullable: true,
     },
+    localityId: {
+      type: 'string',
+      format: 'uuid',
+      nullable: true,
+    },
     limit: limitSchema,
   },
   required: [],

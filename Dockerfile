@@ -9,6 +9,8 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 FROM deps AS development
+# pg_restore/psql for `npm run geo:db:restore` inside the app container
+RUN apk add --no-cache postgresql-client
 COPY . .
 EXPOSE 3000
 CMD ["yarn", "start:dev"]

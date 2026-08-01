@@ -1,0 +1,47 @@
+model Address {
+  entityId           String            @map("entity_id")
+  entityType         AddressEntityType @map("entity_type")
+  countryId          String?           @map("country_id")
+  regionId           String?           @map("region_id")
+  districtRegionId   String?           @map("district_region_id")
+  localityId         String            @map("locality_id")
+  localityDistrictId String?           @map("locality_district_id")
+  streetId           String?           @map("street_id")
+  buildingId         String?           @map("building_id")
+  apartmentId        String?           @map("apartment_id")
+
+  street         String? @map("street")
+  houseNumber    String? @map("house_number")
+  building       String? @map("building")
+  apartment      String? @map("apartment")
+  postalCode     String? @map("postal_code")
+  additionalInfo String? @map("additional_info")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  country          Country?          @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  region           Region?           @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  districtRegion   DistrictRegion?   @relation(fields: [districtRegionId], references: [id], onDelete: SetNull)
+  locality         Locality          @relation(fields: [localityId], references: [id], onDelete: Cascade)
+  localityDistrict LocalityDistrict? @relation(fields: [localityDistrictId], references: [id], onDelete: SetNull)
+  streetEntity     Street?           @relation(fields: [streetId], references: [id], onDelete: SetNull)
+  buildingRef      Building?         @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+  apartmentRef     Apartment?        @relation(fields: [apartmentId], references: [id], onDelete: SetNull)
+
+  @@id([entityId, entityType, localityId])
+  @@index([streetId])
+  @@index([buildingId])
+  @@index([apartmentId])
+  @@index([countryId])
+  @@index([regionId])
+  @@index([districtRegionId])
+  @@index([localityId])
+  @@index([localityDistrictId])
+  @@index([entityType])
+  @@map("addresses")
+}
+
+enum AddressEntityType {
+  MASTER_PROFILE
+}

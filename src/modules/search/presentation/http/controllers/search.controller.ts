@@ -21,10 +21,11 @@ export class SearchController {
   ) {
     const hasQ = payload.q != null && payload.q.trim() !== '';
     const hasCategory = payload.category != null;
+    const hasLocalityId = payload.localityId != null;
 
-    if (!hasQ && !hasCategory) {
+    if (!hasQ && !hasCategory && !hasLocalityId) {
       throw new BadRequestException(
-        'Укажите поисковый запрос (q) и/или категорию (category)',
+        'Укажите поисковый запрос (q), категорию (category) и/или город (localityId)',
       );
     }
 

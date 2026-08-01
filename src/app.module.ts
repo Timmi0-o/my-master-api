@@ -5,6 +5,7 @@ import { AuthorizationModule } from './modules/authorization/authorization.modul
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { BugReportsModule } from './modules/bug-reports/bug-reports.module';
 import { FilesModule } from './modules/files/files.module';
+import { GeoModule } from './modules/geo/geo.module';
 import { MastersModule } from './modules/masters/masters.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SearchModule } from './modules/search/search.module';
@@ -20,6 +21,7 @@ import { WebPushSubscriptionsModule } from './modules/web-push-subscriptions/web
     AuthModule,
     AuthorizationModule,
     MastersModule,
+    GeoModule,
     AppointmentsModule,
     FilesModule,
     SearchModule,

@@ -9,6 +9,7 @@ export function requestQueryParamsToSearchByTextUseCaseInput(
       ? { q: payload.q.trim() }
       : {}),
     ...(payload.category != null ? { category: payload.category } : {}),
+    ...(payload.localityId != null ? { localityId: payload.localityId } : {}),
     ...(payload.limit != null ? { limit: payload.limit } : {}),
   };
 }

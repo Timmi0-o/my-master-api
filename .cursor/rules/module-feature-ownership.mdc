@@ -1,0 +1,43 @@
+---
+description: Ownership — HTTP/UC живёт в модуле сущности; geo только geo-таблицы
+globs: src/modules/**/*.ts
+alwaysApply: false
+---
+
+# Module feature ownership
+
+## Rule
+
+Операции над сущностью модуля X (HTTP + application use-cases) живут **в модуле X**.
+Чужой модуль не держит controllers / use-cases «для удобства», даже если данные лежат рядом.
+
+## Geo
+
+- В `geo` только read/write **geo-таблиц**: localities, streets, buildings, apartments, addresses (generic port).
+- Запрещены в `geo`:
+  - controllers вроде `masters/me/address`, `master-profiles/:id/address`
+  - use-cases `*MasterAddress*`
+  - методы репозитория, заточенные под masters/search (`*MasterProfile*`)
+
+## Masters (и аналоги)
+
+- Адрес мастера: controllers + use-cases в `masters`.
+- Use-case вызывает generic geo-port и сам задаёт `entityType` / `entityId`.
+
+```ts
+// ❌ BAD — geo знает про master
+addressRepository.deleteByMasterProfileId(id, scope)
+
+// ✅ GOOD — masters compose identity
+addressRepository.deleteByEntity(
+  EAddressEntityType.MASTER_PROFILE,
+  masterProfileId,
+  scope,
+)
+```
+
+## Shared tables / polymorphic entities
+
+- Таблица `addresses` (entityType + entityId) — порт в `geo` **generic**.
+- Бизнес-сценарий «адрес профиля мастера» / «фильтр поиска по городу» — в `masters` / `search`.
+- Не тащить orchestration другого модуля в geo ради «одного метода в репозитории».

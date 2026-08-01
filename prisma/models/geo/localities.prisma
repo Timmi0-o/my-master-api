@@ -1,0 +1,107 @@
+model Locality {
+  id                     String                                @id @default(uuid())
+  countryId              String                                @map("country_id")
+  regionId               String                                @map("region_id")
+  garObjectId            BigInt?                               @unique @map("gar_object_id")
+  garObjectGuid          String?                               @unique @map("gar_object_guid")
+  garLevel               Int?                                  @map("gar_level")
+  garTypeName            String?                               @map("gar_type_name")
+  parentGarObjectId      BigInt?                               @map("parent_gar_object_id")
+  slug                   String                                @unique @map("slug")
+  type                   LocalityType                          @map("type")
+  main                   Boolean                               @map("main")
+  isPurchasedFromTourgis Boolean                               @default(false) @map("is_purchased_from_tourgis")
+  coordinates            Unsupported("geometry(Point, 4326)")? @map("coordinates")
+  metadata               Json?                                 @map("metadata")
+
+  name         String  @map("name")
+  descriptions String? @map("descriptions")
+
+  metaTitle        String? @map("meta_title")
+  metaDescriptions String? @map("meta_descriptions")
+  metaKeywords     String? @map("meta_keywords")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  localityDistricts LocalityDistrict[]
+  streets           Street[]
+  landPlots         LandPlot[]
+  buildings         Building[]
+  addresses         Address[]
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  region  Region  @relation(fields: [regionId], references: [id], onDelete: Cascade)
+
+  @@index([parentGarObjectId])
+  @@index([countryId])
+  @@index([regionId])
+  @@index([slug])
+  @@index([coordinates], type: Gist)
+  @@index([name])
+  @@map("Localities")
+}
+
+enum LocalityType {
+  NASLEG
+  SOMON
+  ULUS
+  CITY
+  PGT
+  SELO
+  DEREVNYA
+  POSELOK
+  HUTOR
+  STANICA
+  AUL
+  KISHLACK
+  ARBAN
+  AAL
+  AUTODOROGA
+  VYSEL
+  GORODOK
+  GORODSKOY_POSELOK
+  RABOCHIY_POSELOK
+  DACHNYY_POSELOK
+  ZHD_BUDKA
+  ZHD_BLOKPOST
+  ZHD_KAZARMA
+  ZHD_OSTANOVOCHNYY_PUNKT
+  ZHD_PLATFORMA
+  ZHD_PLOSHCHADKA
+  ZHD_POST
+  ZHD_RAZEZD
+  ZHD_STANTSIYA
+  ZHILOY_RAYON
+  KAZARMA
+  KVARTAL
+  KORDON
+  KURORTNYY_POSELOK
+  MESTECHKO
+  MIKRORAYON
+  NASELENNYY_PUNKT
+  OSTROV
+  POGOST
+  POCHINOK
+  PROMZONA
+  PLOSHCHADOCHNYY_RAYON
+  POCHTOVOE_OTDELENIE
+  PODSTANTSIYA
+  POSELOK_PRI_STANTSII
+  POSELOK_PRI_ZHD_STANTSII
+  POSELOK_RAZEZD
+  RAZEZD
+  SADOVOE_TOVARISHESTVO
+  SELSKAYA_MESTNOST
+  SELSKAYA_TERRITORIYA
+  SELSKOE_MUNICIPALNOE_OBRAZOVANIE
+  SELSKOE_POSELENIE
+  SELSKIY_OKRUG
+  SELSOVET
+  SLOBODA
+  STANTSIYA
+  TERRITORIYA
+  ZAIMKA
+  VYSELKI
+  MASSIV
+}

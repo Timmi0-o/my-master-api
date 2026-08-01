@@ -32,3 +32,12 @@ export type IXRepository = IReadRepository<IPublic, string, IRelations> &
 - Fat god CRUD interface instead of ISP
 - Split read/write into two repositories for the same aggregate
 - Use `PrismaCrudRepository`
+- Add methods specialized for **another module’s aggregate**
+  (`findByMasterProfileId`, `upsertForMasterProfile`, `deleteByMasterProfileId`, …)
+
+## Cross-module usage
+
+- Port methods stay **generic for this aggregate** (`findByEntity`, `deleteByEntity`, `replaceByEntity`, …).
+- Consumer use-case (in `masters` / `search` / …) passes foreign identity itself
+  (`EAddressEntityType.MASTER_PROFILE`, `entityId`, …).
+- Do **not** hardcode another feature’s entity type inside a repository implementation.

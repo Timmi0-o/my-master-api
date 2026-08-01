@@ -5,6 +5,7 @@ import type { IMasterServicePublicEntity } from 'src/modules/masters/domain/enti
 export interface ISearchByTextApplicationInput {
   q?: string;
   category?: EMasterServiceCategory;
+  localityId?: string;
   limit?: number;
 }
 
