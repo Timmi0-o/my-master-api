@@ -29,6 +29,14 @@ type ResolveParams =
       serviceName: string;
     }
   | {
+      type: NotificationType.APPOINTMENT_COMPLETED;
+      serviceName: string;
+    }
+  | {
+      type: NotificationType.APPOINTMENT_NO_SHOW;
+      serviceName: string;
+    }
+  | {
       type: NotificationType.APPOINTMENT_REMINDER;
       serviceName: string;
       reminderType: EAppointmentReminderJobType;
@@ -72,6 +80,24 @@ export class NotificationMessageCatalog {
       }
       case NotificationType.APPOINTMENT_CANCELLED: {
         const entry = messages.APPOINTMENT_CANCELLED;
+        return {
+          title: entry.title,
+          body: this.templateRenderer.renderString(entry.body, {
+            serviceName: params.serviceName,
+          }),
+        };
+      }
+      case NotificationType.APPOINTMENT_COMPLETED: {
+        const entry = messages.APPOINTMENT_COMPLETED;
+        return {
+          title: entry.title,
+          body: this.templateRenderer.renderString(entry.body, {
+            serviceName: params.serviceName,
+          }),
+        };
+      }
+      case NotificationType.APPOINTMENT_NO_SHOW: {
+        const entry = messages.APPOINTMENT_NO_SHOW;
         return {
           title: entry.title,
           body: this.templateRenderer.renderString(entry.body, {

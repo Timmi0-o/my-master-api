@@ -15,6 +15,7 @@ import { GetMyAppointmentsUseCase } from '@modules/appointments/application/use-
 import { GetMyClientsAppointmentsUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-clients-appointments.use-case';
 import { GetMyInProgressAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-in-progress-appointment.use-case';
 import { GetMyClientsInProgressAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/get-my-clients-in-progress-appointment.use-case';
+import { NoShowAppointmentUseCase } from '@modules/appointments/application/use-cases/appointment/no-show-appointment.use-case';
 import { UpdateAppointmentByIdUseCase } from '@modules/appointments/application/use-cases/appointment/update-appointment-by-id.use-case';
 import { cancelAppointmentPayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/cancel-appointment-payload.schema';
 import type { ICancelAppointmentPayload } from '@modules/appointments/presentation/http/validation/schemas/cancel-appointment-payload.types';
@@ -36,6 +37,7 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { requestParamsToCompleteAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-complete-appointment-use-case-input';
 import { requestParamsToConfirmAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-confirm-appointment-use-case-input';
+import { requestParamsToNoShowAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-no-show-appointment-use-case-input';
 import { requestBodyToCancelAppointmentUseCaseInput } from '../request-mappers/appointment/request-body-to-cancel-appointment-use-case-input';
 import { requestBodyToCreateAppointmentUseCaseInput } from '../request-mappers/appointment/request-body-to-create-appointment-use-case-input';
 import { requestParamsToDeleteAppointmentUseCaseInput } from '../request-mappers/appointment/request-params-to-delete-appointment-use-case-input';
@@ -53,6 +55,7 @@ import { mapCreateAppointmentHttpResponse } from '../http-responses/map-create-a
 import { mapCancelAppointmentHttpResponse } from '../http-responses/map-cancel-appointment-response';
 import { mapCompleteAppointmentHttpResponse } from '../http-responses/map-complete-appointment-response';
 import { mapConfirmAppointmentHttpResponse } from '../http-responses/map-confirm-appointment-response';
+import { mapNoShowAppointmentHttpResponse } from '../http-responses/map-no-show-appointment-response';
 import { mapUpdateAppointmentHttpResponse } from '../http-responses/map-update-appointment-response';
 import { mapDeleteAppointmentHttpResponse } from '../http-responses/map-delete-appointment-response';
 
@@ -70,6 +73,7 @@ export class AppointmentsController {
     private readonly confirmAppointmentUseCase: ConfirmAppointmentUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
     private readonly completeAppointmentUseCase: CompleteAppointmentUseCase,
+    private readonly noShowAppointmentUseCase: NoShowAppointmentUseCase,
     private readonly updateAppointmentByIdUseCase: UpdateAppointmentByIdUseCase,
     private readonly deleteAppointmentByIdUseCase: DeleteAppointmentByIdUseCase,
   ) {}
@@ -293,6 +297,26 @@ export class AppointmentsController {
     );
     const output = await this.completeAppointmentUseCase.execute(input);
     return mapCompleteAppointmentHttpResponse(output);
+  }
+
+  @Post(':id/no-show')
+  @Authorize({ kind: 'authenticated' })
+  async noShowAppointment(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToNoShowAppointmentUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.noShowAppointmentUseCase.execute(input);
+    return mapNoShowAppointmentHttpResponse(output);
   }
 
   @Patch(':id')

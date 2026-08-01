@@ -14,6 +14,14 @@ export const notificationMessagesRu: NotificationMessages = {
     title: 'Запись отменена',
     body: 'Запись «{{serviceName}}» отменена',
   },
+  APPOINTMENT_COMPLETED: {
+    title: 'Запись завершена',
+    body: 'Запись «{{serviceName}}» завершена',
+  },
+  APPOINTMENT_NO_SHOW: {
+    title: 'Клиент не пришёл',
+    body: 'Запись «{{serviceName}}» отмечена как неявка',
+  },
   APPOINTMENT_REMINDER: {
     title: 'Напоминание о записи',
     body: 'Запись «{{serviceName}}» {{reminderLabel}}',

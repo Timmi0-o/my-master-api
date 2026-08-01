@@ -1,12 +1,11 @@
 import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import type { ITransactionManager } from '@shared/domain/transactions';
 import {
-  AppointmentForbiddenError,
   EAppointmentStatus,
+  ensureActorCanMarkNoShow,
   ensureAppointmentAccessible,
-  ensureAppointmentCompletable,
   ensureAppointmentExists,
-  isAppointmentEarlyCompletion,
+  ensureAppointmentNoShowable,
   type IUpdateAppointmentInput,
 } from 'src/modules/appointments/domain/entities/appointment';
 import type {
@@ -30,13 +29,13 @@ import {
 import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
 import { EUserLanguage } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
-import type { ICompleteAppointmentApplicationInput } from '../../dtos/appointment/complete-appointment.input';
-import type { ICompleteAppointmentApplicationOutput } from '../../dtos/appointment/complete-appointment.output';
+import type { INoShowAppointmentApplicationInput } from '../../dtos/appointment/no-show-appointment.input';
+import type { INoShowAppointmentApplicationOutput } from '../../dtos/appointment/no-show-appointment.output';
 import type { IAppointmentRealtimePublisher } from '../../ports/appointment/i-appointment-realtime.publisher';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 import type { CancelAppointmentRemindersUseCase } from './cancel-appointment-reminders.use-case';
 
-export class CompleteAppointmentUseCase {
+export class NoShowAppointmentUseCase {
   constructor(
     private readonly transactionManager: ITransactionManager,
     private readonly appointmentRepository: IAppointmentRepository,
@@ -52,10 +51,8 @@ export class CompleteAppointmentUseCase {
   ) {}
 
   async execute(
-    input: ICompleteAppointmentApplicationInput,
-  ): Promise<ICompleteAppointmentApplicationOutput> {
-    const isSystem = input.source === 'system';
-
+    input: INoShowAppointmentApplicationInput,
+  ): Promise<INoShowAppointmentApplicationOutput> {
     const existing = await this.appointmentRepository.findEntityById(input.id);
     ensureAppointmentExists(existing, input.id);
 
@@ -64,27 +61,11 @@ export class CompleteAppointmentUseCase {
     );
     ensureMasterProfileExists(profile, existing.masterProfileId);
     ensureAppointmentAccessible(existing, input.actor, profile.userId);
-    ensureAppointmentCompletable(existing);
-
-    const isMaster = profile.userId === input.actor.userId;
-    const isClient = existing.clientUserId === input.actor.userId;
-
-    if (!isSystem && !input.actor.isStaffUser && !isMaster && !isClient) {
-      throw new AppointmentForbiddenError(existing.id);
-    }
-
-    const completingAsMaster =
-      isMaster || (input.actor.isStaffUser && !isClient) || isSystem;
-    const isEarly = !isSystem && isAppointmentEarlyCompletion(existing);
+    ensureAppointmentNoShowable(existing);
+    ensureActorCanMarkNoShow(existing.id, input.actor, profile.userId);
 
     const patch: IUpdateAppointmentInput = {
-      status: EAppointmentStatus.COMPLETED,
-      ...(isEarly && completingAsMaster
-        ? { isEarlyCompletionByMaster: true }
-        : {}),
-      ...(isEarly && isClient && !isMaster
-        ? { isEarlyCompletionByClient: true }
-        : {}),
+      status: EAppointmentStatus.NO_SHOW,
     };
 
     const result = await this.transactionManager.runInTransaction(
@@ -102,7 +83,7 @@ export class CompleteAppointmentUseCase {
             senderUserId: null,
             actor: EAppointmentChatMessageActor.SYSTEM,
             body: null,
-            systemAction: EAppointmentChatSystemAction.APPOINTMENT_COMPLETED,
+            systemAction: EAppointmentChatSystemAction.APPOINTMENT_NO_SHOW,
             payload: { serviceName: appointment.serviceName },
           };
           systemMessage = await this.appointmentChatMessageRepository.create(
@@ -133,52 +114,45 @@ export class CompleteAppointmentUseCase {
       ]);
     }
 
-    const notifyUserIds = isSystem
-      ? [updated.clientUserId, profile.userId]
-      : isClient && !isMaster
-        ? [profile.userId]
-        : [updated.clientUserId];
-
+    const recipient = await this.userRepository.findEntityById(
+      updated.clientUserId,
+    );
+    const { title, body } = this.notificationMessageCatalog.resolve(
+      recipient?.language ?? EUserLanguage.RU,
+      {
+        type: NotificationType.APPOINTMENT_NO_SHOW,
+        serviceName: updated.serviceName,
+      },
+    );
     const actionUrl = `/record/${updated.id}`;
     const payload = {
-      type: 'appointment_completed',
+      type: 'appointment_no_show',
       appointmentId: updated.id,
       url: actionUrl,
     };
 
-    for (const userId of notifyUserIds) {
-      const recipient = await this.userRepository.findEntityById(userId);
-      const { title, body } = this.notificationMessageCatalog.resolve(
-        recipient?.language ?? EUserLanguage.RU,
-        {
-          type: NotificationType.APPOINTMENT_COMPLETED,
-          serviceName: updated.serviceName,
-        },
-      );
-
-      void this.createNotificationUseCase
-        .execute({
-          userId,
-          actorUserId: isSystem ? null : input.actor.userId,
-          category: NotificationCategory.APPOINTMENT,
-          type: NotificationType.APPOINTMENT_COMPLETED,
-          title,
-          body,
-          actionUrl,
-          relatedEntityType: NotificationRelatedEntityType.APPOINTMENT,
-          relatedEntityId: updated.id,
-          payload,
-          idempotencyKey: `appointment_completed:${updated.id}:${userId}`,
-        })
-        .catch(() => undefined);
-
-      void this.sendWebPushToUserUseCase.execute({
-        userId,
+    void this.createNotificationUseCase
+      .execute({
+        userId: updated.clientUserId,
+        actorUserId: input.actor.userId,
+        category: NotificationCategory.APPOINTMENT,
+        type: NotificationType.APPOINTMENT_NO_SHOW,
         title,
         body,
-        data: payload,
-      });
-    }
+        actionUrl,
+        relatedEntityType: NotificationRelatedEntityType.APPOINTMENT,
+        relatedEntityId: updated.id,
+        payload,
+        idempotencyKey: `appointment_no_show:${updated.id}`,
+      })
+      .catch(() => undefined);
+
+    void this.sendWebPushToUserUseCase.execute({
+      userId: updated.clientUserId,
+      title,
+      body,
+      data: payload,
+    });
 
     await Promise.all([
       this.realtimeAppointmentPublisher.appointmentUpdated(updated, {

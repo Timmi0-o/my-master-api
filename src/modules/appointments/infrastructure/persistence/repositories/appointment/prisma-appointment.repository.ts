@@ -9,6 +9,8 @@ import type { TransactionScope } from '@shared/domain/transactions';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
 import {
   APPOINTMENT_IN_PROGRESS_STATUSES,
+  EAppointmentStatus,
+  isAppointmentDueForAutoComplete,
   isAppointmentInProgress,
   type ICreateAppointmentInput,
   type IAppointmentEntity,
@@ -316,6 +318,31 @@ export class PrismaAppointmentRepository
         isAppointmentInProgress(appointment, now),
       ) ?? null
     );
+  }
+
+  async findConfirmedDueForAutoComplete(
+    now: Date,
+    limit = 50,
+    scope?: TransactionScope,
+  ): Promise<IAppointmentEntity[]> {
+    const windowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const candidates = await this.findMany(
+      {
+        where: {
+          status: { eq: EAppointmentStatus.CONFIRMED },
+          deletedAt: { isNull: true },
+          startsAt: { gte: windowStart, lte: now },
+        },
+        orderBy: [{ field: 'startsAt', direction: 'asc' }],
+        slice: { limit: Math.max(limit * 3, 50) },
+      },
+      scope,
+    );
+
+    return candidates
+      .filter((appointment) => isAppointmentDueForAutoComplete(appointment, now))
+      .slice(0, limit);
   }
 
   async create(

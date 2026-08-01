@@ -49,4 +49,9 @@ export type IAppointmentRepository = IReadRepository<
       IAppointmentPublicEntity,
       IAppointmentRelations
     > | null>;
+    findConfirmedDueForAutoComplete(
+      now: Date,
+      limit?: number,
+      scope?: TransactionScope,
+    ): Promise<IAppointmentEntity[]>;
   };

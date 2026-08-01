@@ -42,6 +42,8 @@ import { GetMyAppointmentsUseCase } from '../../../application/use-cases/appoint
 import { GetMyClientsAppointmentsUseCase } from '../../../application/use-cases/appointment/get-my-clients-appointments.use-case';
 import { GetMyInProgressAppointmentUseCase } from '../../../application/use-cases/appointment/get-my-in-progress-appointment.use-case';
 import { GetMyClientsInProgressAppointmentUseCase } from '../../../application/use-cases/appointment/get-my-clients-in-progress-appointment.use-case';
+import { NoShowAppointmentUseCase } from '../../../application/use-cases/appointment/no-show-appointment.use-case';
+import { ProcessDueAppointmentAutoCompletionsUseCase } from '../../../application/use-cases/appointment/process-due-appointment-auto-completions.use-case';
 import { ProcessDueAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/process-due-appointment-reminders.use-case';
 import { ScheduleAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/schedule-appointment-reminders.use-case';
 import { UpdateAppointmentByIdUseCase } from '../../../application/use-cases/appointment/update-appointment-by-id.use-case';
@@ -55,6 +57,7 @@ import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appoi
 import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
 import { PrismaAppointmentReminderJobRepository } from '../../persistence/repositories/appointment-reminder-job/prisma-appointment-reminder-job.repository';
 import { PrismaAppointmentRepository } from '../../persistence/repositories/appointment/prisma-appointment.repository';
+import { AppointmentAutoCompleteScheduler } from '../../schedulers/appointment-auto-complete.scheduler';
 import { AppointmentRemindersScheduler } from '../../schedulers/appointment-reminders.scheduler';
 import { AppointmentRealtimeEventBus } from '../../web-socket/appointment/appointment-realtime.event-bus';
 import { SocketIoAppointmentRealtimePublisher } from '../../web-socket/appointment/socket-io-appointment-realtime.publisher';
@@ -131,6 +134,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       ],
     },
     AppointmentRemindersScheduler,
+    AppointmentAutoCompleteScheduler,
     {
       provide: GetAppointmentsUseCase,
       useFactory: (repo: IAppointmentRepository) =>
@@ -342,18 +346,96 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       useFactory: (
         transactionManager: ITransactionManager,
         appointmentRepo: IAppointmentRepository,
+        messageRepo: IAppointmentChatMessageRepository,
         profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
+        realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        realtimeChatPublisher: IAppointmentChatRealtimePublisher,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
+        cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
       ) =>
         new CompleteAppointmentUseCase(
           transactionManager,
           appointmentRepo,
+          messageRepo,
           profileRepo,
+          userRepo,
+          realtimeAppointmentPublisher,
+          realtimeChatPublisher,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+          notificationMessageCatalog,
+          cancelAppointmentRemindersUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
+        APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
+        CancelAppointmentRemindersUseCase,
       ],
+    },
+    {
+      provide: NoShowAppointmentUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        appointmentRepo: IAppointmentRepository,
+        messageRepo: IAppointmentChatMessageRepository,
+        profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
+        realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        realtimeChatPublisher: IAppointmentChatRealtimePublisher,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
+        cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
+      ) =>
+        new NoShowAppointmentUseCase(
+          transactionManager,
+          appointmentRepo,
+          messageRepo,
+          profileRepo,
+          userRepo,
+          realtimeAppointmentPublisher,
+          realtimeChatPublisher,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+          notificationMessageCatalog,
+          cancelAppointmentRemindersUseCase,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
+        APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
+        CancelAppointmentRemindersUseCase,
+      ],
+    },
+    {
+      provide: ProcessDueAppointmentAutoCompletionsUseCase,
+      useFactory: (
+        appointmentRepo: IAppointmentRepository,
+        completeAppointmentUseCase: CompleteAppointmentUseCase,
+      ) =>
+        new ProcessDueAppointmentAutoCompletionsUseCase(
+          appointmentRepo,
+          completeAppointmentUseCase,
+        ),
+      inject: [APPOINTMENT_REPOSITORY_TOKEN, CompleteAppointmentUseCase],
     },
     {
       provide: UpdateAppointmentByIdUseCase,
@@ -405,6 +487,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     ConfirmAppointmentUseCase,
     CancelAppointmentUseCase,
     CompleteAppointmentUseCase,
+    NoShowAppointmentUseCase,
     UpdateAppointmentByIdUseCase,
     DeleteAppointmentByIdUseCase,
     AppointmentGateway,

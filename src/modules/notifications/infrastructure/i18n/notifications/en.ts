@@ -14,6 +14,14 @@ export const notificationMessagesEn: NotificationMessages = {
     title: 'Appointment cancelled',
     body: 'Appointment «{{serviceName}}» was cancelled',
   },
+  APPOINTMENT_COMPLETED: {
+    title: 'Appointment completed',
+    body: 'Appointment «{{serviceName}}» is completed',
+  },
+  APPOINTMENT_NO_SHOW: {
+    title: 'Client no-show',
+    body: 'Appointment «{{serviceName}}» was marked as no-show',
+  },
   APPOINTMENT_REMINDER: {
     title: 'Appointment reminder',
     body: 'Appointment «{{serviceName}}» {{reminderLabel}}',
