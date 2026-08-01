@@ -29,4 +29,8 @@ export type IMasterProfileRepository = IReadRepository<
       userId: string,
       scope?: TransactionScope,
     ): Promise<IMasterProfileEntity | null>;
+    findAcceptingForOnboardingCheck(
+      limit?: number,
+      scope?: TransactionScope,
+    ): Promise<IMasterProfileEntity[]>;
   };

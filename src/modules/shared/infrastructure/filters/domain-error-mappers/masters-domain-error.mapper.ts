@@ -4,6 +4,7 @@ import {
   MasterProfileForbiddenError,
   MasterProfileNotFoundError,
   MasterEmailNotVerifiedError,
+  MasterProfileOnboardingIncompleteError,
 } from 'src/modules/masters/domain/entities/master-profile';
 import {
   MasterServiceForbiddenError,
@@ -71,7 +72,8 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof MasterServiceReviewInvalidRatingError ||
     error instanceof MasterServiceReviewReactionAlreadyExistsError ||
     error instanceof MasterSubscriptionAlreadyExistsError ||
-    error instanceof FavoriteMasterServiceAlreadyExistsError
+    error instanceof FavoriteMasterServiceAlreadyExistsError ||
+    error instanceof MasterProfileOnboardingIncompleteError
   ) {
     return new BadRequestException(error.message);
   }

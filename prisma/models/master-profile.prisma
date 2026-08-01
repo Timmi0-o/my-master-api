@@ -8,7 +8,7 @@ model MasterProfile {
 
   // Расписание и приём записей
   timezone      String              @default("Europe/Moscow") @map("timezone")
-  bookingStatus MasterBookingStatus @default(ACCEPTING) @map("booking_status")
+  bookingStatus MasterBookingStatus @default(CLOSED) @map("booking_status")
   pausedUntil   DateTime?           @map("paused_until")
 
   // Правила бронирования (опционально подкрутить в UI мастера)

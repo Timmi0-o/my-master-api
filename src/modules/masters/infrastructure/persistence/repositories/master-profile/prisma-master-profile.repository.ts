@@ -9,6 +9,7 @@ import type {
   IMasterProfileRelations,
   IUpdateMasterProfileInput,
 } from 'src/modules/masters/domain/entities/master-profile';
+import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile';
 import { ImageEntityType } from 'src/modules/masters/domain/entities/image';
 import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
 import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/image/image.repository.tokens';
@@ -254,6 +255,44 @@ export class PrismaMasterProfileRepository
       where: { userId },
     });
     return row ? mapMasterProfileRow(row as MasterProfileRow) : null;
+  }
+
+  async findAcceptingForOnboardingCheck(
+    limit = 50,
+    scope?: TransactionScope,
+  ): Promise<IMasterProfileEntity[]> {
+    const results = await this.findMany(
+      {
+        where: {
+          bookingStatus: { eq: EMasterBookingStatus.ACCEPTING },
+          deletedAt: { isNull: true },
+        },
+        orderBy: [{ field: 'updatedAt', direction: 'asc' }],
+        slice: { limit },
+        selectOptions: {
+          select: [
+            'id',
+            'userId',
+            'displayName',
+            'description',
+            'rating',
+            'timezone',
+            'bookingStatus',
+            'pausedUntil',
+            'minNoticeMinutes',
+            'maxBookingDaysAhead',
+            'slotStepMinutes',
+            'bufferBetweenAppointmentsMinutes',
+            'createdAt',
+            'updatedAt',
+            'deletedAt',
+          ],
+        },
+      },
+      scope,
+    );
+
+    return results;
   }
 
   async create(
