@@ -45,6 +45,7 @@ import { GetMyClientsInProgressAppointmentUseCase } from '../../../application/u
 import { NoShowAppointmentUseCase } from '../../../application/use-cases/appointment/no-show-appointment.use-case';
 import { ProcessDueAppointmentAutoCompletionsUseCase } from '../../../application/use-cases/appointment/process-due-appointment-auto-completions.use-case';
 import { ProcessDueAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/process-due-appointment-reminders.use-case';
+import { RescheduleAppointmentUseCase } from '../../../application/use-cases/appointment/reschedule-appointment.use-case';
 import { ScheduleAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/schedule-appointment-reminders.use-case';
 import { UpdateAppointmentByIdUseCase } from '../../../application/use-cases/appointment/update-appointment-by-id.use-case';
 import { APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-message/appointment-chat-message.repository.tokens';
@@ -342,6 +343,60 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       ],
     },
     {
+      provide: RescheduleAppointmentUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        appointmentRepo: IAppointmentRepository,
+        messageRepo: IAppointmentChatMessageRepository,
+        profileRepo: IMasterProfileRepository,
+        serviceRepo: IMasterServiceRepository,
+        weeklyScheduleRepo: IMasterWeeklyScheduleRepository,
+        scheduleExceptionRepo: IMasterScheduleExceptionRepository,
+        userRepo: IUserRepository,
+        realtimeAppointmentPublisher: IAppointmentRealtimePublisher,
+        realtimeChatPublisher: IAppointmentChatRealtimePublisher,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
+        cancelAppointmentRemindersUseCase: CancelAppointmentRemindersUseCase,
+        scheduleAppointmentRemindersUseCase: ScheduleAppointmentRemindersUseCase,
+      ) =>
+        new RescheduleAppointmentUseCase(
+          transactionManager,
+          appointmentRepo,
+          messageRepo,
+          profileRepo,
+          serviceRepo,
+          weeklyScheduleRepo,
+          scheduleExceptionRepo,
+          userRepo,
+          realtimeAppointmentPublisher,
+          realtimeChatPublisher,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+          notificationMessageCatalog,
+          cancelAppointmentRemindersUseCase,
+          scheduleAppointmentRemindersUseCase,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN,
+        MASTER_SCHEDULE_EXCEPTION_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
+        APPOINTMENT_REALTIME_PUBLISHER_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
+        CancelAppointmentRemindersUseCase,
+        ScheduleAppointmentRemindersUseCase,
+      ],
+    },
+    {
       provide: CompleteAppointmentUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
@@ -486,6 +541,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     CreateAppointmentUseCase,
     ConfirmAppointmentUseCase,
     CancelAppointmentUseCase,
+    RescheduleAppointmentUseCase,
     CompleteAppointmentUseCase,
     NoShowAppointmentUseCase,
     UpdateAppointmentByIdUseCase,

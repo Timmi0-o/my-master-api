@@ -6,3 +6,4 @@ export { AppointmentNotCompletableError } from './appointment-not-completable.er
 export { AppointmentNotConfirmableError } from './appointment-not-confirmable.error';
 export { AppointmentNotFoundError } from './appointment-not-found.error';
 export { AppointmentNotNoShowableError } from './appointment-not-no-showable.error';
+export { AppointmentNotReschedulableError } from './appointment-not-reschedulable.error';

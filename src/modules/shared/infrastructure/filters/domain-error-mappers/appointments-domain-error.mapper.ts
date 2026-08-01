@@ -5,6 +5,7 @@ import {
   AppointmentNotAvailableError,
   AppointmentNotCompletableError,
   AppointmentNotFoundError,
+  AppointmentNotReschedulableError,
 } from 'src/modules/appointments/domain/entities/appointment';
 import {
   AppointmentChatForbiddenError,
@@ -32,7 +33,8 @@ export const mapAppointmentsDomainError: DomainErrorMapper = (error) => {
   }
   if (
     error instanceof AppointmentNotAvailableError ||
-    error instanceof AppointmentNotCompletableError
+    error instanceof AppointmentNotCompletableError ||
+    error instanceof AppointmentNotReschedulableError
   ) {
     return new ConflictException(error.message);
   }

@@ -1,0 +1,5 @@
+-- AlterEnum
+ALTER TYPE "AppointmentChatSystemAction" ADD VALUE 'APPOINTMENT_RESCHEDULED';
+
+-- AlterEnum
+ALTER TYPE "NotificationType" ADD VALUE 'APPOINTMENT_RESCHEDULED';

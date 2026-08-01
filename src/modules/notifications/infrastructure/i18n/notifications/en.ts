@@ -22,6 +22,10 @@ export const notificationMessagesEn: NotificationMessages = {
     title: 'Client no-show',
     body: 'Appointment «{{serviceName}}» was marked as no-show',
   },
+  APPOINTMENT_RESCHEDULED: {
+    title: 'Appointment rescheduled',
+    body: 'Appointment «{{serviceName}}» was moved to a new time',
+  },
   APPOINTMENT_REMINDER: {
     title: 'Appointment reminder',
     body: 'Appointment «{{serviceName}}» {{reminderLabel}}',

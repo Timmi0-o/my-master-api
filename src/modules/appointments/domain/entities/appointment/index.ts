@@ -15,6 +15,7 @@ export {
   AppointmentNotConfirmableError,
   AppointmentNotCancellableError,
   AppointmentNotNoShowableError,
+  AppointmentNotReschedulableError,
 } from './errors';
 export {
   ensureAppointmentExists,
@@ -23,9 +24,11 @@ export {
   ensureAppointmentConfirmable,
   ensureAppointmentCancellable,
   ensureAppointmentNoShowable,
+  ensureAppointmentReschedulable,
   ensureActorCanConfirmAppointment,
   ensureActorCanCancelAppointment,
   ensureActorCanMarkNoShow,
+  ensureActorCanRescheduleAppointment,
   ensureChatHasActiveAppointment,
   isAppointmentEarlyCompletion,
   isAppointmentNoShowEligible,

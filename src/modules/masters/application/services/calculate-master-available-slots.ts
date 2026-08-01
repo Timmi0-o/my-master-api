@@ -35,6 +35,11 @@ export interface ICalculateMasterAvailableSlotsInput {
    * Used to prevent the client from double-booking overlapping time.
    */
   clientAppointments?: IAppointmentEntity[];
+  /**
+   * Appointment being rescheduled — excluded from master/client busy checks
+   * so its current window can be reused.
+   */
+  excludeAppointmentId?: string;
   now?: Date;
 }
 
@@ -237,9 +242,17 @@ export function calculateMasterAvailableSlots(
     date,
     weeklySchedules,
     exceptions,
-    appointments,
-    clientAppointments = [],
+    appointments: rawAppointments,
+    clientAppointments: rawClientAppointments = [],
+    excludeAppointmentId,
   } = input;
+
+  const appointments = excludeAppointmentId
+    ? rawAppointments.filter((item) => item.id !== excludeAppointmentId)
+    : rawAppointments;
+  const clientAppointments = excludeAppointmentId
+    ? rawClientAppointments.filter((item) => item.id !== excludeAppointmentId)
+    : rawClientAppointments;
 
   if (!isBookingOpen(profile, now)) {
     return [];

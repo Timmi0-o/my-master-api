@@ -124,8 +124,11 @@ export class MasterServicesController {
   ) {
     const output = await this.getMasterServiceAvailableSlotsUseCase.execute({
       masterServiceId: params.id,
-      date: queryPayload.date,
+      date: queryPayload.date ?? undefined,
       clientUserId: user.id,
+      ...(queryPayload.excludeAppointmentId
+        ? { excludeAppointmentId: queryPayload.excludeAppointmentId }
+        : {}),
     });
     return mapGetMasterServiceAvailableSlotsHttpResponse(output);
   }

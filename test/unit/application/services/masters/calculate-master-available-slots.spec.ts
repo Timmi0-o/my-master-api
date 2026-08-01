@@ -355,4 +355,51 @@ describe('calculateMasterAvailableSlots / isMasterStartsAtAvailable', () => {
       }),
     ).toBe(true);
   });
+
+  it('excludeAppointmentId frees slots that only conflicted with that appointment', () => {
+    const profile = createProfile({
+      slotStepMinutes: 20,
+      bufferBetweenAppointmentsMinutes: 0,
+    });
+    const service = createService({ durationMinutes: 30 });
+    const existing = {
+      id: 'appt-move',
+      masterProfileId: 'mp-1',
+      masterServiceId: 'svc-1',
+      clientUserId: 'client-1',
+      chatId: 'chat-1',
+      startsAt: slotAt(10),
+      durationMinutes: 30,
+      status: EAppointmentStatus.CONFIRMED,
+      totalPrice: 100,
+      serviceName: 'Haircut',
+      cancelledAt: null,
+      cancelledBy: null,
+      cancelReason: null,
+      isEarlyCompletionByMaster: false,
+      isEarlyCompletionByClient: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as IAppointmentEntity;
+
+    const inputBase = {
+      profile,
+      service,
+      date: DATE,
+      weeklySchedules,
+      exceptions: [] as IMasterScheduleExceptionEntity[],
+      appointments: [existing],
+      clientAppointments: [existing],
+      startsAt: slotAt(10, 20),
+      now: NOW,
+    };
+
+    expect(isMasterStartsAtAvailable(inputBase)).toBe(false);
+    expect(
+      isMasterStartsAtAvailable({
+        ...inputBase,
+        excludeAppointmentId: 'appt-move',
+      }),
+    ).toBe(true);
+  });
 });

@@ -1,3 +1,4 @@
 export interface IGetMasterServiceAvailableSlotsQueryPayload {
-  date?: string;
+  date?: string | null;
+  excludeAppointmentId?: string | null;
 }

@@ -37,6 +37,10 @@ type ResolveParams =
       serviceName: string;
     }
   | {
+      type: NotificationType.APPOINTMENT_RESCHEDULED;
+      serviceName: string;
+    }
+  | {
       type: NotificationType.APPOINTMENT_REMINDER;
       serviceName: string;
       reminderType: EAppointmentReminderJobType;
@@ -98,6 +102,15 @@ export class NotificationMessageCatalog {
       }
       case NotificationType.APPOINTMENT_NO_SHOW: {
         const entry = messages.APPOINTMENT_NO_SHOW;
+        return {
+          title: entry.title,
+          body: this.templateRenderer.renderString(entry.body, {
+            serviceName: params.serviceName,
+          }),
+        };
+      }
+      case NotificationType.APPOINTMENT_RESCHEDULED: {
+        const entry = messages.APPOINTMENT_RESCHEDULED;
         return {
           title: entry.title,
           body: this.templateRenderer.renderString(entry.body, {

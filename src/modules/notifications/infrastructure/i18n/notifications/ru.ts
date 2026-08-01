@@ -22,6 +22,10 @@ export const notificationMessagesRu: NotificationMessages = {
     title: 'Клиент не пришёл',
     body: 'Запись «{{serviceName}}» отмечена как неявка',
   },
+  APPOINTMENT_RESCHEDULED: {
+    title: 'Запись перенесена',
+    body: 'Запись «{{serviceName}}» перенесена на другое время',
+  },
   APPOINTMENT_REMINDER: {
     title: 'Напоминание о записи',
     body: 'Запись «{{serviceName}}» {{reminderLabel}}',

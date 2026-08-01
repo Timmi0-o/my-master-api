@@ -10,6 +10,11 @@ export const getMasterServiceAvailableSlotsQuerySchema: JSONSchemaType<IGetMaste
         pattern: '^\\d{4}-\\d{2}-\\d{2}$',
         nullable: true,
       },
+      excludeAppointmentId: {
+        type: 'string',
+        format: 'uuid',
+        nullable: true,
+      },
     },
     required: [],
     additionalProperties: false,

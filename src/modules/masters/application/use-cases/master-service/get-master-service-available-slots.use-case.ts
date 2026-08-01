@@ -121,6 +121,9 @@ export class GetMasterServiceAvailableSlotsUseCase {
       exceptions: exceptions as IMasterScheduleExceptionPublicEntity[],
       appointments: appointments as IAppointmentPublicEntity[],
       clientAppointments: clientAppointments as IAppointmentPublicEntity[],
+      ...(input.excludeAppointmentId
+        ? { excludeAppointmentId: input.excludeAppointmentId }
+        : {}),
       now,
     });
 
