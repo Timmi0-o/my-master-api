@@ -50,6 +50,7 @@ function createService(
     name: 'Haircut',
     description: '',
     price: 100,
+    rating: 0,
     durationMinutes: 60,
     category: EMasterServiceCategory.BEAUTY,
     tags: [],
