@@ -7,6 +7,9 @@ export type ISearchHttpResponse = ReturnType<typeof mapSearchHttpResponse>;
 export function mapSearchHttpResponse(output: ISearchByTextApplicationOutput) {
   return {
     masters: mapMasterProfilesToHttpResponse(output.masters),
-    services: mapMasterServicesToHttpResponse(output.services),
+    services: {
+      data: mapMasterServicesToHttpResponse(output.services),
+      meta: output.servicesMeta,
+    },
   };
 }

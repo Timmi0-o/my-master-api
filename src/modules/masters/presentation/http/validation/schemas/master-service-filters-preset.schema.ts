@@ -1,7 +1,9 @@
 import { JSONSchemaType } from 'ajv';
 import type { IMasterServiceFiltersPreset } from '../types/master-service-filters-preset.types';
+import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile';
 import {
   dateRangeArrayFilterSchema,
+  filterEnumArraySchema,
   filterStringArraySchema,
   filterUuidArraySchema,
   numberRangeArrayFilterSchema,
@@ -17,6 +19,10 @@ export const masterServiceFiltersPresetSchema: JSONSchemaType<IMasterServiceFilt
       masterProfileId: { ...filterUuidArraySchema, nullable: true },
       name: { ...filterStringArraySchema, nullable: true },
       price: { ...numberRangeArrayFilterSchema, nullable: true },
+      masterBookingStatus: {
+        ...filterEnumArraySchema(Object.values(EMasterBookingStatus)),
+        nullable: true,
+      },
       createdAt: { ...dateRangeArrayFilterSchema, nullable: true },
       updatedAt: { ...dateRangeArrayFilterSchema, nullable: true },
       deletedAt: { ...dateRangeArrayFilterSchema, nullable: true },

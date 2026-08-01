@@ -4,6 +4,7 @@ import type {
   IStringArrayFilter,
   ITextSearchFilterPreset,
 } from 'src/modules/shared/application/presets/common/filter-preset.types';
+import type { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile';
 
 export interface IMasterServiceFiltersPreset {
   search?: ITextSearchFilterPreset;
@@ -11,6 +12,9 @@ export interface IMasterServiceFiltersPreset {
   masterProfileId?: IStringArrayFilter;
   name?: IStringArrayFilter;
   price?: INumberRangeArrayFilter;
+  masterBookingStatus?: IStringArrayFilter & {
+    value: EMasterBookingStatus[];
+  };
   createdAt?: IDateRangeArrayFilter;
   updatedAt?: IDateRangeArrayFilter;
   deletedAt?: IDateRangeArrayFilter;

@@ -21,6 +21,9 @@ model MasterService {
 
   @@index([category])
   @@index([rating])
+  @@index([masterProfileId, deletedAt])
+  @@index([deletedAt, category, rating])
+  @@index([deletedAt, category, price])
   @@map("MasterServices")
 }
 

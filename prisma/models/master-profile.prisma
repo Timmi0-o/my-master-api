@@ -30,6 +30,7 @@ model MasterProfile {
   deletedAt DateTime? @map("deleted_at")
 
   @@index([userId, rating])
+  @@index([deletedAt, bookingStatus, rating])
   @@map("MasterProfiles")
 }
 

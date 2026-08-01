@@ -10,6 +10,11 @@ export function requestQueryParamsToSearchByTextUseCaseInput(
       : {}),
     ...(payload.category != null ? { category: payload.category } : {}),
     ...(payload.localityId != null ? { localityId: payload.localityId } : {}),
+    ...(payload.minPrice != null ? { minPrice: payload.minPrice } : {}),
+    ...(payload.maxPrice != null ? { maxPrice: payload.maxPrice } : {}),
+    ...(payload.minRating != null ? { minRating: payload.minRating } : {}),
+    ...(payload.sort != null ? { sort: payload.sort } : {}),
+    ...(payload.page != null ? { page: payload.page } : {}),
     ...(payload.limit != null ? { limit: payload.limit } : {}),
   };
 }

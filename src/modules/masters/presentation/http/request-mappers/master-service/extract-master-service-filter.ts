@@ -41,5 +41,13 @@ export function extractMasterServiceFilter(
     { type: 'dateRange', field: 'deletedAt', value: sanitized.deletedAt },
   ]);
 
+  if (sanitized.masterBookingStatus?.value?.length) {
+    parts.push({
+      masterProfile: {
+        bookingStatus: { in: sanitized.masterBookingStatus.value },
+      },
+    } as WhereFilter<IMasterServicePublicEntity, IMasterServiceRelations>);
+  }
+
   return finalizeWhereFilterParts(parts);
 }

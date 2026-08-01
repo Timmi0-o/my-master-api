@@ -39,6 +39,7 @@ model Address {
   @@index([localityId])
   @@index([localityDistrictId])
   @@index([entityType])
+  @@index([localityId, entityType])
   @@map("addresses")
 }
 

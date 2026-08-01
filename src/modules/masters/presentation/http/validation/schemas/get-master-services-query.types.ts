@@ -5,6 +5,7 @@ export const MASTER_SERVICE_LIST_ORDER_FIELDS = [
   'id',
   'name',
   'price',
+  'rating',
   'masterProfileId',
   'createdAt',
   'updatedAt',

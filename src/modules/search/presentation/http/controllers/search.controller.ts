@@ -22,10 +22,23 @@ export class SearchController {
     const hasQ = payload.q != null && payload.q.trim() !== '';
     const hasCategory = payload.category != null;
     const hasLocalityId = payload.localityId != null;
+    const hasPrice =
+      payload.minPrice != null || payload.maxPrice != null;
+    const hasMinRating = payload.minRating != null;
 
-    if (!hasQ && !hasCategory && !hasLocalityId) {
+    if (!hasQ && !hasCategory && !hasLocalityId && !hasPrice && !hasMinRating) {
       throw new BadRequestException(
-        'Укажите поисковый запрос (q), категорию (category) и/или город (localityId)',
+        'Укажите поисковый запрос (q), категорию (category), город (localityId) и/или фильтры цены/рейтинга',
+      );
+    }
+
+    if (
+      payload.minPrice != null &&
+      payload.maxPrice != null &&
+      payload.minPrice > payload.maxPrice
+    ) {
+      throw new BadRequestException(
+        'minPrice must be less than or equal to maxPrice',
       );
     }
 

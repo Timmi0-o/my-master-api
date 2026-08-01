@@ -39,6 +39,11 @@ export function extractMasterProfileFilter(
       field: 'displayName',
       value: sanitized.displayName,
     },
+    {
+      type: 'stringArray',
+      field: 'bookingStatus',
+      value: sanitized.bookingStatus,
+    },
     { type: 'numberRange', field: 'rating', value: sanitized.rating },
     { type: 'dateRange', field: 'createdAt', value: sanitized.createdAt },
     { type: 'dateRange', field: 'updatedAt', value: sanitized.updatedAt },
