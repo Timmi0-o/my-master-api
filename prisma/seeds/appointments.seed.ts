@@ -4,8 +4,8 @@ import type {
   PrismaClient,
 } from '@prisma/client';
 import { addDays, setHours, setMinutes, startOfDay } from 'date-fns';
-import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
 import { ERoleIdentifier } from '../../src/modules/authorization/domain/entities/role/role.enum';
+import { SYSTEM_ROLE_IDS } from '../../src/modules/authorization/domain/entities/role/system-role-ids';
 import type { SeedRunner } from './index';
 
 const EXTRA_APPOINTMENTS_PER_CLIENT = 5;
@@ -13,6 +13,9 @@ const EXTRA_GLOBAL_APPOINTMENTS = 400;
 const CREATE_BATCH_SIZE = 25;
 const MESSAGES_MIN = 8;
 const MESSAGES_MAX = 22;
+/** Длинные чаты для теста пагинации / unread / scroll-to-unread */
+const LONG_HISTORY_CHAT_COUNT = 5;
+const LONG_HISTORY_MESSAGE_COUNT = 400;
 
 const CLIENT_MESSAGES = [
   'Первый раз записываюсь — подскажите, за сколько минут лучше приехать?',
@@ -155,8 +158,7 @@ const buildChatMessages = (params: {
   masterUserId: string;
 }): { senderUserId: string; body: string }[] => {
   const { index, status, clientUserId, masterUserId } = params;
-  const count =
-    MESSAGES_MIN + (index % (MESSAGES_MAX - MESSAGES_MIN + 1));
+  const count = MESSAGES_MIN + (index % (MESSAGES_MAX - MESSAGES_MIN + 1));
 
   const messages: { senderUserId: string; body: string }[] = [];
 
@@ -225,11 +227,7 @@ const buildAppointmentDraft = (params: {
     totalPrice: service.price,
     serviceName: service.name,
     cancelledAt: isCancelled ? addDays(startsAt, -1) : null,
-    cancelledBy: isCancelled
-      ? index % 2 === 0
-        ? 'CLIENT'
-        : 'MASTER'
-      : null,
+    cancelledBy: isCancelled ? (index % 2 === 0 ? 'CLIENT' : 'MASTER') : null,
     cancelReason: isCancelled
       ? CANCEL_REASONS[index % CANCEL_REASONS.length]
       : null,
@@ -333,8 +331,7 @@ export const appointmentsSeed: SeedRunner = async (
   // 2) У каждого пользователя несколько записей/чатов с разными мастерами
   for (const [clientIndex, client] of clients.entries()) {
     for (let j = 0; j < EXTRA_APPOINTMENTS_PER_CLIENT; j += 1) {
-      const service =
-        services[(clientIndex * 3 + j * 7) % services.length];
+      const service = services[(clientIndex * 3 + j * 7) % services.length];
       if (service.masterUserId === client.id) {
         continue;
       }
@@ -450,6 +447,69 @@ export const appointmentsSeed: SeedRunner = async (
         createdMessages += messageResult.count;
       }),
     );
+  }
+
+  // Длинные истории для 2–3 чатов + курсоры чтения в середине
+  const longChatPairs = [...chatIdByPair.entries()].slice(
+    0,
+    LONG_HISTORY_CHAT_COUNT,
+  );
+
+  for (const [pairKey, chatId] of longChatPairs) {
+    const separator = pairKey.indexOf(':');
+    const masterProfileId = pairKey.slice(0, separator);
+    const clientUserId = pairKey.slice(separator + 1);
+    const masterUserId =
+      services.find((service) => service.masterProfileId === masterProfileId)
+        ?.masterUserId ?? null;
+
+    if (!masterUserId) {
+      continue;
+    }
+
+    const baseMs = Date.now() - LONG_HISTORY_MESSAGE_COUNT * 60_000;
+    const bulk: {
+      chatId: string;
+      senderUserId: string;
+      actor: 'USER';
+      body: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }[] = [];
+
+    for (let i = 0; i < LONG_HISTORY_MESSAGE_COUNT; i += 1) {
+      const fromClient = i % 2 === 0;
+      const createdAt = new Date(baseMs + i * 60_000);
+      bulk.push({
+        chatId,
+        senderUserId: fromClient ? clientUserId : masterUserId,
+        actor: 'USER',
+        body: fromClient
+          ? CLIENT_MESSAGES[i % CLIENT_MESSAGES.length]
+          : MASTER_MESSAGES[i % MASTER_MESSAGES.length],
+        createdAt,
+        updatedAt: createdAt,
+      });
+    }
+
+    for (const messageBatch of chunkArray(bulk, 100)) {
+      const result = await prisma.appointmentChatMessage.createMany({
+        data: messageBatch,
+      });
+      createdMessages += result.count;
+    }
+
+    const midCreatedAt = new Date(
+      baseMs + Math.floor(LONG_HISTORY_MESSAGE_COUNT / 2) * 60_000,
+    );
+
+    await prisma.appointmentChat.update({
+      where: { id: chatId },
+      data: {
+        clientLastReadAt: midCreatedAt,
+        masterLastReadAt: midCreatedAt,
+      },
+    });
   }
 
   const [appointmentCount, chatCount, messageCount, clientsInChats] =

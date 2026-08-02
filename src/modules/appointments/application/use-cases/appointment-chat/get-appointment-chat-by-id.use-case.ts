@@ -1,9 +1,11 @@
+import { attachAppointmentChatUnreadCount } from 'src/modules/appointments/application/helpers/appointment-chat-unread.helper';
 import {
   AppointmentChatNotFoundError,
   ensureAppointmentChatAccessible,
   ensureAppointmentChatExists,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
+import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
@@ -17,6 +19,7 @@ export class GetAppointmentChatByIdUseCase {
     private readonly appointmentChatRepository: IAppointmentChatRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly userPersonalNoteRepository: IUserPersonalNoteRepository,
+    private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
   ) {}
 
   async execute(
@@ -41,14 +44,18 @@ export class GetAppointmentChatByIdUseCase {
       throw new AppointmentChatNotFoundError(input.id);
     }
 
-    if (!wantsPersonalNotesEnrich(input.params.enrich)) {
-      return item;
-    }
+    const withNotes = wantsPersonalNotesEnrich(input.params.enrich)
+      ? await attachPersonalNotesToAppointmentChatPeers(
+          this.userPersonalNoteRepository,
+          input.actor.userId,
+          item,
+        )
+      : item;
 
-    return attachPersonalNotesToAppointmentChatPeers(
-      this.userPersonalNoteRepository,
+    return attachAppointmentChatUnreadCount(
+      this.appointmentChatMessageRepository,
       input.actor.userId,
-      item,
+      withNotes,
     );
   }
 }

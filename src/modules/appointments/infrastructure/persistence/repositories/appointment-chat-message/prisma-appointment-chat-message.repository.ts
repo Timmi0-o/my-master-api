@@ -1,28 +1,31 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { LOGGER_TOKEN, type ILogger } from '@shared/domain/logging/logger.token';
+import {
+  LOGGER_TOKEN,
+  type ILogger,
+} from '@shared/domain/logging/logger.token';
+import type { ReadResult } from '@shared/domain/query';
 import type { TransactionScope } from '@shared/domain/transactions';
+import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
+import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import { unwrapPrismaTxFromScope } from '@shared/infrastructure/persistence/transactions';
 import type {
-  ICreateAppointmentChatMessageInput,
   IAppointmentChatMessageEntity,
   IAppointmentChatMessagePublicEntity,
   IAppointmentChatMessageRelations,
+  ICreateAppointmentChatMessageInput,
   IUpdateAppointmentChatMessageInput,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
-import type { ReadResult } from '@shared/domain/query';
-import { PrismaService } from '@shared/infrastructure/persistence/prisma/prisma.service';
-import { PrismaReadRepository } from '@shared/infrastructure/persistence/repositories/base/prisma-read.repository';
 import {
   mapAppointmentChatMessageRow,
   type AppointmentChatMessageRow,
 } from '../../row-mappers/appointment-chat-message';
+import { mapAppointmentChatMessageWriteError } from './appointment-chat-message-write-error.mapper';
 import {
   APPOINTMENT_CHAT_MESSAGE_RELATIONS,
   APPOINTMENT_CHAT_MESSAGE_VALIDATION_CONFIG,
 } from './appointment-chat-message.relations';
-import { mapAppointmentChatMessageWriteError } from './appointment-chat-message-write-error.mapper';
 
 function toPrismaCreateData(input: ICreateAppointmentChatMessageInput) {
   return {
@@ -48,7 +51,8 @@ export class PrismaAppointmentChatMessageRepository
   >
   implements IAppointmentChatMessageRepository
 {
-  protected readonly validationConfig = APPOINTMENT_CHAT_MESSAGE_VALIDATION_CONFIG;
+  protected readonly validationConfig =
+    APPOINTMENT_CHAT_MESSAGE_VALIDATION_CONFIG;
   protected readonly relationConfig = APPOINTMENT_CHAT_MESSAGE_RELATIONS;
 
   constructor(
@@ -66,7 +70,10 @@ export class PrismaAppointmentChatMessageRepository
 
   protected mapRow(
     row: AppointmentChatMessageRow,
-  ): ReadResult<IAppointmentChatMessagePublicEntity, IAppointmentChatMessageRelations> {
+  ): ReadResult<
+    IAppointmentChatMessagePublicEntity,
+    IAppointmentChatMessageRelations
+  > {
     return mapAppointmentChatMessageRow(row);
   }
 
@@ -81,7 +88,9 @@ export class PrismaAppointmentChatMessageRepository
     const row = await this.getDelegate(scope).findUnique({
       where: { id },
     });
-    return row ? mapAppointmentChatMessageRow(row as AppointmentChatMessageRow) : null;
+    return row
+      ? mapAppointmentChatMessageRow(row as AppointmentChatMessageRow)
+      : null;
   }
 
   async create(
@@ -96,7 +105,9 @@ export class PrismaAppointmentChatMessageRepository
       });
       return mapAppointmentChatMessageRow(row as AppointmentChatMessageRow);
     } catch (error) {
-      throw mapAppointmentChatMessageWriteError(error, { chatId: input.chatId });
+      throw mapAppointmentChatMessageWriteError(error, {
+        chatId: input.chatId,
+      });
     }
   }
 
@@ -114,10 +125,14 @@ export class PrismaAppointmentChatMessageRepository
       const rows = await tx.appointmentChatMessage.createManyAndReturn({
         data: inputs.map(toPrismaCreateData),
       });
-      return rows.map((row) => mapAppointmentChatMessageRow(row as AppointmentChatMessageRow));
+      return rows.map((row) =>
+        mapAppointmentChatMessageRow(row as AppointmentChatMessageRow),
+      );
     } catch (error) {
       const first = inputs[0];
-      throw mapAppointmentChatMessageWriteError(error, { chatId: first.chatId });
+      throw mapAppointmentChatMessageWriteError(error, {
+        chatId: first.chatId,
+      });
     }
   }
 
@@ -162,5 +177,206 @@ export class PrismaAppointmentChatMessageRepository
     } catch (error) {
       throw mapAppointmentChatMessageWriteError(error, { id });
     }
+  }
+
+  async countUnreadForChat(input: {
+    chatId: string;
+    viewerUserId: string;
+    myLastReadAt: Date | null;
+  }): Promise<number> {
+    return this.getDelegate().count({
+      where: this.buildUnreadWhere(input),
+    });
+  }
+
+  async countUnreadForChats(
+    viewerUserId: string,
+    chats: ReadonlyArray<{
+      chatId: string;
+      myLastReadAt: Date | null;
+    }>,
+  ): Promise<Map<string, number>> {
+    const result = new Map<string, number>();
+
+    if (chats.length === 0) {
+      return result;
+    }
+
+    await Promise.all(
+      chats.map(async (chat) => {
+        const count = await this.countUnreadForChat({
+          chatId: chat.chatId,
+          viewerUserId,
+          myLastReadAt: chat.myLastReadAt,
+        });
+        result.set(chat.chatId, count);
+      }),
+    );
+
+    return result;
+  }
+
+  async findLatestByChatIds(
+    chatIds: readonly string[],
+  ): Promise<Map<string, IAppointmentChatMessagePublicEntity>> {
+    const result = new Map<string, IAppointmentChatMessagePublicEntity>();
+    const uniqueIds = [...new Set(chatIds.filter(Boolean))];
+
+    if (uniqueIds.length === 0) {
+      return result;
+    }
+
+    await Promise.all(
+      uniqueIds.map(async (chatId) => {
+        const row = await this.getDelegate().findFirst({
+          where: {
+            chatId,
+            deletedAt: null,
+          },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        });
+
+        if (row) {
+          result.set(
+            chatId,
+            mapAppointmentChatMessageRow(row as AppointmentChatMessageRow),
+          );
+        }
+      }),
+    );
+
+    return result;
+  }
+
+  async findMessageWindow(input: {
+    chatId: string;
+    limit: number;
+    before?: { createdAt: Date; id?: string };
+    after?: { createdAt: Date; id?: string };
+  }): Promise<{
+    items: IAppointmentChatMessagePublicEntity[];
+    hasMoreBefore: boolean;
+    hasMoreAfter: boolean;
+  }> {
+    const take = input.limit + 1;
+    const baseWhere: Prisma.AppointmentChatMessageWhereInput = {
+      chatId: input.chatId,
+      deletedAt: null,
+    };
+
+    if (input.before && input.after) {
+      throw new Error('before and after cursors are mutually exclusive');
+    }
+
+    if (input.before) {
+      const beforeCreatedAtFilter: Prisma.AppointmentChatMessageWhereInput =
+        input.before.id
+          ? {
+              OR: [
+                { createdAt: { lt: input.before.createdAt } },
+                {
+                  createdAt: input.before.createdAt,
+                  id: { lt: input.before.id },
+                },
+              ],
+            }
+          : { createdAt: { lt: input.before.createdAt } };
+
+      const rows = await this.getDelegate().findMany({
+        where: {
+          ...baseWhere,
+          ...beforeCreatedAtFilter,
+        },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take,
+      });
+
+      const hasMoreBefore = rows.length > input.limit;
+      const slice = hasMoreBefore ? rows.slice(0, input.limit) : rows;
+      const items = slice
+        .reverse()
+        .map((row) =>
+          mapAppointmentChatMessageRow(row as AppointmentChatMessageRow),
+        );
+
+      return {
+        items,
+        hasMoreBefore,
+        hasMoreAfter: true,
+      };
+    }
+
+    if (input.after) {
+      const afterCreatedAtFilter: Prisma.AppointmentChatMessageWhereInput =
+        input.after.id
+          ? {
+              OR: [
+                { createdAt: { gt: input.after.createdAt } },
+                {
+                  createdAt: input.after.createdAt,
+                  id: { gt: input.after.id },
+                },
+              ],
+            }
+          : { createdAt: { gt: input.after.createdAt } };
+
+      const rows = await this.getDelegate().findMany({
+        where: {
+          ...baseWhere,
+          ...afterCreatedAtFilter,
+        },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        take,
+      });
+
+      const hasMoreAfter = rows.length > input.limit;
+      const slice = hasMoreAfter ? rows.slice(0, input.limit) : rows;
+      const items = slice.map((row) =>
+        mapAppointmentChatMessageRow(row as AppointmentChatMessageRow),
+      );
+
+      return {
+        items,
+        hasMoreBefore: true,
+        hasMoreAfter,
+      };
+    }
+
+    const rows = await this.getDelegate().findMany({
+      where: baseWhere,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take,
+    });
+
+    const hasMoreBefore = rows.length > input.limit;
+    const slice = hasMoreBefore ? rows.slice(0, input.limit) : rows;
+    const items = slice
+      .reverse()
+      .map((row) =>
+        mapAppointmentChatMessageRow(row as AppointmentChatMessageRow),
+      );
+
+    return {
+      items,
+      hasMoreBefore,
+      hasMoreAfter: false,
+    };
+  }
+
+  private buildUnreadWhere(input: {
+    chatId: string;
+    viewerUserId: string;
+    myLastReadAt: Date | null;
+  }): Prisma.AppointmentChatMessageWhereInput {
+    return {
+      chatId: input.chatId,
+      deletedAt: null,
+      actor: 'USER',
+      AND: [
+        { senderUserId: { not: null } },
+        { senderUserId: { not: input.viewerUserId } },
+      ],
+      ...(input.myLastReadAt ? { createdAt: { gt: input.myLastReadAt } } : {}),
+    };
   }
 }

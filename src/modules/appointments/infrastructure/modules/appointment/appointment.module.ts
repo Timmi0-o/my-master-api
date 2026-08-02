@@ -147,10 +147,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       useFactory: (
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
-      ) => new GetMyAppointmentsUseCase(repo, personalNoteRepo),
+        messageRepo: IAppointmentChatMessageRepository,
+      ) => new GetMyAppointmentsUseCase(repo, personalNoteRepo, messageRepo),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -158,10 +160,17 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       useFactory: (
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
-      ) => new GetMyClientsAppointmentsUseCase(repo, personalNoteRepo),
+        messageRepo: IAppointmentChatMessageRepository,
+      ) =>
+        new GetMyClientsAppointmentsUseCase(
+          repo,
+          personalNoteRepo,
+          messageRepo,
+        ),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
       ],
     },
     {

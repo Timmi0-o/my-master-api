@@ -9,4 +9,7 @@ export interface IAppointmentChatEntity {
   deletedAt?: Date | null;
 }
 
-export type IAppointmentChatPublicEntity = IAppointmentChatEntity;
+/** Viewer-specific: число непрочитанных входящих USER-сообщений. */
+export type IAppointmentChatPublicEntity = IAppointmentChatEntity & {
+  unreadCount?: number;
+};

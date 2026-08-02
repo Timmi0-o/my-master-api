@@ -1,4 +1,6 @@
+import { attachAppointmentChatsInboxFields } from 'src/modules/appointments/application/helpers/appointment-chat-unread.helper';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { mergeWhereFilters } from 'src/modules/shared/application/presets/common/query-filter.helper';
 import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
 import { attachPersonalNotesToAppointmentPeers } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
@@ -10,6 +12,7 @@ export class GetMyAppointmentsUseCase {
   constructor(
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly userPersonalNoteRepository: IUserPersonalNoteRepository,
+    private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
   ) {}
 
   async execute(
@@ -26,16 +29,21 @@ export class GetMyAppointmentsUseCase {
       this.appointmentRepository.count({ where: params.where }),
     ]);
 
-    if (!wantsPersonalNotesEnrich(params.enrich)) {
-      return { items, total };
-    }
+    const withNotes = wantsPersonalNotesEnrich(params.enrich)
+      ? await attachPersonalNotesToAppointmentPeers(
+          this.userPersonalNoteRepository,
+          input.actor.userId,
+          items,
+        )
+      : items;
 
-    const itemsWithNotes = await attachPersonalNotesToAppointmentPeers(
-      this.userPersonalNoteRepository,
+    const withInbox = await attachAppointmentChatsInboxFields(
+      this.appointmentChatMessageRepository,
       input.actor.userId,
-      items,
+      withNotes,
+      { includeLastMessage: true },
     );
 
-    return { items: itemsWithNotes, total };
+    return { items: withInbox, total };
   }
 }

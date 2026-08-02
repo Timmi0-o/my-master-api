@@ -1,9 +1,12 @@
 import { DeleteAppointmentChatByIdUseCase } from '@modules/appointments/application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
+import { GetAppointmentChatMessageWindowUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chat-message-window.use-case';
 import { GetAppointmentChatsUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chats.use-case';
 import { MarkAppointmentChatReadUseCase } from '@modules/appointments/application/use-cases/appointment-chat/mark-appointment-chat-read.use-case';
 import { getAppointmentChatsQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.schema';
 import type { IGetAppointmentChatsQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.types';
+import { getAppointmentChatMessageWindowQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-message-window-query.schema';
+import type { IGetAppointmentChatMessageWindowQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-message-window-query.types';
 import { getByIdQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.types';
 import { idParamSchema } from '@modules/appointments/presentation/http/validation/schemas/id-param.schema';
@@ -30,8 +33,10 @@ import { requestBodyToMarkAppointmentChatReadUseCaseInput } from '../request-map
 import { requestParamsToDeleteAppointmentChatUseCaseInput } from '../request-mappers/appointment-chat/request-params-to-delete-appointment-chat-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToGetAppointmentChatByIdUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-by-id-use-case-input';
+import { requestQueryParamsToGetAppointmentChatMessageWindowUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-message-window-use-case-input';
 import { mapDeleteAppointmentChatHttpResponse } from '../http-responses/map-delete-appointment-chat-response';
 import { mapGetAppointmentChatByIdHttpResponse } from '../http-responses/map-get-appointment-chat-by-id-response';
+import { mapGetAppointmentChatMessageWindowHttpResponse } from '../http-responses/map-get-appointment-chat-message-window-response';
 import { mapGetAppointmentChatsHttpResponse } from '../http-responses/map-get-appointment-chats-response';
 import { mapMarkAppointmentChatReadHttpResponse } from '../http-responses/map-mark-appointment-chat-read-response';
 
@@ -41,6 +46,7 @@ export class AppointmentChatsController {
   constructor(
     private readonly getAppointmentChatsUseCase: GetAppointmentChatsUseCase,
     private readonly getAppointmentChatByIdUseCase: GetAppointmentChatByIdUseCase,
+    private readonly getAppointmentChatMessageWindowUseCase: GetAppointmentChatMessageWindowUseCase,
     private readonly markAppointmentChatReadUseCase: MarkAppointmentChatReadUseCase,
     private readonly deleteAppointmentChatByIdUseCase: DeleteAppointmentChatByIdUseCase,
   ) {}
@@ -58,6 +64,36 @@ export class AppointmentChatsController {
     const params = requestQueryParamsToFindManyParams(queryParams, metadata);
     const output = await this.getAppointmentChatsUseCase.execute(params);
     return mapGetAppointmentChatsHttpResponse(output, queryParams);
+  }
+
+  @Get(':id/messages')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointmentChats.read],
+  })
+  async getAppointmentChatMessages(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpQuery(getAppointmentChatMessageWindowQuerySchema, {
+      errorMessage: 'Некорректные параметры окна сообщений',
+    })
+    queryPayload: IGetAppointmentChatMessageWindowQueryPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input =
+      requestQueryParamsToGetAppointmentChatMessageWindowUseCaseInput(
+        params.id,
+        queryPayload,
+        user,
+        metadata.isStaffUser,
+      );
+    const output =
+      await this.getAppointmentChatMessageWindowUseCase.execute(input);
+    return mapGetAppointmentChatMessageWindowHttpResponse(output);
   }
 
   @Get(':id')

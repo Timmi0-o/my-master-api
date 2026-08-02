@@ -101,24 +101,7 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentPresetOptions> = {
         ] as (keyof IUserPublicEntity)[],
         include: CLIENT_USER_PROFILE_AVATAR_INCLUDE,
       },
-      chat: {
-        include: {
-          messages: {
-            select: [
-              'id',
-              'chatId',
-              'senderUserId',
-              'actor',
-              'body',
-              'systemAction',
-              'payload',
-              'createdAt',
-              'updatedAt',
-              'deletedAt',
-            ],
-          },
-        },
-      },
+      chat: true,
     },
     enrich: { personalNotes: true },
   },

@@ -16,8 +16,11 @@ import type { IAppointmentChatRealtimePublisher } from '../../../application/por
 import { AssertAppointmentChatAccessUseCase } from '../../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
 import { DeleteAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
+import { GetAppointmentChatMessageWindowUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chat-message-window.use-case';
 import { GetAppointmentChatsUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chats.use-case';
 import { MarkAppointmentChatReadUseCase } from '../../../application/use-cases/appointment-chat/mark-appointment-chat-read.use-case';
+import { APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-message/appointment-chat-message.repository.tokens';
+import type { IAppointmentChatMessageRepository } from '../../../domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat/appointment-chat.repository.tokens';
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { AppointmentChatGateway } from '../../../presentation/web-socket/appointment-chat/appointment-chat.gateway';
@@ -26,12 +29,14 @@ import { PrismaAppointmentChatRepository } from '../../persistence/repositories/
 import { AppointmentChatRealtimeEventBus } from '../../web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import { SocketIoAppointmentChatRealtimePublisher } from '../../web-socket/appointment-chat/socket-io-appointment-chat-realtime.publisher';
 import { AppointmentModule } from '../appointment/appointment.module';
+import { AppointmentChatMessageModule } from '../appointment-chat-message/appointment-chat-message.module';
 
 @Module({
   imports: [
     forwardRef(() => MastersModule),
     forwardRef(() => ImageModule),
     forwardRef(() => AppointmentModule),
+    forwardRef(() => AppointmentChatMessageModule),
     UsersModule,
     JwtModule.register({}),
   ],
@@ -63,16 +68,19 @@ import { AppointmentModule } from '../appointment/appointment.module';
         chatRepo: IAppointmentChatRepository,
         profileRepo: IMasterProfileRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
+        messageRepo: IAppointmentChatMessageRepository,
       ) =>
         new GetAppointmentChatByIdUseCase(
           chatRepo,
           profileRepo,
           personalNoteRepo,
+          messageRepo,
         ),
       inject: [
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -84,6 +92,18 @@ import { AppointmentModule } from '../appointment/appointment.module';
       inject: [
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
+      ],
+    },
+    {
+      provide: GetAppointmentChatMessageWindowUseCase,
+      useFactory: (
+        assertAccess: AssertAppointmentChatAccessUseCase,
+        messageRepo: IAppointmentChatMessageRepository,
+      ) =>
+        new GetAppointmentChatMessageWindowUseCase(assertAccess, messageRepo),
+      inject: [
+        AssertAppointmentChatAccessUseCase,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -133,6 +153,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
     WsJwtAuthGuard,
     GetAppointmentChatsUseCase,
     GetAppointmentChatByIdUseCase,
+    GetAppointmentChatMessageWindowUseCase,
     AssertAppointmentChatAccessUseCase,
     MarkAppointmentChatReadUseCase,
     DeleteAppointmentChatByIdUseCase,

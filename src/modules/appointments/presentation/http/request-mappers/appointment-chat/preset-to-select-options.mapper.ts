@@ -2,7 +2,6 @@ import type {
   IAppointmentChatPublicEntity,
   IAppointmentChatRelations,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
-import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import { APPOINTMENT_CHAT_SELECT_FIELDS, APPOINTMENT_CHAT_STAFF_ONLY_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat/appointment-chat-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
@@ -49,20 +48,6 @@ const PRESETS: Record<
             include: CLIENT_USER_PROFILE_AVATAR_INCLUDE,
           },
         },
-      },
-      messages: {
-        select: [
-          'id',
-          'chatId',
-          'senderUserId',
-          'actor',
-          'body',
-          'systemAction',
-          'payload',
-          'createdAt',
-          'updatedAt',
-          'deletedAt',
-        ] as (keyof IAppointmentChatMessagePublicEntity)[],
       },
     },
     enrich: { personalNotes: true },
