@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { AppointmentChatMessageModule } from './infrastructure/modules/appointment-chat-message/appointment-chat-message.module';
 import { AppointmentChatModule } from './infrastructure/modules/appointment-chat/appointment-chat.module';
 import { AppointmentModule } from './infrastructure/modules/appointment/appointment.module';
+import { CallModule } from './infrastructure/modules/call/call.module';
 import { AppointmentChatMessagesController } from './presentation/http/controllers/appointment-chat-messages.controller';
 import { AppointmentChatsController } from './presentation/http/controllers/appointment-chats.controller';
 import { AppointmentsController } from './presentation/http/controllers/appointments.controller';
@@ -19,6 +20,7 @@ import { AppointmentsController } from './presentation/http/controllers/appointm
     AppointmentModule,
     AppointmentChatModule,
     AppointmentChatMessageModule,
+    CallModule,
   ],
   controllers: [
     AppointmentsController,
@@ -29,6 +31,7 @@ import { AppointmentsController } from './presentation/http/controllers/appointm
     AppointmentModule,
     AppointmentChatModule,
     AppointmentChatMessageModule,
+    CallModule,
   ],
 })
 export class AppointmentsModule {}
