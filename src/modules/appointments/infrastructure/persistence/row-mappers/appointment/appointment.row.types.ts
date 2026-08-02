@@ -22,6 +22,8 @@ export type AppointmentChatRelationRow = {
   id: string;
   masterProfileId: string;
   clientUserId: string;
+  clientLastReadAt: Date | null;
+  masterLastReadAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

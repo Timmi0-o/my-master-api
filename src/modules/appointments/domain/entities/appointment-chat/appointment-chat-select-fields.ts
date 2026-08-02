@@ -4,6 +4,8 @@ export const APPOINTMENT_CHAT_SELECT_FIELDS = [
   'id',
   'masterProfileId',
   'clientUserId',
+  'clientLastReadAt',
+  'masterLastReadAt',
   'createdAt',
   'updatedAt',
   'deletedAt',

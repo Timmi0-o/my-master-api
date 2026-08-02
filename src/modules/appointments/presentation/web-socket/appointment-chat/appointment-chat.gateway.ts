@@ -20,6 +20,7 @@ import {
 import type { AppointmentChatAuthenticatedSocket } from './guards/appointment-chat-authenticated-socket.types';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { mapAppointmentChatMessageToWsPayload } from './mappers/map-appointment-chat-message-to-ws-payload';
+import { mapAppointmentChatReadToWsPayload } from './mappers/map-appointment-chat-read-to-ws-payload';
 import { mapWsErrorResponse } from './mappers/map-ws-error-response';
 import { requestBodyToAssertAppointmentChatAccessUseCaseInput } from './mappers/request-body-to-assert-appointment-chat-access-use-case-input';
 import { validateJoinAppointmentChatPayload } from './validation/validate-join-appointment-chat-payload';
@@ -66,6 +67,15 @@ export class AppointmentChatGateway
             .to(APPOINTMENT_CHAT_WS_USER_ROOM_NAME(event.recipientUserId))
             .emit(APPOINTMENT_CHAT_WS_EVENTS.INBOX_MESSAGE, payload);
         }
+        return;
+      }
+
+      if (event.type === 'chat.read') {
+        server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.READ, {
+          result: {
+            data: mapAppointmentChatReadToWsPayload(event),
+          },
+        });
         return;
       }
 

@@ -45,6 +45,8 @@ export function mapAppointmentChatRow(
     id: row.id,
     masterProfileId: row.masterProfileId,
     clientUserId: row.clientUserId,
+    clientLastReadAt: row.clientLastReadAt ?? null,
+    masterLastReadAt: row.masterLastReadAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt ?? null,

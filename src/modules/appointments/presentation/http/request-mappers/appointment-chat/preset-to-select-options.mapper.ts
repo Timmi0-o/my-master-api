@@ -29,6 +29,8 @@ const PRESETS: Record<
       'id',
       'masterProfileId',
       'clientUserId',
+      'clientLastReadAt',
+      'masterLastReadAt',
       'createdAt',
       'updatedAt',
     ],

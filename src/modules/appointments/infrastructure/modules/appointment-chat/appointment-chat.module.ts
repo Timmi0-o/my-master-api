@@ -12,10 +12,12 @@ import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repo
 import { MastersModule } from '../../../../masters/masters.module';
 import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
+import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { AssertAppointmentChatAccessUseCase } from '../../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
 import { DeleteAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
 import { GetAppointmentChatsUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chats.use-case';
+import { MarkAppointmentChatReadUseCase } from '../../../application/use-cases/appointment-chat/mark-appointment-chat-read.use-case';
 import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat/appointment-chat.repository.tokens';
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { AppointmentChatGateway } from '../../../presentation/web-socket/appointment-chat/appointment-chat.gateway';
@@ -85,6 +87,27 @@ import { AppointmentModule } from '../appointment/appointment.module';
       ],
     },
     {
+      provide: MarkAppointmentChatReadUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        chatRepo: IAppointmentChatRepository,
+        profileRepo: IMasterProfileRepository,
+        realtimePublisher: IAppointmentChatRealtimePublisher,
+      ) =>
+        new MarkAppointmentChatReadUseCase(
+          transactionManager,
+          chatRepo,
+          profileRepo,
+          realtimePublisher,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_CHAT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+      ],
+    },
+    {
       provide: DeleteAppointmentChatByIdUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
@@ -111,6 +134,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
     GetAppointmentChatsUseCase,
     GetAppointmentChatByIdUseCase,
     AssertAppointmentChatAccessUseCase,
+    MarkAppointmentChatReadUseCase,
     DeleteAppointmentChatByIdUseCase,
   ],
 })
