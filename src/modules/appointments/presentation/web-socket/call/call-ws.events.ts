@@ -23,4 +23,5 @@ export type TCallEndReason =
   | 'busy'
   | 'timeout'
   | 'disconnect'
-  | 'error';
+  | 'error'
+  | 'accepted_elsewhere';

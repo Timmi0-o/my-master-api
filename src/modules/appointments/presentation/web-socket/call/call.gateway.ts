@@ -199,6 +199,19 @@ export class CallGateway
         throw new BadRequestException('Звонок недоступен для принятия');
       }
 
+      // Другие устройства callee — сразу закрыть incoming overlay.
+      client
+        .to(CALL_WS_USER_ROOM_NAME(session.calleeUserId))
+        .emit(CALL_WS_EVENTS.ENDED, {
+          result: {
+            data: {
+              callId: session.callId,
+              chatId: session.chatId,
+              reason: 'accepted_elsewhere' as const,
+            },
+          },
+        });
+
       this.server
         .to(CALL_WS_USER_ROOM_NAME(session.callerUserId))
         .emit(CALL_WS_EVENTS.ACCEPTED, {
@@ -282,7 +295,10 @@ export class CallGateway
         .to(CALL_WS_USER_ROOM_NAME(removed.session.callerUserId))
         .emit(CALL_WS_EVENTS.ENDED, endedPayload);
 
-      client.emit(CALL_WS_EVENTS.ENDED, endedPayload);
+      // Все устройства callee (включая текущее) закрывают overlay.
+      this.server
+        .to(CALL_WS_USER_ROOM_NAME(removed.session.calleeUserId))
+        .emit(CALL_WS_EVENTS.ENDED, endedPayload);
 
       return {
         result: {
