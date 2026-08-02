@@ -1,6 +1,4 @@
-import { AssertAppointmentChatAccessUseCase } from '@modules/appointments/application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
-import { AppointmentChatRealtimeEventBus } from '@modules/appointments/infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
-import { type OnModuleDestroy, UseGuards } from '@nestjs/common';
+import { Inject, type OnModuleDestroy, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,6 +10,17 @@ import {
 } from '@nestjs/websockets';
 import type { Subscription } from 'rxjs';
 import type { Server } from 'socket.io';
+import { AssertAppointmentChatAccessUseCase } from '@modules/appointments/application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
+import { AppointmentChatRealtimeEventBus } from '@modules/appointments/infrastructure/web-socket/appointment-chat/appointment-chat-realtime.event-bus';
+import {
+  ensureAppointmentChatAccessible,
+  ensureAppointmentChatExists,
+} from 'src/modules/appointments/domain/entities/appointment-chat';
+import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from 'src/modules/appointments/domain/repositories/appointment-chat/appointment-chat.repository.tokens';
+import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
+import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
+import { MASTER_PROFILE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/master-profile/master-profile.repository.tokens';
+import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import {
   APPOINTMENT_CHAT_WS_EVENTS,
   APPOINTMENT_CHAT_WS_ROOM_NAME,
@@ -41,6 +50,10 @@ export class AppointmentChatGateway
     private readonly eventBus: AppointmentChatRealtimeEventBus,
     private readonly wsJwtAuthGuard: WsJwtAuthGuard,
     private readonly assertAccessUseCase: AssertAppointmentChatAccessUseCase,
+    @Inject(APPOINTMENT_CHAT_REPOSITORY_TOKEN)
+    private readonly appointmentChatRepository: IAppointmentChatRepository,
+    @Inject(MASTER_PROFILE_REPOSITORY_TOKEN)
+    private readonly masterProfileRepository: IMasterProfileRepository,
   ) {}
 
   afterInit(server: Server): void {
@@ -135,7 +148,10 @@ export class AppointmentChatGateway
       );
 
       await this.assertAccessUseCase.execute(
-        requestBodyToAssertAppointmentChatAccessUseCaseInput(payload, client.data.user),
+        requestBodyToAssertAppointmentChatAccessUseCaseInput(
+          payload,
+          client.data.user,
+        ),
       );
 
       await client.join(APPOINTMENT_CHAT_WS_ROOM_NAME(payload.chatId));
@@ -157,11 +173,111 @@ export class AppointmentChatGateway
         body,
         'Некорректные данные для выхода из чата',
       );
+
+      await this.broadcastTyping(
+        client,
+        payload.chatId,
+        APPOINTMENT_CHAT_WS_EVENTS.TYPING_STOP,
+      );
+
       await client.leave(APPOINTMENT_CHAT_WS_ROOM_NAME(payload.chatId));
 
       return { result: { data: { left: true } } };
     } catch (error) {
       return mapWsErrorResponse(error);
     }
+  }
+
+  @SubscribeMessage(APPOINTMENT_CHAT_WS_EVENTS.TYPING_START)
+  @UseGuards(WsJwtAuthGuard)
+  async typingStart(
+    @ConnectedSocket() client: AppointmentChatAuthenticatedSocket,
+    @MessageBody() body: Record<string, unknown>,
+  ) {
+    try {
+      const payload = validateJoinAppointmentChatPayload(
+        body,
+        'Некорректные данные typing.start',
+      );
+
+      await this.broadcastTyping(
+        client,
+        payload.chatId,
+        APPOINTMENT_CHAT_WS_EVENTS.TYPING_START,
+      );
+
+      return { result: { data: { ok: true } } };
+    } catch (error) {
+      return mapWsErrorResponse(error);
+    }
+  }
+
+  @SubscribeMessage(APPOINTMENT_CHAT_WS_EVENTS.TYPING_STOP)
+  @UseGuards(WsJwtAuthGuard)
+  async typingStop(
+    @ConnectedSocket() client: AppointmentChatAuthenticatedSocket,
+    @MessageBody() body: Record<string, unknown>,
+  ) {
+    try {
+      const payload = validateJoinAppointmentChatPayload(
+        body,
+        'Некорректные данные typing.stop',
+      );
+
+      await this.broadcastTyping(
+        client,
+        payload.chatId,
+        APPOINTMENT_CHAT_WS_EVENTS.TYPING_STOP,
+      );
+
+      return { result: { data: { ok: true } } };
+    } catch (error) {
+      return mapWsErrorResponse(error);
+    }
+  }
+
+  private async broadcastTyping(
+    client: AppointmentChatAuthenticatedSocket,
+    chatId: string,
+    event:
+      | typeof APPOINTMENT_CHAT_WS_EVENTS.TYPING_START
+      | typeof APPOINTMENT_CHAT_WS_EVENTS.TYPING_STOP,
+  ): Promise<void> {
+    const chat = await this.appointmentChatRepository.findEntityById(chatId);
+    ensureAppointmentChatExists(chat, chatId);
+
+    const profile = await this.masterProfileRepository.findEntityById(
+      chat.masterProfileId,
+    );
+    ensureMasterProfileExists(profile, chat.masterProfileId);
+    ensureAppointmentChatAccessible(
+      chat,
+      { userId: client.data.user.id, isStaffUser: false },
+      profile.userId,
+    );
+
+    const peerUserId =
+      chat.clientUserId === client.data.user.id
+        ? profile.userId
+        : chat.clientUserId;
+
+    const payload = {
+      result: {
+        data: {
+          chatId,
+          userId: client.data.user.id,
+        },
+      },
+    };
+
+    this.server
+      .to(APPOINTMENT_CHAT_WS_ROOM_NAME(chatId))
+      .except(client.id)
+      .emit(event, payload);
+
+    this.server
+      .to(APPOINTMENT_CHAT_WS_USER_ROOM_NAME(peerUserId))
+      .except(client.id)
+      .emit(event, payload);
   }
 }

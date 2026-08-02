@@ -4,6 +4,8 @@ export const APPOINTMENT_CHAT_WS_EVENTS = {
   MESSAGE_CREATED: 'appointment-chat.message.created',
   MESSAGE_DELETED: 'appointment-chat.message.deleted',
   READ: 'appointment-chat.read',
+  TYPING_START: 'appointment-chat.typing.start',
+  TYPING_STOP: 'appointment-chat.typing.stop',
   /** In-app уведомление получателю (user room), даже если чат не открыт */
   INBOX_MESSAGE: 'appointment-chat.inbox.message',
   /** Клиент явно подписывается на inbox (user room) */
