@@ -201,7 +201,7 @@ export class CallGateway
           chatId: session.chatId,
           media: session.media,
           callerUserId: session.callerUserId,
-          url: `/chat/${session.chatId}?incomingCall=1&callId=${encodeURIComponent(session.callId)}&media=${session.media}`,
+          url: `/chat/${session.chatId}?incomingCall=enabled&callId=${encodeURIComponent(session.callId)}&media=${session.media}`,
         },
       });
 
