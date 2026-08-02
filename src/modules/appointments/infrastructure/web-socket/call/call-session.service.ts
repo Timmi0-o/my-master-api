@@ -121,6 +121,12 @@ export class CallSessionService {
     if (!session) {
       return null;
     }
+
+    // Keep ringing while callee is offline so a push can wake them.
+    if (session.status === 'ringing' && session.calleeUserId === userId) {
+      return null;
+    }
+
     this.removeSession(session.callId);
     return session;
   }

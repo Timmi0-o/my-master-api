@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { WebPushSubscriptionsModule } from '@modules/web-push-subscriptions/web-push-subscriptions.module';
 import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
 import { PrismaUserRepository } from 'src/modules/users/infrastructure/persistence/repositories/user/prisma-user.repository';
 import { UsersModule } from 'src/modules/users/users.module';
@@ -20,6 +21,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     UsersModule,
     JwtModule.register({}),
     AppointmentChatModule,
+    WebPushSubscriptionsModule,
   ],
   providers: [
     CallGateway,

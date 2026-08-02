@@ -1,5 +1,6 @@
 import { ResolveCallParticipantsUseCase } from '@modules/appointments/application/use-cases/call/resolve-call-participants.use-case';
 import { CallSessionService } from '@modules/appointments/infrastructure/web-socket/call/call-session.service';
+import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import {
   BadRequestException,
   type OnModuleInit,
@@ -52,6 +53,7 @@ export class CallGateway
     private readonly callWsJwtAuthGuard: CallWsJwtAuthGuard,
     private readonly callSessionService: CallSessionService,
     private readonly resolveCallParticipantsUseCase: ResolveCallParticipantsUseCase,
+    private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
   ) {}
 
   onModuleInit(): void {
@@ -77,6 +79,25 @@ export class CallGateway
 
     client.data.user = user;
     await client.join(CALL_WS_USER_ROOM_NAME(user.id));
+
+    // Callee opened app from push / reconnect while still ringing.
+    const ringing = this.callSessionService.findByUserId(user.id);
+    if (
+      ringing &&
+      ringing.status === 'ringing' &&
+      ringing.calleeUserId === user.id
+    ) {
+      client.emit(CALL_WS_EVENTS.INCOMING, {
+        result: {
+          data: {
+            callId: ringing.callId,
+            chatId: ringing.chatId,
+            media: ringing.media,
+            callerUserId: ringing.callerUserId,
+          },
+        },
+      });
+    }
   }
 
   handleDisconnect(client: CallAuthenticatedSocket): void {
@@ -153,18 +174,36 @@ export class CallGateway
         media: payload.media,
       });
 
+      const incomingData = {
+        callId: session.callId,
+        chatId: session.chatId,
+        media: session.media,
+        callerUserId: session.callerUserId,
+      };
+
       this.server
         .to(CALL_WS_USER_ROOM_NAME(session.calleeUserId))
         .emit(CALL_WS_EVENTS.INCOMING, {
           result: {
-            data: {
-              callId: session.callId,
-              chatId: session.chatId,
-              media: session.media,
-              callerUserId: session.callerUserId,
-            },
+            data: incomingData,
           },
         });
+
+      const callerLabel = user.username?.trim() || 'My Master';
+      const isVideo = session.media === 'video';
+      void this.sendWebPushToUserUseCase.execute({
+        userId: session.calleeUserId,
+        title: isVideo ? 'Входящий видеозвонок' : 'Входящий звонок',
+        body: `Звонит ${callerLabel}`,
+        data: {
+          type: 'incoming_call',
+          callId: session.callId,
+          chatId: session.chatId,
+          media: session.media,
+          callerUserId: session.callerUserId,
+          url: `/chat/${session.chatId}?incomingCall=1&callId=${encodeURIComponent(session.callId)}&media=${session.media}`,
+        },
+      });
 
       return {
         result: {
