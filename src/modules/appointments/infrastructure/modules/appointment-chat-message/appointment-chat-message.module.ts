@@ -4,14 +4,13 @@ import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
+import { NotificationMessageCatalog } from '../../../../notifications/infrastructure/i18n/notification-message-catalog';
+import { NotificationsModule } from '../../../../notifications/notifications.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
 import { USER_BLOCK_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user-block/user-block.repository.tokens';
 import type { IUserRepository } from '../../../../users/domain/repositories/user/i-user.repository';
 import { USER_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/user/user.repository.tokens';
 import { UsersModule } from '../../../../users/users.module';
-import { CreateNotificationUseCase } from '../../../../notifications/application/use-cases/notification/create-notification.use-case';
-import { NotificationMessageCatalog } from '../../../../notifications/infrastructure/i18n/notification-message-catalog';
-import { NotificationsModule } from '../../../../notifications/notifications.module';
 import { SendWebPushToUserUseCase } from '../../../../web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import { WebPushSubscriptionsModule } from '../../../../web-push-subscriptions/web-push-subscriptions.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
@@ -79,7 +78,6 @@ import { AppointmentModule } from '../appointment/appointment.module';
         userRepo: IUserRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
         userBlockRepo: IUserBlockRepository,
-        createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
         notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
@@ -92,7 +90,6 @@ import { AppointmentModule } from '../appointment/appointment.module';
           userRepo,
           realtimePublisher,
           userBlockRepo,
-          createNotificationUseCase,
           sendWebPushToUserUseCase,
           notificationMessageCatalog,
         ),
@@ -105,7 +102,6 @@ import { AppointmentModule } from '../appointment/appointment.module';
         USER_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
         USER_BLOCK_REPOSITORY_TOKEN,
-        CreateNotificationUseCase,
         SendWebPushToUserUseCase,
         NotificationMessageCatalog,
       ],

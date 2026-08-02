@@ -14,15 +14,10 @@ import type { IAppointmentChatRepository } from 'src/modules/appointments/domain
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import type { CreateNotificationUseCase } from 'src/modules/notifications/application/use-cases/notification/create-notification.use-case';
-import {
-  NotificationCategory,
-  NotificationRelatedEntityType,
-  NotificationType,
-} from 'src/modules/notifications/domain/entities/notification';
+import { NotificationType } from 'src/modules/notifications/domain/entities/notification';
 import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
-import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
 import { EUserLanguage } from 'src/modules/users/domain/entities/user';
+import { ensureUsersNotBlocked } from 'src/modules/users/domain/entities/user-block';
 import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { SendWebPushToUserUseCase } from 'src/modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
@@ -42,7 +37,6 @@ export class CreateAppointmentChatMessageUseCase {
     private readonly userRepository: IUserRepository,
     private readonly realtimeChatPublisher: IAppointmentChatRealtimePublisher,
     private readonly userBlockRepository: IUserBlockRepository,
-    private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
     private readonly notificationMessageCatalog: NotificationMessageCatalog,
   ) {}
@@ -102,7 +96,8 @@ export class CreateAppointmentChatMessageUseCase {
     });
 
     if (recipientUserId && message.body) {
-      const recipient = await this.userRepository.findEntityById(recipientUserId);
+      const recipient =
+        await this.userRepository.findEntityById(recipientUserId);
       const { title, body } = this.notificationMessageCatalog.resolve(
         recipient?.language ?? EUserLanguage.RU,
         {
@@ -117,23 +112,6 @@ export class CreateAppointmentChatMessageUseCase {
         messageId: message.id,
         url: actionUrl,
       };
-
-      void this.createNotificationUseCase
-        .execute({
-          userId: recipientUserId,
-          actorUserId: input.actor.userId,
-          category: NotificationCategory.CHAT,
-          type: NotificationType.CHAT_MESSAGE,
-          title,
-          body,
-          actionUrl,
-          relatedEntityType:
-            NotificationRelatedEntityType.APPOINTMENT_CHAT_MESSAGE,
-          relatedEntityId: message.id,
-          payload,
-          idempotencyKey: `chat_message:${message.id}`,
-        })
-        .catch(() => undefined);
 
       void this.sendWebPushToUserUseCase.execute({
         userId: recipientUserId,
