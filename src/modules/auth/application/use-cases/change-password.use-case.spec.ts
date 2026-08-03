@@ -4,7 +4,7 @@ import { InvalidCurrentPasswordError } from 'src/modules/auth/domain/entities/pa
 import type { IRefreshTokenRepository } from 'src/modules/auth/domain/repositories/i-refresh-token.repository';
 import { UserNotFoundError } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
-import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '@test-support/mocks/transaction-manager.mock';
 
 describe('ChangePasswordUseCase', () => {
   it('updates password and revokes refresh tokens', async () => {

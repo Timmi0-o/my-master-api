@@ -1,6 +1,6 @@
 import { CreateMasterProfileUseCase } from 'src/modules/masters/application/use-cases/master-profile/create-master-profile.use-case';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '@test-support/mocks/transaction-manager.mock';
 
 describe('CreateMasterProfileUseCase', () => {
   it('creates profile for actor user inside transaction', async () => {

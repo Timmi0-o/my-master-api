@@ -16,13 +16,27 @@ import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/dom
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
 import type { IMasterWeeklyScheduleRepository } from 'src/modules/masters/domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import { fromZonedTime } from 'date-fns-tz';
-import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '@test-support/mocks/transaction-manager.mock';
 
 /** Monday 2026-08-03 10:00 Europe/Moscow */
 const SLOT_STARTS_AT = fromZonedTime(
   new Date(2026, 7, 3, 10, 0, 0, 0),
   'Europe/Moscow',
 );
+
+/** Frozen "now" safely before SLOT_STARTS_AT so availability checks stay stable. */
+const TEST_NOW = fromZonedTime(
+  new Date(2026, 7, 3, 8, 0, 0, 0),
+  'Europe/Moscow',
+);
+
+beforeEach(() => {
+  jest.useFakeTimers({ now: TEST_NOW });
+});
+
+afterEach(() => {
+  jest.useRealTimers();
+});
 
 function createMasterProfile(overrides: Record<string, unknown> = {}) {
   return {

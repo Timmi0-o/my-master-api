@@ -8,7 +8,7 @@ import type { IAppointmentRepository } from 'src/modules/appointments/domain/rep
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import { NotificationType } from 'src/modules/notifications/domain/entities/notification';
-import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '@test-support/mocks/transaction-manager.mock';
 
 function createPendingAppointment(
   overrides: Record<string, unknown> = {},

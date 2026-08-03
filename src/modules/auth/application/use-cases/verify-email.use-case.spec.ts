@@ -7,7 +7,7 @@ import type { TokenService } from 'src/modules/auth/infrastructure/services/toke
 import { EUserStatus } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IMailer } from '@shared/domain/mailer';
-import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '@test-support/mocks/transaction-manager.mock';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');

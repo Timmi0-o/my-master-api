@@ -5,7 +5,7 @@ import {
   type IMasterProfileEntity,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { createMockTransactionManager } from '../../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '@test-support/mocks/transaction-manager.mock';
 
 describe('ProcessIncompleteAcceptingMastersJobUseCase', () => {
   it('demotes incomplete ACCEPTING profiles to CLOSED', async () => {

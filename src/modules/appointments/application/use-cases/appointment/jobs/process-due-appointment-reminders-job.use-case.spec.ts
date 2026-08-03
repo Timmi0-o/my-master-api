@@ -1,125 +1,15 @@
-import { ScheduleAppointmentRemindersUseCase } from 'src/modules/appointments/application/use-cases/appointment/schedule-appointment-reminders.use-case';
-import { CancelAppointmentRemindersUseCase } from 'src/modules/appointments/application/use-cases/appointment/cancel-appointment-reminders.use-case';
 import { ProcessDueAppointmentRemindersJobUseCase } from 'src/modules/appointments/application/use-cases/appointment/jobs/process-due-appointment-reminders-job.use-case';
+import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment';
 import {
   EAppointmentReminderJobStatus,
   EAppointmentReminderJobType,
-  buildAppointmentReminderJobPlans,
 } from 'src/modules/appointments/domain/entities/appointment-reminder-job';
-import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment';
 import type { IAppointmentReminderJobRepository } from 'src/modules/appointments/domain/repositories/appointment-reminder-job/i-appointment-reminder-job.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import { NotificationType } from 'src/modules/notifications/domain/entities/notification';
 
-const MS_PER_MINUTE = 60 * 1000;
-const MS_PER_HOUR = 60 * MS_PER_MINUTE;
-
-describe('buildAppointmentReminderJobPlans', () => {
-  const now = new Date('2026-08-01T12:00:00.000Z');
-
-  it('schedules all reminders when startsAt is more than 48h ahead', () => {
-    const startsAt = new Date(now.getTime() + 60 * MS_PER_HOUR);
-    const plans = buildAppointmentReminderJobPlans(startsAt, now);
-
-    expect(plans.map((p) => p.type)).toEqual([
-      EAppointmentReminderJobType.REMINDER_48H,
-      EAppointmentReminderJobType.REMINDER_24H,
-      EAppointmentReminderJobType.REMINDER_12H,
-      EAppointmentReminderJobType.REMINDER_6H,
-      EAppointmentReminderJobType.REMINDER_4H,
-      EAppointmentReminderJobType.REMINDER_2H,
-      EAppointmentReminderJobType.REMINDER_30M,
-    ]);
-  });
-
-  it('schedules only remaining offsets when startsAt is between 2h and 4h', () => {
-    const startsAt = new Date(now.getTime() + 3 * MS_PER_HOUR);
-    const plans = buildAppointmentReminderJobPlans(startsAt, now);
-
-    expect(plans.map((p) => p.type)).toEqual([
-      EAppointmentReminderJobType.REMINDER_2H,
-      EAppointmentReminderJobType.REMINDER_30M,
-    ]);
-  });
-
-  it('schedules only REMINDER_30M when startsAt is between 30m and 2h', () => {
-    const startsAt = new Date(now.getTime() + 60 * MS_PER_MINUTE);
-    const plans = buildAppointmentReminderJobPlans(startsAt, now);
-
-    expect(plans).toHaveLength(1);
-    expect(plans[0].type).toBe(EAppointmentReminderJobType.REMINDER_30M);
-  });
-
-  it('schedules no jobs when startsAt is less than 30m ahead', () => {
-    const startsAt = new Date(now.getTime() + 15 * MS_PER_MINUTE);
-    const plans = buildAppointmentReminderJobPlans(startsAt, now);
-
-    expect(plans).toHaveLength(0);
-  });
-});
-
-describe('ScheduleAppointmentRemindersUseCase', () => {
-  it('upserts only future reminder plans', async () => {
-    const now = new Date('2026-08-01T12:00:00.000Z');
-    const startsAt = new Date(now.getTime() + 3 * MS_PER_HOUR);
-    const upsertPendingMany = jest.fn().mockResolvedValue([]);
-    const syncDelayedJobs = jest.fn().mockResolvedValue(undefined);
-
-    const useCase = new ScheduleAppointmentRemindersUseCase(
-      {
-        upsertPendingMany,
-      } as unknown as IAppointmentReminderJobRepository,
-      { syncDelayedJobs } as never,
-    );
-
-    await useCase.execute({
-      appointmentId: 'appt-1',
-      startsAt,
-      now,
-    });
-
-    expect(upsertPendingMany).toHaveBeenCalledWith(
-      [
-        {
-          appointmentId: 'appt-1',
-          type: EAppointmentReminderJobType.REMINDER_2H,
-          runAt: new Date(startsAt.getTime() - 2 * MS_PER_HOUR),
-        },
-        {
-          appointmentId: 'appt-1',
-          type: EAppointmentReminderJobType.REMINDER_30M,
-          runAt: new Date(startsAt.getTime() - 30 * MS_PER_MINUTE),
-        },
-      ],
-      undefined,
-    );
-    expect(syncDelayedJobs).toHaveBeenCalledWith([]);
-  });
-});
-
-describe('CancelAppointmentRemindersUseCase', () => {
-  it('cancels active reminder jobs for appointment', async () => {
-    const cancelActiveByAppointmentId = jest.fn().mockResolvedValue(2);
-    const cancelByAppointmentId = jest.fn().mockResolvedValue(undefined);
-
-    const useCase = new CancelAppointmentRemindersUseCase(
-      {
-        cancelActiveByAppointmentId,
-      } as unknown as IAppointmentReminderJobRepository,
-      { cancelByAppointmentId } as never,
-    );
-
-    const count = await useCase.execute({ appointmentId: 'appt-1' });
-
-    expect(count).toBe(2);
-    expect(cancelActiveByAppointmentId).toHaveBeenCalledWith(
-      'appt-1',
-      undefined,
-    );
-    expect(cancelByAppointmentId).toHaveBeenCalledWith('appt-1');
-  });
-});
+const MS_PER_HOUR = 60 * 60 * 1000;
 
 describe('ProcessDueAppointmentRemindersJobUseCase', () => {
   const now = new Date('2026-08-01T12:00:00.000Z');
