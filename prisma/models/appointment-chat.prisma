@@ -14,10 +14,11 @@ model AppointmentChat {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  masterProfile MasterProfile            @relation(fields: [masterProfileId], references: [id])
-  clientUser    User                     @relation("ClientAppointmentChats", fields: [clientUserId], references: [id])
-  appointments  Appointment[]
-  messages      AppointmentChatMessage[]
+  masterProfile    MasterProfile                     @relation(fields: [masterProfileId], references: [id])
+  clientUser       User                              @relation("ClientAppointmentChats", fields: [clientUserId], references: [id])
+  appointments     Appointment[]
+  messages         AppointmentChatMessage[]
+  appointmentChatUnreadReminders AppointmentChatUnreadReminder[]
 
   @@unique([masterProfileId, clientUserId])
   @@index([clientUserId])

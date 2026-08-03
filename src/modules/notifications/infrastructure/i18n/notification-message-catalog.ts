@@ -48,6 +48,10 @@ type ResolveParams =
   | {
       type: NotificationType.CHAT_MESSAGE;
       body: string;
+    }
+  | {
+      type: NotificationType.CHAT_UNREAD_REMINDER;
+      senderName: string;
     };
 
 @Injectable()
@@ -135,6 +139,15 @@ export class NotificationMessageCatalog {
           title: messages.CHAT_MESSAGE.title,
           body: params.body,
         };
+      case NotificationType.CHAT_UNREAD_REMINDER: {
+        const entry = messages.CHAT_UNREAD_REMINDER;
+        return {
+          title: entry.title,
+          body: this.templateRenderer.renderString(entry.body, {
+            senderName: params.senderName,
+          }),
+        };
+      }
       default: {
         const exhaustive: never = params;
         return exhaustive;

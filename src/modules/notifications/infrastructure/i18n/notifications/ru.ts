@@ -33,6 +33,10 @@ export const notificationMessagesRu: NotificationMessages = {
   CHAT_MESSAGE: {
     title: 'Новое сообщение',
   },
+  CHAT_UNREAD_REMINDER: {
+    title: 'Непрочитанное сообщение',
+    body: '{{senderName}} ждёт вашего ответа',
+  },
   reminderLabels: {
     [EAppointmentReminderJobType.REMINDER_48H]: 'через 48 часов',
     [EAppointmentReminderJobType.REMINDER_24H]: 'через 24 часа',

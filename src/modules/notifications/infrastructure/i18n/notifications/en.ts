@@ -33,6 +33,10 @@ export const notificationMessagesEn: NotificationMessages = {
   CHAT_MESSAGE: {
     title: 'New message',
   },
+  CHAT_UNREAD_REMINDER: {
+    title: 'Unread message',
+    body: '{{senderName}} is waiting for your reply',
+  },
   reminderLabels: {
     [EAppointmentReminderJobType.REMINDER_48H]: 'in 48 hours',
     [EAppointmentReminderJobType.REMINDER_24H]: 'in 24 hours',

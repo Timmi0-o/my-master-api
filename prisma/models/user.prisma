@@ -46,6 +46,7 @@ model User {
   webPushSubscriptions           WebPushSubscription[]
   notifications                  Notification[] @relation("UserNotifications")
   actedNotifications             Notification[] @relation("UserActedNotifications")
+  appointmentChatUnreadReminders AppointmentChatUnreadReminder[] @relation("AppointmentChatUnreadReminders")
 
   @@unique([email])
   @@unique([phone])

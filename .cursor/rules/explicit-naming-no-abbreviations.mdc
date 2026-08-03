@@ -1,0 +1,24 @@
+---
+description: Explicit naming — no abbreviated identifiers in methods, params, fields
+alwaysApply: true
+---
+
+# Explicit naming (no abbreviations)
+
+Always name identifiers by the full identity they refer to. Never shorten entity/field names in method names, parameters, locals, or DI bindings.
+
+## Rules
+
+- Include the full property identity in the name: `chatId`, `recipientProfileUserId`, `appointmentId` — not `chat`, `recipient`, `appointment`.
+- Repository lookup/delete methods must list every key they use:
+  - ❌ `findByChatAndRecipient`, `deleteByChatAndRecipient`, `deleteById` (ambiguous)
+  - ✅ `findByChatIdAndRecipientProfileUserId`, `deleteByChatIdAndRecipientProfileUserId`, `deleteByAppointmentChatUnreadReminderId`
+- Injected dependencies use the full domain name:
+  - ❌ `unreadReminderRepository`, `messageRepo`, `chatRepo`
+  - ✅ `appointmentChatUnreadReminderRepository`, `appointmentChatMessageRepository`, `appointmentChatRepository`
+- Types follow the same rule: `IStaleUnreadAppointmentChatPair`, not `IStaleUnreadChatPair`.
+- Abbreviations like `repo`, `msg`, `usr`, `res`, `req`, `cfg`, `ctx` (as name stems) are forbidden for new code. Prefer the full word.
+
+## Why
+
+Ambiguous names hide which id/field is meant (`recipient` vs `recipientProfileUserId`). Explicit names make call sites self-documenting and prevent wrong-argument bugs.

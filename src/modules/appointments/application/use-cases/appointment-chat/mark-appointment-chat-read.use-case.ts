@@ -1,9 +1,12 @@
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { getAppointmentChatMyLastReadAt } from 'src/modules/appointments/application/helpers/appointment-chat-unread.helper';
 import {
   AppointmentChatForbiddenError,
   ensureAppointmentChatAccessible,
   ensureAppointmentChatExists,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
+import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
+import type { IAppointmentChatUnreadReminderRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-unread-reminder';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
@@ -16,6 +19,8 @@ export class MarkAppointmentChatReadUseCase {
     private readonly transactionManager: ITransactionManager,
     private readonly appointmentChatRepository: IAppointmentChatRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
+    private readonly appointmentChatMessageRepository: IAppointmentChatMessageRepository,
+    private readonly appointmentChatUnreadReminderRepository: IAppointmentChatUnreadReminderRepository,
     private readonly realtimePublisher: IAppointmentChatRealtimePublisher,
   ) {}
 
@@ -69,6 +74,24 @@ export class MarkAppointmentChatReadUseCase {
         scope,
       ),
     );
+
+    const myLastReadAt = getAppointmentChatMyLastReadAt(
+      updated,
+      input.actor.userId,
+    );
+    const unreadCount =
+      await this.appointmentChatMessageRepository.countUnreadForChat({
+        chatId: updated.id,
+        viewerUserId: input.actor.userId,
+        myLastReadAt,
+      });
+
+    if (unreadCount === 0) {
+      await this.appointmentChatUnreadReminderRepository.deleteByChatIdAndRecipientProfileUserId(
+        updated.id,
+        input.actor.userId,
+      );
+    }
 
     await this.realtimePublisher.chatRead({
       chatId: updated.id,

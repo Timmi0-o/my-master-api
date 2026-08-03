@@ -9,5 +9,6 @@ export type NotificationMessages = {
   APPOINTMENT_RESCHEDULED: { title: string; body: string };
   APPOINTMENT_REMINDER: { title: string; body: string };
   CHAT_MESSAGE: { title: string };
+  CHAT_UNREAD_REMINDER: { title: string; body: string };
   reminderLabels: Record<EAppointmentReminderJobType, string>;
 };
