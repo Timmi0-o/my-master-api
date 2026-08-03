@@ -2,11 +2,14 @@ import type {
   IMasterProfilePublicEntity,
   IMasterProfileRelations,
 } from 'src/modules/masters/domain/entities/master-profile';
-import type { WithPersonalNote } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
+import type { IUserPersonalNotePublicEntity } from 'src/modules/users/domain/entities/user-personal-note';
 
 export type GetMasterProfilesOutput = {
-  items: WithPersonalNote<
-    IMasterProfilePublicEntity & Partial<IMasterProfileRelations>
-  >[];
+  items: Array<
+    IMasterProfilePublicEntity &
+      Partial<IMasterProfileRelations> & {
+        personalNote?: IUserPersonalNotePublicEntity | null;
+      }
+  >;
   total: number;
 };

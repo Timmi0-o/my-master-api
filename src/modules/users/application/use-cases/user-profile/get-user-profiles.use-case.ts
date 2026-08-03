@@ -1,11 +1,5 @@
-import {
-  type FindManyParams,
-  wantsPersonalNotesEnrich,
-} from 'src/modules/shared/domain/query';
-import {
-  attachPersonalNotesByUserId,
-  type WithPersonalNote,
-} from 'src/modules/users/application/helpers/attach-personal-notes.helper';
+import type { FindManyParams } from 'src/modules/shared/domain/query';
+import { attachPersonalNotesByUserId } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 import type {
   IUserProfilePublicEntity,
   IUserProfileRelations,
@@ -29,16 +23,8 @@ export class GetUserProfilesUseCase {
       this.userProfileRepository.count({ where: params.where }),
     ]);
 
-    if (!wantsPersonalNotesEnrich(params.enrich)) {
-      return {
-        items: items.map(
-          (item): WithPersonalNote<(typeof items)[number]> => ({
-            ...item,
-            personalNote: null,
-          }),
-        ),
-        total,
-      };
+    if (!params.enrich?.personalNotes) {
+      return { items, total };
     }
 
     const itemsWithNotes = await attachPersonalNotesByUserId(

@@ -1,6 +1,5 @@
-import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
-import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
 import { attachPersonalNotesToAppointmentPeers } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
+import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import type { IGetMyClientsInProgressAppointmentApplicationInput } from '../../dtos/appointment/get-my-clients-in-progress-appointment.input';
 import type { IGetInProgressAppointmentApplicationOutput } from '../../dtos/appointment/get-in-progress-appointment.output';
@@ -20,7 +19,7 @@ export class GetMyClientsInProgressAppointmentUseCase {
       input.params,
     );
 
-    if (!item || !wantsPersonalNotesEnrich(input.params.enrich)) {
+    if (!item || !input.params.enrich?.personalNotes) {
       return item;
     }
 

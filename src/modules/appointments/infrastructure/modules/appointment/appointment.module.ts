@@ -43,8 +43,8 @@ import { GetMyClientsAppointmentsUseCase } from '../../../application/use-cases/
 import { GetMyInProgressAppointmentUseCase } from '../../../application/use-cases/appointment/get-my-in-progress-appointment.use-case';
 import { GetMyClientsInProgressAppointmentUseCase } from '../../../application/use-cases/appointment/get-my-clients-in-progress-appointment.use-case';
 import { NoShowAppointmentUseCase } from '../../../application/use-cases/appointment/no-show-appointment.use-case';
-import { ProcessDueAppointmentAutoCompletionsUseCase } from '../../../application/use-cases/appointment/process-due-appointment-auto-completions.use-case';
-import { ProcessDueAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/process-due-appointment-reminders.use-case';
+import { CronProcessDueAppointmentAutoCompletionsUseCase } from '../../../application/use-cases/appointment/cron-process-due-appointment-auto-completions.use-case';
+import { CronProcessDueAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/cron-process-due-appointment-reminders.use-case';
 import { RescheduleAppointmentUseCase } from '../../../application/use-cases/appointment/reschedule-appointment.use-case';
 import { ScheduleAppointmentRemindersUseCase } from '../../../application/use-cases/appointment/schedule-appointment-reminders.use-case';
 import { UpdateAppointmentByIdUseCase } from '../../../application/use-cases/appointment/update-appointment-by-id.use-case';
@@ -105,7 +105,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       inject: [APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN],
     },
     {
-      provide: ProcessDueAppointmentRemindersUseCase,
+      provide: CronProcessDueAppointmentRemindersUseCase,
       useFactory: (
         reminderJobRepo: IAppointmentReminderJobRepository,
         appointmentRepo: IAppointmentRepository,
@@ -115,7 +115,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
         notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
-        new ProcessDueAppointmentRemindersUseCase(
+        new CronProcessDueAppointmentRemindersUseCase(
           reminderJobRepo,
           appointmentRepo,
           profileRepo,
@@ -490,12 +490,12 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       ],
     },
     {
-      provide: ProcessDueAppointmentAutoCompletionsUseCase,
+      provide: CronProcessDueAppointmentAutoCompletionsUseCase,
       useFactory: (
         appointmentRepo: IAppointmentRepository,
         completeAppointmentUseCase: CompleteAppointmentUseCase,
       ) =>
-        new ProcessDueAppointmentAutoCompletionsUseCase(
+        new CronProcessDueAppointmentAutoCompletionsUseCase(
           appointmentRepo,
           completeAppointmentUseCase,
         ),

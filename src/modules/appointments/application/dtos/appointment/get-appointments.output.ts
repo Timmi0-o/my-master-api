@@ -1,6 +1,6 @@
-import type { IAppointmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment';
+import type { IAppointmentWithPeerPersonalNotes } from './appointment-with-peer-personal-notes.output';
 
 export interface GetAppointmentsOutput {
-  items: IAppointmentPublicEntity[];
+  items: IAppointmentWithPeerPersonalNotes[];
   total: number;
 }

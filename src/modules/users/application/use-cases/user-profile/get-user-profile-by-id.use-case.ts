@@ -1,9 +1,5 @@
+import { resolvePersonalNoteForReference } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 import { UserProfileNotFoundError } from 'src/modules/users/domain/entities/user-profile';
-import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
-import {
-  resolvePersonalNoteForReference,
-  type WithPersonalNote,
-} from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
 import type { IGetUserProfileByIdApplicationInput } from '../../dtos/user-profile/get-user-profile-by-id.input';
@@ -17,7 +13,7 @@ export class GetUserProfileByIdUseCase {
 
   async execute(
     input: IGetUserProfileByIdApplicationInput,
-  ): Promise<WithPersonalNote<IGetUserProfileByIdApplicationOutput>> {
+  ): Promise<IGetUserProfileByIdApplicationOutput> {
     const entity = await this.userProfileRepository.findEntityById(input.id);
 
     if (!entity || (!input.actor.isStaffUser && entity.deletedAt != null)) {
@@ -33,11 +29,8 @@ export class GetUserProfileByIdUseCase {
       throw new UserProfileNotFoundError(input.id);
     }
 
-    if (!wantsPersonalNotesEnrich(input.params?.enrich)) {
-      return {
-        ...item,
-        personalNote: null,
-      };
+    if (!input.params?.enrich?.personalNotes) {
+      return item;
     }
 
     const personalNote = await resolvePersonalNoteForReference(

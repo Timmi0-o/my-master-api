@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ProcessDueAppointmentRemindersUseCase } from '../../application/use-cases/appointment/process-due-appointment-reminders.use-case';
+import { CronProcessDueAppointmentRemindersUseCase } from '../../application/use-cases/appointment/cron-process-due-appointment-reminders.use-case';
 
 @Injectable()
 export class AppointmentRemindersScheduler {
   constructor(
-    private readonly processDueAppointmentRemindersUseCase: ProcessDueAppointmentRemindersUseCase,
+    private readonly cronProcessDueAppointmentRemindersUseCase: CronProcessDueAppointmentRemindersUseCase,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron(): Promise<void> {
-    await this.processDueAppointmentRemindersUseCase.execute();
+    await this.cronProcessDueAppointmentRemindersUseCase.execute();
   }
 }

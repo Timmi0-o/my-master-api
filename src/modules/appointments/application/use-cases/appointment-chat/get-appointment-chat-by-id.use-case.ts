@@ -8,7 +8,6 @@ import type { IAppointmentChatRepository } from 'src/modules/appointments/domain
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
 import { attachPersonalNotesToAppointmentChatPeers } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import type { IGetAppointmentChatByIdApplicationInput } from '../../dtos/appointment-chat/get-appointment-chat-by-id.input';
@@ -44,7 +43,7 @@ export class GetAppointmentChatByIdUseCase {
       throw new AppointmentChatNotFoundError(input.id);
     }
 
-    const withNotes = wantsPersonalNotesEnrich(input.params.enrich)
+    const withNotes = input.params.enrich?.personalNotes
       ? await attachPersonalNotesToAppointmentChatPeers(
           this.userPersonalNoteRepository,
           input.actor.userId,

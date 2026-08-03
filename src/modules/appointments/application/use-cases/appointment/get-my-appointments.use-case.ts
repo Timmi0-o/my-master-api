@@ -2,7 +2,6 @@ import { attachAppointmentChatsInboxFields } from 'src/modules/appointments/appl
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { mergeWhereFilters } from 'src/modules/shared/application/presets/common/query-filter.helper';
-import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
 import { attachPersonalNotesToAppointmentPeers } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import type { GetAppointmentsOutput } from '../../dtos/appointment/get-appointments.output';
@@ -29,7 +28,7 @@ export class GetMyAppointmentsUseCase {
       this.appointmentRepository.count({ where: params.where }),
     ]);
 
-    const withNotes = wantsPersonalNotesEnrich(params.enrich)
+    const withNotes = params.enrich?.personalNotes
       ? await attachPersonalNotesToAppointmentPeers(
           this.userPersonalNoteRepository,
           input.actor.userId,

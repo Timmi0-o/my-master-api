@@ -5,7 +5,6 @@ import {
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { wantsPersonalNotesEnrich } from 'src/modules/shared/domain/query';
 import { attachPersonalNotesToAppointmentPeers } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import type { IGetAppointmentByIdApplicationInput } from '../../dtos/appointment/get-appointment-by-id.input';
@@ -40,7 +39,7 @@ export class GetAppointmentByIdUseCase {
       throw new AppointmentNotFoundError(input.id);
     }
 
-    if (!wantsPersonalNotesEnrich(input.params.enrich)) {
+    if (!input.params.enrich?.personalNotes) {
       return item;
     }
 

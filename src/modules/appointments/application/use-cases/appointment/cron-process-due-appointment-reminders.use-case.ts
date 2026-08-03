@@ -21,7 +21,7 @@ function retryBackoffMs(attempts: number): number {
   return attempts <= 1 ? 60_000 : 5 * 60_000;
 }
 
-export class ProcessDueAppointmentRemindersUseCase {
+export class CronProcessDueAppointmentRemindersUseCase {
   constructor(
     private readonly appointmentReminderJobRepository: IAppointmentReminderJobRepository,
     private readonly appointmentRepository: IAppointmentRepository,

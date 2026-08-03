@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ProcessDueAppointmentAutoCompletionsUseCase } from '../../application/use-cases/appointment/process-due-appointment-auto-completions.use-case';
+import { CronProcessDueAppointmentAutoCompletionsUseCase } from '../../application/use-cases/appointment/cron-process-due-appointment-auto-completions.use-case';
 
 @Injectable()
 export class AppointmentAutoCompleteScheduler {
   constructor(
-    private readonly processDueAppointmentAutoCompletionsUseCase: ProcessDueAppointmentAutoCompletionsUseCase,
+    private readonly cronProcessDueAppointmentAutoCompletionsUseCase: CronProcessDueAppointmentAutoCompletionsUseCase,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron(): Promise<void> {
-    await this.processDueAppointmentAutoCompletionsUseCase.execute();
+    await this.cronProcessDueAppointmentAutoCompletionsUseCase.execute();
   }
 }

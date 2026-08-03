@@ -5,9 +5,3 @@
 export type EnrichOptions = {
   personalNotes?: boolean;
 };
-
-export function wantsPersonalNotesEnrich(
-  enrich: EnrichOptions | undefined,
-): boolean {
-  return enrich?.personalNotes === true;
-}

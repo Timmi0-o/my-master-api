@@ -1,13 +1,11 @@
-import {
-  EMasterBookingStatus,
-} from 'src/modules/masters/domain/entities/master-profile';
-import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile';
+import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { MasterOnboardingService } from '../../services/master-onboarding.service';
 
 const DEMOTE_BATCH_LIMIT = 50;
 
-export class ProcessIncompleteAcceptingMastersUseCase {
+export class CronProcessIncompleteAcceptingMastersUseCase {
   constructor(
     private readonly transactionManager: ITransactionManager,
     private readonly masterProfileRepository: IMasterProfileRepository,

@@ -4,7 +4,7 @@ import type { CompleteAppointmentUseCase } from './complete-appointment.use-case
 const AUTO_COMPLETE_BATCH_LIMIT = 50;
 const SYSTEM_ACTOR_USER_ID = '00000000-0000-0000-0000-000000000000';
 
-export class ProcessDueAppointmentAutoCompletionsUseCase {
+export class CronProcessDueAppointmentAutoCompletionsUseCase {
   constructor(
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly completeAppointmentUseCase: CompleteAppointmentUseCase,

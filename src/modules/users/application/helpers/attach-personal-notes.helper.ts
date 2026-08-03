@@ -1,10 +1,6 @@
 import type { IUserPersonalNotePublicEntity } from 'src/modules/users/domain/entities/user-personal-note';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 
-export type WithPersonalNote<T> = T & {
-  personalNote: IUserPersonalNotePublicEntity | null;
-};
-
 export async function resolvePersonalNoteForReference(
   repository: IUserPersonalNoteRepository,
   ownerUserId: string | undefined | null,
@@ -30,7 +26,7 @@ export async function attachPersonalNotesByUserId<T extends { userId: string }>(
   repository: IUserPersonalNoteRepository,
   ownerUserId: string | undefined | null,
   items: readonly T[],
-): Promise<WithPersonalNote<T>[]> {
+): Promise<Array<T & { personalNote: IUserPersonalNotePublicEntity | null }>> {
   if (!ownerUserId || items.length === 0) {
     return items.map((item) => ({ ...item, personalNote: null }));
   }

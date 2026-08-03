@@ -1,6 +1,5 @@
 import { mapEntityHttpResponse } from 'src/modules/shared/presentation/http/http-responses/map-entity-http-response';
-import type { WithPersonalNote } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
-import type { IMasterProfilePublicEntity } from 'src/modules/masters/domain/entities/master-profile';
+import type { IGetMasterProfileByIdApplicationOutput } from 'src/modules/masters/application/dtos/master-profile/get-master-profile-by-id.output';
 import { mapMasterProfileToHttpResponse } from './map-master-profile-http-response';
 
 export type IGetMasterProfileByIdHttpResponse = ReturnType<
@@ -8,7 +7,7 @@ export type IGetMasterProfileByIdHttpResponse = ReturnType<
 >;
 
 export function mapGetMasterProfileByIdHttpResponse(
-  output: WithPersonalNote<IMasterProfilePublicEntity>,
+  output: IGetMasterProfileByIdApplicationOutput,
 ) {
   return mapEntityHttpResponse(mapMasterProfileToHttpResponse(output));
 }

@@ -1,12 +1,15 @@
-import type { WithPersonalNote } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
+import type { IUserPersonalNotePublicEntity } from 'src/modules/users/domain/entities/user-personal-note';
 import type {
   IUserProfilePublicEntity,
   IUserProfileRelations,
 } from 'src/modules/users/domain/entities/user-profile';
 
 export type GetUserProfilesOutput = {
-  items: WithPersonalNote<
-    IUserProfilePublicEntity & Partial<IUserProfileRelations>
-  >[];
+  items: Array<
+    IUserProfilePublicEntity &
+      Partial<IUserProfileRelations> & {
+        personalNote?: IUserPersonalNotePublicEntity | null;
+      }
+  >;
   total: number;
 };
