@@ -10,12 +10,11 @@ import { AppointmentChatRealtimeEventBus } from './appointment-chat-realtime.eve
 export class SocketIoAppointmentChatRealtimePublisher implements IAppointmentChatRealtimePublisher {
   constructor(private readonly eventBus: AppointmentChatRealtimeEventBus) {}
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async messageCreated(
     message: IAppointmentChatMessagePublicEntity,
     options?: { recipientUserId?: string | null },
   ): Promise<void> {
-    this.eventBus.publish({
+    await this.eventBus.publish({
       type: 'message.created',
       chatId: message.chatId,
       message,
@@ -23,21 +22,19 @@ export class SocketIoAppointmentChatRealtimePublisher implements IAppointmentCha
     });
   }
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async messageDeleted(payload: {
     chatId: string;
     messageId: string;
   }): Promise<void> {
-    this.eventBus.publish({
+    await this.eventBus.publish({
       type: 'message.deleted',
       chatId: payload.chatId,
       messageId: payload.messageId,
     });
   }
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async chatRead(payload: IAppointmentChatReadRealtimePayload): Promise<void> {
-    this.eventBus.publish({
+    await this.eventBus.publish({
       type: 'chat.read',
       chatId: payload.chatId,
       clientLastReadAt: payload.clientLastReadAt,

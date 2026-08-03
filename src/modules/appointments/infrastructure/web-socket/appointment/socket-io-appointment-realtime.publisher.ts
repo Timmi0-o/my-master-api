@@ -7,24 +7,22 @@ import { AppointmentRealtimeEventBus } from './appointment-realtime.event-bus';
 export class SocketIoAppointmentRealtimePublisher implements IAppointmentRealtimePublisher {
   constructor(private readonly eventBus: AppointmentRealtimeEventBus) {}
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async appointmentCreated(
     appointment: IAppointmentPublicEntity,
     options?: { recipientUserId?: string | null },
   ): Promise<void> {
-    this.eventBus.publish({
+    await this.eventBus.publish({
       type: 'appointment.created',
       appointment,
       recipientUserId: options?.recipientUserId ?? null,
     });
   }
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async appointmentUpdated(
     appointment: IAppointmentPublicEntity,
     options?: { recipientUserId?: string | null },
   ): Promise<void> {
-    this.eventBus.publish({
+    await this.eventBus.publish({
       type: 'appointment.updated',
       appointment,
       recipientUserId: options?.recipientUserId ?? null,

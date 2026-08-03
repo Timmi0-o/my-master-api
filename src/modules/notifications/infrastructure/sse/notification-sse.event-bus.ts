@@ -4,6 +4,10 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import {
+  parseRedisPubSubMessage,
+  serializeForRedisPubSub,
+} from '@shared/infrastructure/redis/redis-pubsub-json';
 import { RedisService } from '@shared/infrastructure/redis/redis.service';
 import type Redis from 'ioredis';
 import { Observable, Subject } from 'rxjs';
@@ -12,7 +16,9 @@ import type { NotificationRealtimeEvent } from './i-notification-realtime.events
 const NOTIFICATION_SSE_CHANNEL = 'notifications:sse';
 
 @Injectable()
-export class NotificationSseEventBus implements OnModuleInit, OnModuleDestroy {
+export class NotificationSseEventBus
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(NotificationSseEventBus.name);
   private readonly events$ = new Subject<NotificationRealtimeEvent>();
   private subscriber: Redis | null = null;
@@ -27,7 +33,9 @@ export class NotificationSseEventBus implements OnModuleInit, OnModuleDestroy {
       }
 
       try {
-        this.events$.next(JSON.parse(message) as NotificationRealtimeEvent);
+        this.events$.next(
+          parseRedisPubSubMessage<NotificationRealtimeEvent>(message),
+        );
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown parse error';
@@ -40,7 +48,7 @@ export class NotificationSseEventBus implements OnModuleInit, OnModuleDestroy {
   async publish(event: NotificationRealtimeEvent): Promise<void> {
     await this.redisService
       .getClient()
-      .publish(NOTIFICATION_SSE_CHANNEL, JSON.stringify(event));
+      .publish(NOTIFICATION_SSE_CHANNEL, serializeForRedisPubSub(event));
   }
 
   asObservable(): Observable<NotificationRealtimeEvent> {
