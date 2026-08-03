@@ -64,10 +64,14 @@ describe('ScheduleAppointmentRemindersUseCase', () => {
     const now = new Date('2026-08-01T12:00:00.000Z');
     const startsAt = new Date(now.getTime() + 3 * MS_PER_HOUR);
     const upsertPendingMany = jest.fn().mockResolvedValue([]);
+    const syncDelayedJobs = jest.fn().mockResolvedValue(undefined);
 
-    const useCase = new ScheduleAppointmentRemindersUseCase({
-      upsertPendingMany,
-    } as unknown as IAppointmentReminderJobRepository);
+    const useCase = new ScheduleAppointmentRemindersUseCase(
+      {
+        upsertPendingMany,
+      } as unknown as IAppointmentReminderJobRepository,
+      { syncDelayedJobs } as never,
+    );
 
     await useCase.execute({
       appointmentId: 'appt-1',
@@ -90,16 +94,21 @@ describe('ScheduleAppointmentRemindersUseCase', () => {
       ],
       undefined,
     );
+    expect(syncDelayedJobs).toHaveBeenCalledWith([]);
   });
 });
 
 describe('CancelAppointmentRemindersUseCase', () => {
   it('cancels active reminder jobs for appointment', async () => {
     const cancelActiveByAppointmentId = jest.fn().mockResolvedValue(2);
+    const cancelByAppointmentId = jest.fn().mockResolvedValue(undefined);
 
-    const useCase = new CancelAppointmentRemindersUseCase({
-      cancelActiveByAppointmentId,
-    } as unknown as IAppointmentReminderJobRepository);
+    const useCase = new CancelAppointmentRemindersUseCase(
+      {
+        cancelActiveByAppointmentId,
+      } as unknown as IAppointmentReminderJobRepository,
+      { cancelByAppointmentId } as never,
+    );
 
     const count = await useCase.execute({ appointmentId: 'appt-1' });
 
@@ -108,15 +117,14 @@ describe('CancelAppointmentRemindersUseCase', () => {
       'appt-1',
       undefined,
     );
+    expect(cancelByAppointmentId).toHaveBeenCalledWith('appt-1');
   });
 });
 
 describe('CronProcessDueAppointmentRemindersUseCase', () => {
   const now = new Date('2026-08-01T12:00:00.000Z');
 
-  function createJob(
-    overrides: Record<string, unknown> = {},
-  ) {
+  function createJob(overrides: Record<string, unknown> = {}) {
     return {
       id: 'job-1',
       appointmentId: 'appt-1',
@@ -132,9 +140,7 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
     };
   }
 
-  function createConfirmedAppointment(
-    overrides: Record<string, unknown> = {},
-  ) {
+  function createConfirmedAppointment(overrides: Record<string, unknown> = {}) {
     return {
       id: 'appt-1',
       masterProfileId: 'mp-1',
@@ -149,9 +155,11 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
 
   it('cancels job when appointment is not CONFIRMED', async () => {
     const claimDueBatch = jest.fn().mockResolvedValue([createJob()]);
-    const markCancelled = jest.fn().mockResolvedValue(createJob({
-      status: EAppointmentReminderJobStatus.CANCELLED,
-    }));
+    const markCancelled = jest.fn().mockResolvedValue(
+      createJob({
+        status: EAppointmentReminderJobStatus.CANCELLED,
+      }),
+    );
     const createNotification = jest.fn();
     const sendWebPush = jest.fn();
 
@@ -161,9 +169,11 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
         markCancelled,
       } as unknown as IAppointmentReminderJobRepository,
       {
-        findEntityById: jest.fn().mockResolvedValue(
-          createConfirmedAppointment({ status: EAppointmentStatus.PENDING }),
-        ),
+        findEntityById: jest
+          .fn()
+          .mockResolvedValue(
+            createConfirmedAppointment({ status: EAppointmentStatus.PENDING }),
+          ),
       } as unknown as IAppointmentRepository,
       {
         findEntityById: jest.fn().mockResolvedValue({
@@ -197,9 +207,11 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
 
   it('notifies client and master with stable idempotency keys', async () => {
     const claimDueBatch = jest.fn().mockResolvedValue([createJob()]);
-    const markSent = jest.fn().mockResolvedValue(
-      createJob({ status: EAppointmentReminderJobStatus.SENT }),
-    );
+    const markSent = jest
+      .fn()
+      .mockResolvedValue(
+        createJob({ status: EAppointmentReminderJobStatus.SENT }),
+      );
     const createNotification = jest.fn().mockResolvedValue({ id: 'n-1' });
     const sendWebPush = jest.fn().mockResolvedValue({
       attempted: 0,
@@ -214,7 +226,9 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
         markSent,
       } as unknown as IAppointmentReminderJobRepository,
       {
-        findEntityById: jest.fn().mockResolvedValue(createConfirmedAppointment()),
+        findEntityById: jest
+          .fn()
+          .mockResolvedValue(createConfirmedAppointment()),
       } as unknown as IAppointmentRepository,
       {
         findEntityById: jest.fn().mockResolvedValue({

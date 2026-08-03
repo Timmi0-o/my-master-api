@@ -58,8 +58,11 @@ import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appoi
 import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
 import { PrismaAppointmentReminderJobRepository } from '../../persistence/repositories/appointment-reminder-job/prisma-appointment-reminder-job.repository';
 import { PrismaAppointmentRepository } from '../../persistence/repositories/appointment/prisma-appointment.repository';
-import { AppointmentAutoCompleteScheduler } from '../../schedulers/appointment-auto-complete.scheduler';
-import { AppointmentRemindersScheduler } from '../../schedulers/appointment-reminders.scheduler';
+import { AppointmentAutoCompleteProcessor } from '../../queues/appointment-auto-complete.processor';
+import { AppointmentAutoCompleteRepeatableRegistrar } from '../../queues/appointment-auto-complete-repeatable.registrar';
+import { AppointmentReminderQueueService } from '../../queues/appointment-reminder-queue.service';
+import { AppointmentRemindersProcessor } from '../../queues/appointment-reminders.processor';
+import { AppointmentRemindersRepeatableRegistrar } from '../../queues/appointment-reminders-repeatable.registrar';
 import { AppointmentRealtimeEventBus } from '../../web-socket/appointment/appointment-realtime.event-bus';
 import { SocketIoAppointmentRealtimePublisher } from '../../web-socket/appointment/socket-io-appointment-realtime.publisher';
 import { AppointmentChatMessageModule } from '../appointment-chat-message/appointment-chat-message.module';
@@ -92,17 +95,28 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       provide: APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN,
       useClass: PrismaAppointmentReminderJobRepository,
     },
+    AppointmentReminderQueueService,
     {
       provide: ScheduleAppointmentRemindersUseCase,
-      useFactory: (repo: IAppointmentReminderJobRepository) =>
-        new ScheduleAppointmentRemindersUseCase(repo),
-      inject: [APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IAppointmentReminderJobRepository,
+        queueService: AppointmentReminderQueueService,
+      ) => new ScheduleAppointmentRemindersUseCase(repo, queueService),
+      inject: [
+        APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN,
+        AppointmentReminderQueueService,
+      ],
     },
     {
       provide: CancelAppointmentRemindersUseCase,
-      useFactory: (repo: IAppointmentReminderJobRepository) =>
-        new CancelAppointmentRemindersUseCase(repo),
-      inject: [APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IAppointmentReminderJobRepository,
+        queueService: AppointmentReminderQueueService,
+      ) => new CancelAppointmentRemindersUseCase(repo, queueService),
+      inject: [
+        APPOINTMENT_REMINDER_JOB_REPOSITORY_TOKEN,
+        AppointmentReminderQueueService,
+      ],
     },
     {
       provide: CronProcessDueAppointmentRemindersUseCase,
@@ -134,8 +148,10 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         NotificationMessageCatalog,
       ],
     },
-    AppointmentRemindersScheduler,
-    AppointmentAutoCompleteScheduler,
+    AppointmentRemindersProcessor,
+    AppointmentRemindersRepeatableRegistrar,
+    AppointmentAutoCompleteProcessor,
+    AppointmentAutoCompleteRepeatableRegistrar,
     {
       provide: GetAppointmentsUseCase,
       useFactory: (repo: IAppointmentRepository) =>

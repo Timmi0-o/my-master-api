@@ -19,6 +19,21 @@ services:
     networks:
       - my-master-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: my-master-api-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: ['redis-server', '--appendonly', 'yes']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - my-master-network
+
   app:
     image: my-master-api-app:latest
     container_name: my-master-api-app
@@ -28,10 +43,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       APP_PORT: ${APP_PORT}
       DATABASE_URL: postgresql://app:app@postgres:5432/my_master_api?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379/0
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       APP_WEB_URL: ${APP_WEB_URL}
@@ -76,6 +96,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   my-master-network:

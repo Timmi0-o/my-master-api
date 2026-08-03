@@ -4,10 +4,12 @@ import {
   type IAppointmentReminderJobEntity,
 } from 'src/modules/appointments/domain/entities/appointment-reminder-job';
 import type { IAppointmentReminderJobRepository } from 'src/modules/appointments/domain/repositories/appointment-reminder-job/i-appointment-reminder-job.repository';
+import type { AppointmentReminderQueueService } from 'src/modules/appointments/infrastructure/queues/appointment-reminder-queue.service';
 
 export class ScheduleAppointmentRemindersUseCase {
   constructor(
     private readonly appointmentReminderJobRepository: IAppointmentReminderJobRepository,
+    private readonly appointmentReminderQueueService?: AppointmentReminderQueueService,
   ) {}
 
   async execute(input: {
@@ -21,7 +23,7 @@ export class ScheduleAppointmentRemindersUseCase {
       input.now ?? new Date(),
     );
 
-    return this.appointmentReminderJobRepository.upsertPendingMany(
+    const jobs = await this.appointmentReminderJobRepository.upsertPendingMany(
       plans.map((plan) => ({
         appointmentId: input.appointmentId,
         type: plan.type,
@@ -29,5 +31,9 @@ export class ScheduleAppointmentRemindersUseCase {
       })),
       input.scope,
     );
+
+    await this.appointmentReminderQueueService?.syncDelayedJobs(jobs);
+
+    return jobs;
   }
 }

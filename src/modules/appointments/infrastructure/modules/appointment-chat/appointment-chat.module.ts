@@ -38,7 +38,8 @@ import { AppointmentChatGateway } from '../../../presentation/web-socket/appoint
 import { WsJwtAuthGuard } from '../../../presentation/web-socket/appointment-chat/guards/ws-jwt-auth.guard';
 import { PrismaAppointmentChatUnreadReminderRepository } from '../../persistence/repositories/appointment-chat-unread-reminder/prisma-appointment-chat-unread-reminder.repository';
 import { PrismaAppointmentChatRepository } from '../../persistence/repositories/appointment-chat/prisma-appointment-chat.repository';
-import { AppointmentChatUnreadRemindersScheduler } from '../../schedulers/appointment-chat-unread-reminders.scheduler';
+import { AppointmentChatUnreadRemindersProcessor } from '../../queues/appointment-chat-unread-reminders.processor';
+import { AppointmentChatUnreadRemindersRepeatableRegistrar } from '../../queues/appointment-chat-unread-reminders-repeatable.registrar';
 import { AppointmentChatRealtimeEventBus } from '../../web-socket/appointment-chat/appointment-chat-realtime.event-bus';
 import { SocketIoAppointmentChatRealtimePublisher } from '../../web-socket/appointment-chat/socket-io-appointment-chat-realtime.publisher';
 import { AppointmentModule } from '../appointment/appointment.module';
@@ -182,7 +183,8 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
         NotificationMessageCatalog,
       ],
     },
-    AppointmentChatUnreadRemindersScheduler,
+    AppointmentChatUnreadRemindersProcessor,
+    AppointmentChatUnreadRemindersRepeatableRegistrar,
     {
       provide: DeleteAppointmentChatByIdUseCase,
       useFactory: (

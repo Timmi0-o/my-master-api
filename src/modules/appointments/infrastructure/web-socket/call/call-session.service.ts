@@ -1,4 +1,11 @@
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
+import {
+  QUEUE_JOB_NAMES,
+  QUEUE_NAMES,
+} from '@shared/infrastructure/queues/queue.constants';
+import { RedisService } from '@shared/infrastructure/redis/redis.service';
+import type { Queue } from 'bullmq';
 import { randomUUID } from 'crypto';
 import type {
   TCallEndReason,
@@ -17,42 +24,54 @@ export interface ICallSession {
 }
 
 const RING_TIMEOUT_MS = 45_000;
+const CALL_SESSION_TTL_SECONDS = 2 * 60 * 60;
 
 @Injectable()
 export class CallSessionService {
-  private readonly sessionsById = new Map<string, ICallSession>();
-
-  private readonly sessionIdByUserId = new Map<string, string>();
-
-  private readonly ringTimeouts = new Map<string, NodeJS.Timeout>();
   private onRingTimeout: ((session: ICallSession) => void) | null = null;
+
+  constructor(
+    private readonly redisService: RedisService,
+    @InjectQueue(QUEUE_NAMES.CALL_RING_TIMEOUT)
+    private readonly ringTimeoutQueue: Queue,
+  ) {}
 
   setRingTimeoutHandler(handler: (session: ICallSession) => void): void {
     this.onRingTimeout = handler;
   }
 
-  findById(callId: string): ICallSession | null {
-    return this.sessionsById.get(callId) ?? null;
+  async findById(callId: string): Promise<ICallSession | null> {
+    const value = await this.redisService
+      .getClient()
+      .get(this.getSessionKey(callId));
+    return value ? (JSON.parse(value) as ICallSession) : null;
   }
 
-  findByUserId(userId: string): ICallSession | null {
-    const callId = this.sessionIdByUserId.get(userId);
+  async findByUserId(userId: string): Promise<ICallSession | null> {
+    const callId = await this.redisService
+      .getClient()
+      .get(this.getUserKey(userId));
     if (!callId) {
       return null;
     }
-    return this.sessionsById.get(callId) ?? null;
+
+    const session = await this.findById(callId);
+    if (!session) {
+      await this.redisService.getClient().del(this.getUserKey(userId));
+    }
+    return session;
   }
 
-  isUserBusy(userId: string): boolean {
-    return this.sessionIdByUserId.has(userId);
+  async isUserBusy(userId: string): Promise<boolean> {
+    return (await this.findByUserId(userId)) !== null;
   }
 
-  createRinging(input: {
+  async createRinging(input: {
     chatId: string;
     callerUserId: string;
     calleeUserId: string;
     media: TCallMedia;
-  }): ICallSession {
+  }): Promise<ICallSession> {
     const callId = randomUUID();
     const session: ICallSession = {
       callId,
@@ -63,26 +82,28 @@ export class CallSessionService {
       status: 'ringing',
     };
 
-    this.sessionsById.set(callId, session);
-    this.sessionIdByUserId.set(input.callerUserId, callId);
-    this.sessionIdByUserId.set(input.calleeUserId, callId);
-
-    const timeout = setTimeout(() => {
-      const current = this.sessionsById.get(callId);
-      if (!current || current.status !== 'ringing') {
-        return;
-      }
-      this.removeSession(callId);
-      this.onRingTimeout?.(current);
-    }, RING_TIMEOUT_MS);
-
-    this.ringTimeouts.set(callId, timeout);
+    await this.saveSession(session);
+    try {
+      await this.ringTimeoutQueue.add(
+        QUEUE_JOB_NAMES.CALL_RING_TIMEOUT,
+        { callId },
+        {
+          jobId: callId,
+          delay: RING_TIMEOUT_MS,
+          removeOnComplete: true,
+          removeOnFail: 50,
+        },
+      );
+    } catch (error) {
+      await this.removeSession(session);
+      throw error;
+    }
 
     return session;
   }
 
-  accept(callId: string, userId: string): ICallSession | null {
-    const session = this.sessionsById.get(callId);
+  async accept(callId: string, userId: string): Promise<ICallSession | null> {
+    const session = await this.findById(callId);
     if (!session || session.status !== 'ringing') {
       return null;
     }
@@ -90,16 +111,17 @@ export class CallSessionService {
       return null;
     }
 
-    this.clearRingTimeout(callId);
     session.status = 'active';
+    await this.saveSession(session);
+    await this.removeRingTimeout(callId);
     return session;
   }
 
-  removeIfParticipant(
+  async removeIfParticipant(
     callId: string,
     userId: string,
-  ): { session: ICallSession; reason: TCallEndReason } | null {
-    const session = this.sessionsById.get(callId);
+  ): Promise<{ session: ICallSession; reason: TCallEndReason } | null> {
+    const session = await this.findById(callId);
     if (!session) {
       return null;
     }
@@ -112,12 +134,12 @@ export class CallSessionService {
         ? 'reject'
         : 'hangup';
 
-    this.removeSession(callId);
+    await this.removeSession(session);
     return { session, reason };
   }
 
-  removeByDisconnect(userId: string): ICallSession | null {
-    const session = this.findByUserId(userId);
+  async removeByDisconnect(userId: string): Promise<ICallSession | null> {
+    const session = await this.findByUserId(userId);
     if (!session) {
       return null;
     }
@@ -127,8 +149,22 @@ export class CallSessionService {
       return null;
     }
 
-    this.removeSession(session.callId);
+    await this.removeSession(session);
     return session;
+  }
+
+  async removeRinging(callId: string): Promise<ICallSession | null> {
+    const session = await this.findById(callId);
+    if (!session || session.status !== 'ringing') {
+      return null;
+    }
+
+    await this.removeSession(session);
+    return session;
+  }
+
+  invokeRingTimeoutHandler(session: ICallSession): void {
+    this.onRingTimeout?.(session);
   }
 
   getPeerUserId(session: ICallSession, userId: string): string | null {
@@ -145,22 +181,52 @@ export class CallSessionService {
     return session.callerUserId === userId || session.calleeUserId === userId;
   }
 
-  private clearRingTimeout(callId: string): void {
-    const timeout = this.ringTimeouts.get(callId);
-    if (timeout) {
-      clearTimeout(timeout);
-      this.ringTimeouts.delete(callId);
-    }
+  private async saveSession(session: ICallSession): Promise<void> {
+    const serializedSession = JSON.stringify(session);
+    await this.redisService
+      .getClient()
+      .multi()
+      .set(
+        this.getSessionKey(session.callId),
+        serializedSession,
+        'EX',
+        CALL_SESSION_TTL_SECONDS,
+      )
+      .set(
+        this.getUserKey(session.callerUserId),
+        session.callId,
+        'EX',
+        CALL_SESSION_TTL_SECONDS,
+      )
+      .set(
+        this.getUserKey(session.calleeUserId),
+        session.callId,
+        'EX',
+        CALL_SESSION_TTL_SECONDS,
+      )
+      .exec();
   }
 
-  private removeSession(callId: string): void {
-    const session = this.sessionsById.get(callId);
-    this.clearRingTimeout(callId);
-    if (!session) {
-      return;
-    }
-    this.sessionsById.delete(callId);
-    this.sessionIdByUserId.delete(session.callerUserId);
-    this.sessionIdByUserId.delete(session.calleeUserId);
+  private async removeSession(session: ICallSession): Promise<void> {
+    await this.redisService
+      .getClient()
+      .del(
+        this.getSessionKey(session.callId),
+        this.getUserKey(session.callerUserId),
+        this.getUserKey(session.calleeUserId),
+      );
+    await this.removeRingTimeout(session.callId);
+  }
+
+  private async removeRingTimeout(callId: string): Promise<void> {
+    await this.ringTimeoutQueue.remove(callId).catch(() => undefined);
+  }
+
+  private getSessionKey(callId: string): string {
+    return `call:session:${callId}`;
+  }
+
+  private getUserKey(userId: string): string {
+    return `call:user:${userId}`;
   }
 }

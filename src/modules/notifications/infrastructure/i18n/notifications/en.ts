@@ -37,6 +37,14 @@ export const notificationMessagesEn: NotificationMessages = {
     title: 'Unread message',
     body: '{{senderName}} is waiting for your reply',
   },
+  REVIEW_CREATED: {
+    title: 'New review',
+    body: 'A client left a review for «{{serviceName}}» — {{rating}}/5',
+  },
+  REVIEW_REACTION: {
+    title: 'Review reaction',
+    body: 'Someone {{reactionLabel}} your review of «{{serviceName}}»',
+  },
   reminderLabels: {
     [EAppointmentReminderJobType.REMINDER_48H]: 'in 48 hours',
     [EAppointmentReminderJobType.REMINDER_24H]: 'in 24 hours',

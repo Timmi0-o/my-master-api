@@ -8,11 +8,10 @@ import { NotificationSseEventBus } from './notification-sse.event-bus';
 export class RxjsNotificationRealtimePublisher implements INotificationRealtimePublisher {
   constructor(private readonly eventBus: NotificationSseEventBus) {}
 
-  //eslint-disable-next-line @typescript-eslint/require-await
   async notificationCreated(
     notification: INotificationPublicEntity,
   ): Promise<void> {
-    this.eventBus.publish({
+    await this.eventBus.publish({
       type: NOTIFICATION_SSE_EVENTS.NOTIFICATION_CREATED,
       notification,
     });

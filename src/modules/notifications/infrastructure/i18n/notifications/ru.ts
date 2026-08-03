@@ -37,6 +37,14 @@ export const notificationMessagesRu: NotificationMessages = {
     title: 'Непрочитанное сообщение',
     body: '{{senderName}} ждёт вашего ответа',
   },
+  REVIEW_CREATED: {
+    title: 'Новый отзыв',
+    body: 'Клиент оставил отзыв на «{{serviceName}}» — {{rating}}/5',
+  },
+  REVIEW_REACTION: {
+    title: 'Реакция на отзыв',
+    body: 'На ваш отзыв о «{{serviceName}}» поставили {{reactionLabel}}',
+  },
   reminderLabels: {
     [EAppointmentReminderJobType.REMINDER_48H]: 'через 48 часов',
     [EAppointmentReminderJobType.REMINDER_24H]: 'через 24 часа',

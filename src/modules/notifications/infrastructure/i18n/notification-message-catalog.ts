@@ -52,6 +52,16 @@ type ResolveParams =
   | {
       type: NotificationType.CHAT_UNREAD_REMINDER;
       senderName: string;
+    }
+  | {
+      type: NotificationType.REVIEW_CREATED;
+      serviceName: string;
+      rating: number;
+    }
+  | {
+      type: NotificationType.REVIEW_REACTION;
+      serviceName: string;
+      reactionLabel: string;
     };
 
 @Injectable()
@@ -145,6 +155,26 @@ export class NotificationMessageCatalog {
           title: entry.title,
           body: this.templateRenderer.renderString(entry.body, {
             senderName: params.senderName,
+          }),
+        };
+      }
+      case NotificationType.REVIEW_CREATED: {
+        const entry = messages.REVIEW_CREATED;
+        return {
+          title: entry.title,
+          body: this.templateRenderer.renderString(entry.body, {
+            serviceName: params.serviceName,
+            rating: String(params.rating),
+          }),
+        };
+      }
+      case NotificationType.REVIEW_REACTION: {
+        const entry = messages.REVIEW_REACTION;
+        return {
+          title: entry.title,
+          body: this.templateRenderer.renderString(entry.body, {
+            serviceName: params.serviceName,
+            reactionLabel: params.reactionLabel,
           }),
         };
       }

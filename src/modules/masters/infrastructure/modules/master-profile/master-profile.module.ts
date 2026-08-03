@@ -28,7 +28,8 @@ import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../domain/repositories/ma
 import type { IMasterWeeklyScheduleRepository } from '../../../domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import { MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN } from '../../../domain/repositories/master-weekly-schedule/master-weekly-schedule.repository.tokens';
 import { PrismaMasterProfileRepository } from '../../persistence/repositories/master-profile/prisma-master-profile.repository';
-import { MasterOnboardingDemoteScheduler } from '../../schedulers/master-onboarding-demote.scheduler';
+import { MasterOnboardingDemoteProcessor } from '../../queues/master-onboarding-demote.processor';
+import { MasterOnboardingDemoteRepeatableRegistrar } from '../../queues/master-onboarding-demote-repeatable.registrar';
 import { ImageModule } from '../image/image.module';
 import { MasterServiceModule } from '../master-service/master-service.module';
 import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-weekly-schedule.module';
@@ -139,7 +140,8 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
         MasterOnboardingService,
       ],
     },
-    MasterOnboardingDemoteScheduler,
+    MasterOnboardingDemoteProcessor,
+    MasterOnboardingDemoteRepeatableRegistrar,
     {
       provide: DeleteMasterProfileByIdUseCase,
       useFactory: (

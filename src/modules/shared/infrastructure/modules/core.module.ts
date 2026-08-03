@@ -7,12 +7,13 @@ import { DomainExceptionFilter } from '../filters/domain-exception.filter';
 import { GlobalExceptionFilter } from '../filters/global-exception.filter';
 import { PrismaModule } from '../persistence/prisma/prisma.module';
 import { PrismaTransactionManager } from '../persistence/transactions';
+import { RedisModule } from '../redis/redis.module';
 import { LoggerService } from '../services/logger.service';
 import { TemplatingModule } from '../templating/templating.module';
 
 @Global()
 @Module({
-  imports: [PrismaModule, TemplatingModule],
+  imports: [PrismaModule, TemplatingModule, RedisModule],
   providers: [
     LoggerService,
     PrismaTransactionManager,
@@ -28,6 +29,7 @@ import { TemplatingModule } from '../templating/templating.module';
   exports: [
     PrismaModule,
     TemplatingModule,
+    RedisModule,
     ILoggerSymbol,
     LOGGER_TOKEN,
     TRANSACTION_MANAGER_TOKEN,

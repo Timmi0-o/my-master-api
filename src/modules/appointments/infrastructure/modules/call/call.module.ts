@@ -12,6 +12,7 @@ import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { CallGateway } from '../../../presentation/web-socket/call/call.gateway';
 import { CallWsJwtAuthGuard } from '../../../presentation/web-socket/call/guards/call-ws-jwt-auth.guard';
+import { CallRingTimeoutProcessor } from '../../web-socket/call/call-ring-timeout.processor';
 import { CallSessionService } from '../../web-socket/call/call-session.service';
 import { AppointmentChatModule } from '../appointment-chat/appointment-chat.module';
 
@@ -27,6 +28,7 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     CallGateway,
     CallWsJwtAuthGuard,
     CallSessionService,
+    CallRingTimeoutProcessor,
     {
       provide: USER_REPOSITORY_TOKEN,
       useClass: PrismaUserRepository,

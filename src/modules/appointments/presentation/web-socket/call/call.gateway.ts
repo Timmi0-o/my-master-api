@@ -81,7 +81,7 @@ export class CallGateway
     await client.join(CALL_WS_USER_ROOM_NAME(user.id));
 
     // Callee opened app from push / reconnect while still ringing.
-    const ringing = this.callSessionService.findByUserId(user.id);
+    const ringing = await this.callSessionService.findByUserId(user.id);
     if (
       ringing &&
       ringing.status === 'ringing' &&
@@ -100,13 +100,13 @@ export class CallGateway
     }
   }
 
-  handleDisconnect(client: CallAuthenticatedSocket): void {
+  async handleDisconnect(client: CallAuthenticatedSocket): Promise<void> {
     const userId = client.data?.user?.id;
     if (!userId) {
       return;
     }
 
-    const session = this.callSessionService.removeByDisconnect(userId);
+    const session = await this.callSessionService.removeByDisconnect(userId);
     if (!session) {
       return;
     }
@@ -133,7 +133,7 @@ export class CallGateway
       const payload = validateInviteCallPayload(body);
       const user = client.data.user;
 
-      if (this.callSessionService.isUserBusy(user.id)) {
+      if (await this.callSessionService.isUserBusy(user.id)) {
         throw new BadRequestException('Вы уже в звонке');
       }
 
@@ -145,7 +145,7 @@ export class CallGateway
         ),
       });
 
-      if (this.callSessionService.isUserBusy(participants.calleeUserId)) {
+      if (await this.callSessionService.isUserBusy(participants.calleeUserId)) {
         this.server
           .to(CALL_WS_USER_ROOM_NAME(user.id))
           .emit(CALL_WS_EVENTS.BUSY, {
@@ -167,7 +167,7 @@ export class CallGateway
         };
       }
 
-      const session = this.callSessionService.createRinging({
+      const session = await this.callSessionService.createRinging({
         chatId: participants.chatId,
         callerUserId: participants.callerUserId,
         calleeUserId: participants.calleeUserId,
@@ -223,13 +223,13 @@ export class CallGateway
 
   @SubscribeMessage(CALL_WS_EVENTS.ACCEPT)
   @UseGuards(CallWsJwtAuthGuard)
-  accept(
+  async accept(
     @ConnectedSocket() client: CallAuthenticatedSocket,
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
       const payload = validateCallIdPayload(body);
-      const session = this.callSessionService.accept(
+      const session = await this.callSessionService.accept(
         payload.callId,
         client.data.user.id,
       );
@@ -281,13 +281,13 @@ export class CallGateway
 
   @SubscribeMessage(CALL_WS_EVENTS.REJECT)
   @UseGuards(CallWsJwtAuthGuard)
-  reject(
+  async reject(
     @ConnectedSocket() client: CallAuthenticatedSocket,
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
       const payload = validateCallIdPayload(body);
-      const existing = this.callSessionService.findById(payload.callId);
+      const existing = await this.callSessionService.findById(payload.callId);
 
       if (
         !existing ||
@@ -297,7 +297,7 @@ export class CallGateway
         throw new BadRequestException('Звонок недоступен для отклонения');
       }
 
-      const removed = this.callSessionService.removeIfParticipant(
+      const removed = await this.callSessionService.removeIfParticipant(
         payload.callId,
         client.data.user.id,
       );
@@ -354,13 +354,13 @@ export class CallGateway
 
   @SubscribeMessage(CALL_WS_EVENTS.OFFER)
   @UseGuards(CallWsJwtAuthGuard)
-  offer(
+  async offer(
     @ConnectedSocket() client: CallAuthenticatedSocket,
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
       const payload = validateCallOfferPayload(body);
-      this.relaySignaling(
+      await this.relaySignaling(
         client.data.user.id,
         payload.callId,
         CALL_WS_EVENTS.OFFER,
@@ -377,13 +377,13 @@ export class CallGateway
 
   @SubscribeMessage(CALL_WS_EVENTS.ANSWER)
   @UseGuards(CallWsJwtAuthGuard)
-  answer(
+  async answer(
     @ConnectedSocket() client: CallAuthenticatedSocket,
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
       const payload = validateCallAnswerPayload(body);
-      this.relaySignaling(
+      await this.relaySignaling(
         client.data.user.id,
         payload.callId,
         CALL_WS_EVENTS.ANSWER,
@@ -400,13 +400,13 @@ export class CallGateway
 
   @SubscribeMessage(CALL_WS_EVENTS.ICE)
   @UseGuards(CallWsJwtAuthGuard)
-  ice(
+  async ice(
     @ConnectedSocket() client: CallAuthenticatedSocket,
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
       const payload = validateCallIcePayload(body);
-      this.relaySignaling(
+      await this.relaySignaling(
         client.data.user.id,
         payload.callId,
         CALL_WS_EVENTS.ICE,
@@ -423,14 +423,14 @@ export class CallGateway
 
   @SubscribeMessage(CALL_WS_EVENTS.END)
   @UseGuards(CallWsJwtAuthGuard)
-  end(
+  async end(
     @ConnectedSocket() client: CallAuthenticatedSocket,
     @MessageBody() body: Record<string, unknown>,
   ) {
     try {
       const payload = validateCallIdPayload(body);
 
-      const removed = this.callSessionService.removeIfParticipant(
+      const removed = await this.callSessionService.removeIfParticipant(
         payload.callId,
         client.data.user.id,
       );
@@ -482,13 +482,13 @@ export class CallGateway
     }
   }
 
-  private relaySignaling(
+  private async relaySignaling(
     senderUserId: string,
     callId: string,
     event: string,
     data: Record<string, unknown>,
-  ): void {
-    const session = this.callSessionService.findById(callId);
+  ): Promise<void> {
+    const session = await this.callSessionService.findById(callId);
     if (
       !session ||
       !this.callSessionService.assertParticipant(session, senderUserId)

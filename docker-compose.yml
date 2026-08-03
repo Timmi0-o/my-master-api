@@ -19,6 +19,23 @@ services:
     networks:
       - my-master-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: my-master-api-redis
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    command: ['redis-server', '--appendonly', 'yes']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - my-master-network
+
   app:
     build:
       context: .
@@ -30,12 +47,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       my-master-minio:
         condition: service_healthy
     environment:
       NODE_ENV: development
       APP_PORT: ${APP_PORT}
       DATABASE_URL: postgresql://app:app@postgres:5432/my_master_api?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379/0
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       S3_ENDPOINT: http://my-master-minio:9000
@@ -129,6 +151,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   my-master-minio_data:
 
 networks:

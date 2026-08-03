@@ -16,13 +16,18 @@ const LOCALITY_SELECT = {
   countryId: true,
   regionId: true,
   descriptions: true,
+  metaTitle: true,
+  metaDescriptions: true,
+  metaKeywords: true,
 } satisfies Prisma.LocalitySelect;
 
 @Injectable()
 export class PrismaLocalityRepository implements ILocalityRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findMany(params: IFindLocalitiesParams): Promise<ILocalityPublicEntity[]> {
+  async findMany(
+    params: IFindLocalitiesParams,
+  ): Promise<ILocalityPublicEntity[]> {
     const where: Prisma.LocalityWhereInput = {};
     if (params.regionId) {
       where.regionId = params.regionId;
@@ -45,7 +50,9 @@ export class PrismaLocalityRepository implements ILocalityRepository {
     }));
   }
 
-  async findBySlugOrId(slugOrId: string): Promise<ILocalityPublicEntity | null> {
+  async findBySlugOrId(
+    slugOrId: string,
+  ): Promise<ILocalityPublicEntity | null> {
     const row = await this.prisma.locality.findFirst({
       where: {
         OR: [{ id: slugOrId }, { slug: slugOrId }],

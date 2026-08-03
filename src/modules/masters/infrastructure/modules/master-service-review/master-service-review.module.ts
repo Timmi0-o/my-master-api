@@ -1,6 +1,14 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TRANSACTION_MANAGER_TOKEN } from '@shared/domain/transactions';
 import type { ITransactionManager } from '@shared/domain/transactions';
+import { CreateNotificationUseCase } from '@modules/notifications/application/use-cases/notification/create-notification.use-case';
+import { NotificationMessageCatalog } from '@modules/notifications/infrastructure/i18n/notification-message-catalog';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
+import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
+import { WebPushSubscriptionsModule } from '@modules/web-push-subscriptions/web-push-subscriptions.module';
+import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
+import { USER_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user/user.repository.tokens';
+import { UsersModule } from 'src/modules/users/users.module';
 import { AppointmentsModule } from '../../../../appointments/appointments.module';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../../appointments/domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../../appointments/domain/repositories/appointment/i-appointment.repository';
@@ -29,6 +37,9 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
     forwardRef(() => MasterServiceReviewReactionModule),
     forwardRef(() => MasterServiceModule),
     forwardRef(() => MasterProfileModule),
+    UsersModule,
+    NotificationsModule,
+    WebPushSubscriptionsModule,
   ],
   providers: [
     {
@@ -81,19 +92,34 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
         transactionManager: ITransactionManager,
         reviewRepo: IMasterServiceReviewRepository,
         appointmentRepo: IAppointmentRepository,
+        profileRepo: IMasterProfileRepository,
+        userRepo: IUserRepository,
         recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
+        createNotificationUseCase: CreateNotificationUseCase,
+        sendWebPushToUserUseCase: SendWebPushToUserUseCase,
+        notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
         new CreateMasterServiceReviewUseCase(
           transactionManager,
           reviewRepo,
           appointmentRepo,
+          profileRepo,
+          userRepo,
           recalculateMasterRatingsUseCase,
+          createNotificationUseCase,
+          sendWebPushToUserUseCase,
+          notificationMessageCatalog,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
         MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
         APPOINTMENT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_REPOSITORY_TOKEN,
         RecalculateMasterRatingsUseCase,
+        CreateNotificationUseCase,
+        SendWebPushToUserUseCase,
+        NotificationMessageCatalog,
       ],
     },
     {

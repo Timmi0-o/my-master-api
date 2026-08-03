@@ -1,6 +1,5 @@
 import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 import {
   ILoggerSymbol,
@@ -8,11 +7,16 @@ import {
 } from './modules/shared/domain/services/i-logger.service';
 import { LoggingInterceptor } from './modules/shared/infrastructure/interceptors/logging.interceptor';
 import { ResponseInterceptor } from './modules/shared/infrastructure/interceptors/response.interceptor';
+import { RedisService } from './modules/shared/infrastructure/redis/redis.service';
+import { RedisIoAdapter } from './modules/shared/infrastructure/websocket/redis-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useWebSocketAdapter(new IoAdapter(app));
+  const redisService = app.get(RedisService);
+  const redisIoAdapter = new RedisIoAdapter(app, redisService);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.enableCors({
     origin: [

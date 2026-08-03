@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthorizationModule } from './modules/authorization/authorization.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
@@ -15,7 +14,6 @@ import { WebPushSubscriptionsModule } from './modules/web-push-subscriptions/web
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     CoreModule,
     UsersModule,
     AuthModule,

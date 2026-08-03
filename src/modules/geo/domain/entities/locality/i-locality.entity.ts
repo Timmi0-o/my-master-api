@@ -7,6 +7,9 @@ export interface ILocalityEntity {
   countryId: string;
   regionId: string;
   descriptions: string | null;
+  metaTitle: string | null;
+  metaDescriptions: string | null;
+  metaKeywords: string | null;
 }
 
 export type ILocalityPublicEntity = ILocalityEntity;

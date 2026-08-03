@@ -10,5 +10,7 @@ export type NotificationMessages = {
   APPOINTMENT_REMINDER: { title: string; body: string };
   CHAT_MESSAGE: { title: string };
   CHAT_UNREAD_REMINDER: { title: string; body: string };
+  REVIEW_CREATED: { title: string; body: string };
+  REVIEW_REACTION: { title: string; body: string };
   reminderLabels: Record<EAppointmentReminderJobType, string>;
 };
