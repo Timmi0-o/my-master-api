@@ -22,7 +22,7 @@ import { ImageModule } from '../../../../masters/infrastructure/modules/image/im
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
 import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { AssertAppointmentChatAccessUseCase } from '../../../application/use-cases/appointment-chat/assert-appointment-chat-access.use-case';
-import { CronProcessAppointmentChatUnreadRemindersUseCase } from '../../../application/use-cases/appointment-chat/cron-process-appointment-chat-unread-reminders.use-case';
+import { ProcessAppointmentChatUnreadRemindersJobUseCase } from '../../../application/use-cases/appointment-chat/jobs/process-appointment-chat-unread-reminders-job.use-case';
 import { DeleteAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/delete-appointment-chat-by-id.use-case';
 import { GetAppointmentChatByIdUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chat-by-id.use-case';
 import { GetAppointmentChatMessageWindowUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chat-message-window.use-case';
@@ -154,7 +154,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
       ],
     },
     {
-      provide: CronProcessAppointmentChatUnreadRemindersUseCase,
+      provide: ProcessAppointmentChatUnreadRemindersJobUseCase,
       useFactory: (
         appointmentChatUnreadReminderRepository: IAppointmentChatUnreadReminderRepository,
         masterProfileRepository: IMasterProfileRepository,
@@ -164,7 +164,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
         notificationMessageCatalog: NotificationMessageCatalog,
       ) =>
-        new CronProcessAppointmentChatUnreadRemindersUseCase(
+        new ProcessAppointmentChatUnreadRemindersJobUseCase(
           appointmentChatUnreadReminderRepository,
           masterProfileRepository,
           userProfileRepository,
@@ -216,7 +216,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
     AssertAppointmentChatAccessUseCase,
     MarkAppointmentChatReadUseCase,
     DeleteAppointmentChatByIdUseCase,
-    CronProcessAppointmentChatUnreadRemindersUseCase,
+    ProcessAppointmentChatUnreadRemindersJobUseCase,
   ],
 })
 export class AppointmentChatModule {}

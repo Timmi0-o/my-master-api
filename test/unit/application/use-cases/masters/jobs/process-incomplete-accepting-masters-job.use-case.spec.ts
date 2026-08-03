@@ -1,13 +1,13 @@
-import { CronProcessIncompleteAcceptingMastersUseCase } from 'src/modules/masters/application/use-cases/master-profile/cron-process-incomplete-accepting-masters.use-case';
+import { ProcessIncompleteAcceptingMastersJobUseCase } from 'src/modules/masters/application/use-cases/master-profile/jobs/process-incomplete-accepting-masters-job.use-case';
 import type { MasterOnboardingService } from 'src/modules/masters/application/services/master-onboarding.service';
 import {
   EMasterBookingStatus,
   type IMasterProfileEntity,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import { createMockTransactionManager } from '../../../../support/mocks/transaction-manager.mock';
+import { createMockTransactionManager } from '../../../../../support/mocks/transaction-manager.mock';
 
-describe('CronProcessIncompleteAcceptingMastersUseCase', () => {
+describe('ProcessIncompleteAcceptingMastersJobUseCase', () => {
   it('demotes incomplete ACCEPTING profiles to CLOSED', async () => {
     const incomplete = {
       id: 'mp-incomplete',
@@ -32,7 +32,7 @@ describe('CronProcessIncompleteAcceptingMastersUseCase', () => {
       isFulfilled: jest.fn(async (id: string) => id === 'mp-complete'),
     } as unknown as MasterOnboardingService;
 
-    const useCase = new CronProcessIncompleteAcceptingMastersUseCase(
+    const useCase = new ProcessIncompleteAcceptingMastersJobUseCase(
       createMockTransactionManager(),
       repository,
       onboardingService,

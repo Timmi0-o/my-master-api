@@ -18,7 +18,7 @@ import { GetMasterOnboardingUseCase } from '../../../application/use-cases/maste
 import { GetMasterProfileByIdUseCase } from '../../../application/use-cases/master-profile/get-master-profile-by-id.use-case';
 import { GetMasterProfilesUseCase } from '../../../application/use-cases/master-profile/get-master-profiles.use-case';
 import { GetMyMasterProfileUseCase } from '../../../application/use-cases/master-profile/get-my-master-profile.use-case';
-import { CronProcessIncompleteAcceptingMastersUseCase } from '../../../application/use-cases/master-profile/cron-process-incomplete-accepting-masters.use-case';
+import { ProcessIncompleteAcceptingMastersJobUseCase } from '../../../application/use-cases/master-profile/jobs/process-incomplete-accepting-masters-job.use-case';
 import { UpdateMasterProfileByIdUseCase } from '../../../application/use-cases/master-profile/update-master-profile-by-id.use-case';
 import { UpsertMasterAddressUseCase } from '../../../application/use-cases/master-profile/upsert-master-address.use-case';
 import type { IMasterProfileRepository } from '../../../domain/repositories/master-profile/i-master-profile.repository';
@@ -123,13 +123,13 @@ import { MasterWeeklyScheduleModule } from '../master-weekly-schedule/master-wee
       ],
     },
     {
-      provide: CronProcessIncompleteAcceptingMastersUseCase,
+      provide: ProcessIncompleteAcceptingMastersJobUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
         repo: IMasterProfileRepository,
         onboardingService: MasterOnboardingService,
       ) =>
-        new CronProcessIncompleteAcceptingMastersUseCase(
+        new ProcessIncompleteAcceptingMastersJobUseCase(
           transactionManager,
           repo,
           onboardingService,

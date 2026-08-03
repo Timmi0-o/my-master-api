@@ -34,7 +34,7 @@ function formatUtcDateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export class CronProcessAppointmentChatUnreadRemindersUseCase {
+export class ProcessAppointmentChatUnreadRemindersJobUseCase {
   constructor(
     private readonly appointmentChatUnreadReminderRepository: IAppointmentChatUnreadReminderRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,

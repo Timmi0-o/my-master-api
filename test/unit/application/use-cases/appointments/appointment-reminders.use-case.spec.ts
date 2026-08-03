@@ -1,6 +1,6 @@
 import { ScheduleAppointmentRemindersUseCase } from 'src/modules/appointments/application/use-cases/appointment/schedule-appointment-reminders.use-case';
 import { CancelAppointmentRemindersUseCase } from 'src/modules/appointments/application/use-cases/appointment/cancel-appointment-reminders.use-case';
-import { CronProcessDueAppointmentRemindersUseCase } from 'src/modules/appointments/application/use-cases/appointment/cron-process-due-appointment-reminders.use-case';
+import { ProcessDueAppointmentRemindersJobUseCase } from 'src/modules/appointments/application/use-cases/appointment/jobs/process-due-appointment-reminders-job.use-case';
 import {
   EAppointmentReminderJobStatus,
   EAppointmentReminderJobType,
@@ -121,7 +121,7 @@ describe('CancelAppointmentRemindersUseCase', () => {
   });
 });
 
-describe('CronProcessDueAppointmentRemindersUseCase', () => {
+describe('ProcessDueAppointmentRemindersJobUseCase', () => {
   const now = new Date('2026-08-01T12:00:00.000Z');
 
   function createJob(overrides: Record<string, unknown> = {}) {
@@ -163,7 +163,7 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
     const createNotification = jest.fn();
     const sendWebPush = jest.fn();
 
-    const useCase = new CronProcessDueAppointmentRemindersUseCase(
+    const useCase = new ProcessDueAppointmentRemindersJobUseCase(
       {
         claimDueBatch,
         markCancelled,
@@ -220,7 +220,7 @@ describe('CronProcessDueAppointmentRemindersUseCase', () => {
       expired: 0,
     });
 
-    const useCase = new CronProcessDueAppointmentRemindersUseCase(
+    const useCase = new ProcessDueAppointmentRemindersJobUseCase(
       {
         claimDueBatch,
         markSent,
