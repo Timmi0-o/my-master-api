@@ -266,13 +266,24 @@ else
   COMPOSE='docker compose'
 fi
 
+# Redis нужен app'у; --no-deps ниже его не поднимет — стартуем явно.
+echo "==> Ensure redis is up"
+\$COMPOSE -f "\$COMPOSE_FILE_Q" up -d redis
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if docker exec my-master-api-redis redis-cli ping 2>/dev/null | grep -q PONG; then
+    echo "==> Redis ready"
+    break
+  fi
+  sleep 1
+done
+
 \$COMPOSE -f "\$COMPOSE_FILE_Q" up -d --force-recreate --no-deps app
 
 # После recreate старый :latest становится <none> — подчищаем.
 prune_dangling_images
 
 sleep 8
-docker ps --filter name=my-master-api-app --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'
+docker ps --filter name=my-master-api --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'
 echo '---LOGS---'
 docker logs --tail=40 my-master-api-app 2>&1 || true
 echo '---HEALTH---'
