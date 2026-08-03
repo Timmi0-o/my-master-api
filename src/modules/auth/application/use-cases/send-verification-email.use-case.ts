@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
 import type { IMailer } from '@shared/domain/mailer';
 import type { EmailMessageFactory } from '@shared/infrastructure/mailer/email-message.factory';
+import { EMAIL_VERIFICATION_TOKEN_TTL_MS } from 'src/modules/auth/domain/entities/email-verification-token';
 import {
   EUserLanguage,
   EUserStatus,
@@ -8,8 +9,6 @@ import {
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IEmailVerificationTokenRepository } from '../../domain/repositories/i-email-verification-token.repository';
 import type { TokenService } from '../../infrastructure/services/token.service';
-
-const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 export class SendVerificationEmailUseCase {
   constructor(

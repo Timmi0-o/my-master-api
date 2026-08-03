@@ -1,4 +1,8 @@
 import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
+import {
+  APPOINTMENT_CHAT_UNREAD_REMINDERS_MAX_PER_DAY,
+  APPOINTMENT_CHAT_UNREAD_STALE_MS,
+} from 'src/modules/appointments/domain/entities/appointment-chat-unread-reminder';
 import type {
   IAppointmentChatUnreadReminderRepository,
   IStaleUnreadAppointmentChatPair,
@@ -16,8 +20,6 @@ import type { IUserProfileRepository } from 'src/modules/users/domain/repositori
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 
 const DEFAULT_BATCH_SIZE = 500;
-const MAX_REMINDERS_PER_DAY = 3;
-const STALE_UNREAD_MS = 2 * 60 * 60 * 1000;
 
 function startOfUtcDay(date: Date): Date {
   return new Date(
@@ -49,7 +51,9 @@ export class CronProcessAppointmentChatUnreadRemindersUseCase {
     skipped: number;
   }> {
     const now = input?.now ?? new Date();
-    const staleBefore = new Date(now.getTime() - STALE_UNREAD_MS);
+    const staleBefore = new Date(
+      now.getTime() - APPOINTMENT_CHAT_UNREAD_STALE_MS,
+    );
     const todayStartUtc = startOfUtcDay(now);
     const dateKey = formatUtcDateKey(now);
 
@@ -96,7 +100,10 @@ export class CronProcessAppointmentChatUnreadRemindersUseCase {
       existing = null;
     }
 
-    if (existing && existing.remindersCount >= MAX_REMINDERS_PER_DAY) {
+    if (
+      existing &&
+      existing.remindersCount >= APPOINTMENT_CHAT_UNREAD_REMINDERS_MAX_PER_DAY
+    ) {
       return 'skipped';
     }
 

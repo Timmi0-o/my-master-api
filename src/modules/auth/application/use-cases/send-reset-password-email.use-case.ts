@@ -1,12 +1,11 @@
 import { randomBytes } from 'crypto';
 import type { IMailer } from '@shared/domain/mailer';
 import type { EmailMessageFactory } from '@shared/infrastructure/mailer/email-message.factory';
+import { PASSWORD_RESET_TOKEN_TTL_MS } from 'src/modules/auth/domain/entities/password-reset-token';
 import { EUserStatus } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { IPasswordResetTokenRepository } from '../../domain/repositories/i-password-reset-token.repository';
 import type { TokenService } from '../../infrastructure/services/token.service';
-
-const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 export class SendResetPasswordEmailUseCase {
   constructor(

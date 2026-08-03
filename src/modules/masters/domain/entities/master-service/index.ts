@@ -11,6 +11,7 @@ export {
   MASTER_SERVICE_TAGS_MAX_COUNT,
   MASTER_SERVICE_TAG_MAX_LENGTH,
 } from './master-service-tags.constants';
+export { DEFAULT_MASTER_SERVICE_DURATION_MINUTES } from './master-service.constants';
 export {
   MasterServiceNotFoundError,
   MasterServiceForbiddenError,

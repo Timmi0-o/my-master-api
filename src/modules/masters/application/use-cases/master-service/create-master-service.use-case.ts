@@ -2,6 +2,7 @@ import type { ICreateMasterServiceApplicationInput } from '../../dtos/master-ser
 import type { ICreateMasterServiceApplicationOutput } from '../../dtos/master-service/create-master-service.output';
 import type { ICreateMasterServiceInput } from 'src/modules/masters/domain/entities/master-service';
 import {
+  DEFAULT_MASTER_SERVICE_DURATION_MINUTES,
   EMasterServiceCategory,
   ensureMasterServiceTagsValid,
 } from 'src/modules/masters/domain/entities/master-service';
@@ -36,7 +37,8 @@ export class CreateMasterServiceUseCase {
       name: input.name,
       description: input.description,
       price: input.price,
-      durationMinutes: input.durationMinutes ?? 60,
+      durationMinutes:
+        input.durationMinutes ?? DEFAULT_MASTER_SERVICE_DURATION_MINUTES,
       category: input.category ?? EMasterServiceCategory.SERVICES,
       tags,
     };
