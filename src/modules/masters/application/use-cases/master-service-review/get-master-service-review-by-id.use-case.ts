@@ -1,7 +1,8 @@
-import { attachReactionStatsToReviews } from 'src/modules/masters/application/helpers/attach-reaction-stats-to-reviews';
+import { enrichReactionStatsWithReviews } from 'src/modules/masters/application/helpers/enrich-reaction-stats-with-reviews';
 import { MasterServiceReviewNotFoundError } from 'src/modules/masters/domain/entities/master-service-review';
 import type { IMasterServiceReviewReactionRepository } from 'src/modules/masters/domain/repositories/master-service-review-reaction/i-master-service-review-reaction.repository';
 import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/repositories/master-service-review/i-master-service-review.repository';
+import { applyReadEnrichments } from 'src/modules/shared/application/enrichment/apply-read-enrichments';
 import type { IGetMasterServiceReviewByIdApplicationInput } from '../../dtos/master-service-review/get-master-service-review-by-id.input';
 import type { IGetMasterServiceReviewByIdApplicationOutput } from '../../dtos/master-service-review/get-master-service-review-by-id.output';
 
@@ -29,12 +30,19 @@ export class GetMasterServiceReviewByIdUseCase {
       throw new MasterServiceReviewNotFoundError(input.id);
     }
 
-    const stats =
-      await this.masterServiceReviewReactionRepository.getStatsByReviewIds([
-        item.id,
-      ]);
-    const [withStats] = attachReactionStatsToReviews([item], stats);
+    const [enriched] = await applyReadEnrichments([item], {}, [
+      {
+        when: () => true,
+        apply: async (current) => {
+          const stats =
+            await this.masterServiceReviewReactionRepository.getStatsByReviewIds(
+              current.map((review) => review.id),
+            );
+          return enrichReactionStatsWithReviews(current, stats);
+        },
+      },
+    ]);
 
-    return withStats;
+    return enriched;
   }
 }

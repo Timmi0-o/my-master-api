@@ -38,6 +38,15 @@ export function mapNotificationRow(
             name: row.actor.name,
             surname: row.actor.surname,
             patronymic: row.actor.patronymic,
+            ...(row.actor.userProfile != null
+              ? {
+                  userProfile: {
+                    id: row.actor.userProfile.id,
+                    userId: row.actor.userProfile.userId,
+                    displayName: row.actor.userProfile.displayName,
+                  },
+                }
+              : {}),
           };
   }
 

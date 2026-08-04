@@ -10,6 +10,7 @@ export type {
 export type {
   INotificationRelations,
   INotificationActorUserPublic,
+  INotificationActorUserProfilePublic,
 } from './i-notification-relations';
 export type { ICreateNotificationInput } from './i-create-notification.input';
 export type { IUpdateNotificationInput } from './i-update-notification.input';

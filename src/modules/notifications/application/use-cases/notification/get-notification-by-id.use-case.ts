@@ -1,14 +1,18 @@
+import { enrichNotificationActorAvatars } from 'src/modules/notifications/application/helpers/enrich-notification-actor-avatars.helper';
 import {
   NotificationForbiddenError,
   NotificationNotFoundError,
 } from 'src/modules/notifications/domain/entities/notification';
 import type { INotificationRepository } from 'src/modules/notifications/domain/repositories/notification';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
+import { applyReadEnrichments } from 'src/modules/shared/application/enrichment/apply-read-enrichments';
 import type { IGetNotificationByIdApplicationInput } from '../../dtos/notification/get-notification-by-id.input';
 import type { IGetNotificationByIdApplicationOutput } from '../../dtos/notification/get-notification-by-id.output';
 
 export class GetNotificationByIdUseCase {
   constructor(
     private readonly notificationRepository: INotificationRepository,
+    private readonly imageRepository: IImageRepository,
   ) {}
 
   async execute(
@@ -31,6 +35,18 @@ export class GetNotificationByIdUseCase {
       throw new NotificationNotFoundError(input.id);
     }
 
-    return item;
+    const [enriched] = await applyReadEnrichments(
+      [item],
+      { enrich: input.params.enrich },
+      [
+        {
+          when: (ctx) => Boolean(ctx.enrich?.profileAvatars),
+          apply: (current) =>
+            enrichNotificationActorAvatars(this.imageRepository, current),
+        },
+      ],
+    );
+
+    return enriched;
   }
 }

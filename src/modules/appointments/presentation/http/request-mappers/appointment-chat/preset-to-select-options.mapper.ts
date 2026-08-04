@@ -2,7 +2,10 @@ import type {
   IAppointmentChatPublicEntity,
   IAppointmentChatRelations,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
-import { APPOINTMENT_CHAT_SELECT_FIELDS, APPOINTMENT_CHAT_STAFF_ONLY_FIELDS } from 'src/modules/appointments/domain/entities/appointment-chat/appointment-chat-select-fields';
+import {
+  APPOINTMENT_CHAT_SELECT_FIELDS,
+  APPOINTMENT_CHAT_STAFF_ONLY_FIELDS,
+} from 'src/modules/appointments/domain/entities/appointment-chat/appointment-chat-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
 import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/request-mappers/shared/staff-visibility.helper';
@@ -50,17 +53,14 @@ const PRESETS: Record<
         },
       },
     },
-    enrich: { personalNotes: true },
+    enrich: { personalNotes: true, profileAvatars: true },
   },
 };
 
 export function presetToSelectOptions(
   preset: TPresetType | undefined,
   isStaffUser: boolean,
-): PresetReadOptions<
-  IAppointmentChatPublicEntity,
-  IAppointmentChatRelations
-> {
+): PresetReadOptions<IAppointmentChatPublicEntity, IAppointmentChatRelations> {
   const config = PRESETS[preset ?? 'SHORT'];
   const select = omitDisallowedSelectFieldsForNonStaff(
     config.select,

@@ -17,6 +17,8 @@ import { PrismaUserRepository } from 'src/modules/users/infrastructure/persisten
 import { UsersModule } from 'src/modules/users/users.module';
 import type { IMasterProfileRepository } from '../../../../masters/domain/repositories/master-profile/i-master-profile.repository';
 import { MASTER_PROFILE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-profile/master-profile.repository.tokens';
+import type { IImageRepository } from '../../../../masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/image/image.repository.tokens';
 import { MastersModule } from '../../../../masters/masters.module';
 import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
@@ -78,9 +80,11 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
     },
     {
       provide: GetAppointmentChatsUseCase,
-      useFactory: (repo: IAppointmentChatRepository) =>
-        new GetAppointmentChatsUseCase(repo),
-      inject: [APPOINTMENT_CHAT_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IAppointmentChatRepository,
+        imageRepo: IImageRepository,
+      ) => new GetAppointmentChatsUseCase(repo, imageRepo),
+      inject: [APPOINTMENT_CHAT_REPOSITORY_TOKEN, IMAGE_REPOSITORY_TOKEN],
     },
     {
       provide: GetAppointmentChatByIdUseCase,
@@ -89,18 +93,21 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
         profileRepo: IMasterProfileRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
         messageRepo: IAppointmentChatMessageRepository,
+        imageRepo: IImageRepository,
       ) =>
         new GetAppointmentChatByIdUseCase(
           chatRepo,
           profileRepo,
           personalNoteRepo,
           messageRepo,
+          imageRepo,
         ),
       inject: [
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
       ],
     },
     {

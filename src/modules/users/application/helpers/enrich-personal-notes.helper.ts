@@ -22,7 +22,7 @@ export async function resolvePersonalNoteForReference(
   return note;
 }
 
-export async function attachPersonalNotesByUserId<T extends { userId: string }>(
+export async function enrichPersonalNotesByUserId<T extends { userId: string }>(
   repository: IUserPersonalNoteRepository,
   ownerUserId: string | undefined | null,
   items: readonly T[],
@@ -79,7 +79,7 @@ function withPeerPersonalNotes<T extends AppointmentPeerItem>(
   };
 }
 
-export async function attachPersonalNotesToAppointmentPeers<T>(
+export async function enrichPersonalNotesWithAppointmentPeers<T>(
   repository: IUserPersonalNoteRepository,
   ownerUserId: string | undefined | null,
   items: readonly T[],
@@ -123,7 +123,7 @@ export async function attachPersonalNotesToAppointmentPeers<T>(
   ) as T[];
 }
 
-export async function attachPersonalNotesToAppointmentChatPeers<T>(
+export async function enrichPersonalNotesWithAppointmentChatPeers<T>(
   repository: IUserPersonalNoteRepository,
   ownerUserId: string | undefined | null,
   item: T,
@@ -136,7 +136,7 @@ export async function attachPersonalNotesToAppointmentChatPeers<T>(
     return item;
   }
 
-  const [appointment] = await attachPersonalNotesToAppointmentPeers(
+  const [appointment] = await enrichPersonalNotesWithAppointmentPeers(
     repository,
     ownerUserId,
     [chatItem.appointment],

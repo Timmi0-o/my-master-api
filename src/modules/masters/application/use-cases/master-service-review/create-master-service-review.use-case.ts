@@ -1,13 +1,13 @@
+import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
+import type { ITransactionManager } from '@shared/domain/transactions';
 import { ensureAppointmentExists } from 'src/modules/appointments/domain/entities/appointment';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { ICreateMasterServiceReviewInput } from 'src/modules/masters/domain/entities/master-service-review';
 import {
   ensureAppointmentReviewable,
   ensureValidReviewRating,
 } from 'src/modules/masters/domain/entities/master-service-review';
-import {
-  ensureMasterProfileExists,
-} from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/repositories/master-service-review/i-master-service-review.repository';
 import type { CreateNotificationUseCase } from 'src/modules/notifications/application/use-cases/notification/create-notification.use-case';
@@ -17,8 +17,6 @@ import {
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification';
 import type { NotificationMessageCatalog } from 'src/modules/notifications/infrastructure/i18n/notification-message-catalog';
-import { SendWebPushToUserUseCase } from '@modules/web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
-import type { ITransactionManager } from '@shared/domain/transactions';
 import { EUserLanguage } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { ICreateMasterServiceReviewApplicationInput } from '../../dtos/master-service-review/create-master-service-review.input';
@@ -85,6 +83,7 @@ export class CreateMasterServiceReviewUseCase {
     );
 
     const recipient = await this.userRepository.findEntityById(profile.userId);
+
     const { title, body } = this.notificationMessageCatalog.resolve(
       recipient?.language ?? EUserLanguage.RU,
       {

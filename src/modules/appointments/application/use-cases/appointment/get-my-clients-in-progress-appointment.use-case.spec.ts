@@ -1,6 +1,7 @@
 import { GetMyClientsInProgressAppointmentUseCase } from 'src/modules/appointments/application/use-cases/appointment/get-my-clients-in-progress-appointment.use-case';
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 
 function createAppointment(overrides: Record<string, unknown> = {}) {
@@ -37,6 +38,7 @@ describe('GetMyClientsInProgressAppointmentUseCase', () => {
     const useCase = new GetMyClientsInProgressAppointmentUseCase(
       appointmentRepository,
       {} as IUserPersonalNoteRepository,
+      {} as IImageRepository,
     );
 
     const result = await useCase.execute({

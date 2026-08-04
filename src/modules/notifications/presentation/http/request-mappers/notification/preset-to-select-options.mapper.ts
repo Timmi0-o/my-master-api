@@ -20,6 +20,19 @@ const ACTOR_PUBLIC_SELECT = [
   'patronymic',
 ] as const;
 
+const ACTOR_USER_PROFILE_AVATAR_INCLUDE = {
+  userProfile: {
+    select: ['id', 'userId', 'displayName'] as const,
+  },
+} as const;
+
+const ACTOR_WITH_AVATAR_INCLUDE = {
+  actor: {
+    select: ACTOR_PUBLIC_SELECT,
+    include: ACTOR_USER_PROFILE_AVATAR_INCLUDE,
+  },
+} as const;
+
 const NOTIFICATION_PRESETS: Record<TPresetType, NotificationSelectOptions> = {
   MINIMAL: {
     select: ['id', 'category', 'type', 'title', 'readAt'],
@@ -36,14 +49,13 @@ const NOTIFICATION_PRESETS: Record<TPresetType, NotificationSelectOptions> = {
       'archivedAt',
       'createdAt',
     ],
+    include: ACTOR_WITH_AVATAR_INCLUDE,
+    enrich: { profileAvatars: true },
   },
   BASE: {
     select: [...NOTIFICATION_SELECT_FIELDS],
-    include: {
-      actor: {
-        select: ACTOR_PUBLIC_SELECT,
-      },
-    },
+    include: ACTOR_WITH_AVATAR_INCLUDE,
+    enrich: { profileAvatars: true },
   },
 };
 

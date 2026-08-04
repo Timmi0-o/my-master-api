@@ -3,9 +3,12 @@ import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
-import { MASTER_SERVICE_SELECT_FIELDS, MASTER_SERVICE_STAFF_ONLY_FIELDS } from 'src/modules/masters/domain/entities/master-service/master-service-select-fields';
-import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
+import {
+  MASTER_SERVICE_SELECT_FIELDS,
+  MASTER_SERVICE_STAFF_ONLY_FIELDS,
+} from 'src/modules/masters/domain/entities/master-service/master-service-select-fields';
 import type { PresetReadOptions } from 'src/modules/shared/application/presets/common/preset-base.types';
+import type { TPresetType } from 'src/modules/shared/application/presets/common/preset.types';
 import { omitDisallowedSelectFieldsForNonStaff } from 'src/modules/shared/presentation/http/request-mappers/shared/staff-visibility.helper';
 
 type MasterServiceSelectOptions = PresetReadOptions<

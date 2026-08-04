@@ -1,29 +1,9 @@
-import type { IImagePublicEntity } from 'src/modules/masters/domain/entities/image';
-import type { IProfileAvatarView } from 'src/modules/masters/domain/entities/image';
+import {
+  groupAvatarsByEntityId,
+  toProfileAvatarView,
+} from 'src/modules/masters/application/helpers/profile-avatar-batch.helper';
 
-export function toProfileAvatarView(
-  image: IImagePublicEntity,
-): IProfileAvatarView {
-  return {
-    id: image.id,
-    fileId: image.fileId,
-    ...(image.file != null ? { file: image.file } : {}),
-  };
-}
-
-export function groupAvatarsByEntityId(
-  images: readonly IImagePublicEntity[],
-): Map<string, IProfileAvatarView> {
-  const grouped = new Map<string, IProfileAvatarView>();
-
-  for (const image of images) {
-    if (!grouped.has(image.entityId)) {
-      grouped.set(image.entityId, toProfileAvatarView(image));
-    }
-  }
-
-  return grouped;
-}
+export { groupAvatarsByEntityId, toProfileAvatarView };
 
 export function wantsAvatarInclude(include: unknown): boolean {
   if (!include || typeof include !== 'object') {
@@ -80,6 +60,27 @@ export function wantsNestedClientUserProfileAvatarInclude(
 
   // Presence of userProfile is enough: avatar is virtual and hydrated separately.
   return Object.prototype.hasOwnProperty.call(clientUserInclude, 'userProfile');
+}
+
+export function wantsNestedActorUserProfileAvatarInclude(
+  include: unknown,
+): boolean {
+  if (!include || typeof include !== 'object') {
+    return false;
+  }
+
+  const actor = (include as Record<string, unknown>).actor;
+  if (actor === true || !actor || typeof actor !== 'object') {
+    return false;
+  }
+
+  const actorInclude = (actor as { include?: unknown }).include;
+  if (!actorInclude || typeof actorInclude !== 'object') {
+    return false;
+  }
+
+  // Presence of userProfile is enough: avatar is virtual and hydrated separately.
+  return Object.prototype.hasOwnProperty.call(actorInclude, 'userProfile');
 }
 
 export function wantsNestedAppointmentPeerAvatarsInclude(

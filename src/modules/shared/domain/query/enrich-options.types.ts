@@ -4,4 +4,5 @@
  */
 export type EnrichOptions = {
   personalNotes?: boolean;
+  profileAvatars?: boolean;
 };

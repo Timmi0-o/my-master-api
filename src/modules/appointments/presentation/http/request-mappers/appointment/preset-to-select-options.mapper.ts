@@ -103,7 +103,7 @@ const APPOINTMENT_PRESETS: Record<TPresetType, AppointmentPresetOptions> = {
       },
       chat: true,
     },
-    enrich: { personalNotes: true },
+    enrich: { personalNotes: true, profileAvatars: true },
   },
 };
 

@@ -1,4 +1,4 @@
-import type { IMasterServiceReviewWithReactionStats } from 'src/modules/masters/application/helpers/attach-reaction-stats-to-reviews';
+import type { IMasterServiceReviewWithReactionStats } from 'src/modules/masters/application/helpers/enrich-reaction-stats-with-reviews';
 
 export type IGetMasterServiceReviewByIdApplicationOutput =
   IMasterServiceReviewWithReactionStats;

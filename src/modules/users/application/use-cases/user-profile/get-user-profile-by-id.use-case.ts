@@ -1,4 +1,5 @@
-import { resolvePersonalNoteForReference } from 'src/modules/users/application/helpers/attach-personal-notes.helper';
+import { applyReadEnrichments } from 'src/modules/shared/application/enrichment/apply-read-enrichments';
+import { enrichPersonalNotesByUserId } from 'src/modules/users/application/helpers/enrich-personal-notes.helper';
 import { UserProfileNotFoundError } from 'src/modules/users/domain/entities/user-profile';
 import type { IUserPersonalNoteRepository } from 'src/modules/users/domain/repositories/user-personal-note/i-user-personal-note.repository';
 import type { IUserProfileRepository } from 'src/modules/users/domain/repositories/user-profile/i-user-profile.repository';
@@ -29,19 +30,25 @@ export class GetUserProfileByIdUseCase {
       throw new UserProfileNotFoundError(input.id);
     }
 
-    if (!input.params?.enrich?.personalNotes) {
-      return item;
-    }
-
-    const personalNote = await resolvePersonalNoteForReference(
-      this.userPersonalNoteRepository,
-      input.actor.userId || null,
-      item.userId,
+    const [enriched] = await applyReadEnrichments(
+      [item],
+      {
+        enrich: input.params?.enrich,
+        actorUserId: input.actor.userId || null,
+      },
+      [
+        {
+          when: (ctx) => Boolean(ctx.enrich?.personalNotes),
+          apply: (current, ctx) =>
+            enrichPersonalNotesByUserId(
+              this.userPersonalNoteRepository,
+              ctx.actorUserId,
+              current,
+            ),
+        },
+      ],
     );
 
-    return {
-      ...item,
-      personalNote,
-    };
+    return enriched;
   }
 }

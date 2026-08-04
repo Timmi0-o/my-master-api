@@ -1,11 +1,12 @@
-import type { FindManyParams } from 'src/modules/shared/domain/query';
-import { attachReactionStatsToReviews } from 'src/modules/masters/application/helpers/attach-reaction-stats-to-reviews';
+import { enrichReactionStatsWithReviews } from 'src/modules/masters/application/helpers/enrich-reaction-stats-with-reviews';
 import type {
   IMasterServiceReviewPublicEntity,
   IMasterServiceReviewRelations,
 } from 'src/modules/masters/domain/entities/master-service-review';
 import type { IMasterServiceReviewReactionRepository } from 'src/modules/masters/domain/repositories/master-service-review-reaction/i-master-service-review-reaction.repository';
 import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/repositories/master-service-review/i-master-service-review.repository';
+import { applyReadEnrichments } from 'src/modules/shared/application/enrichment/apply-read-enrichments';
+import type { FindManyParams } from 'src/modules/shared/domain/query';
 import type { GetMasterServiceReviewsOutput } from '../../dtos/master-service-review/get-master-service-reviews.output';
 
 export class GetMasterServiceReviewsUseCase {
@@ -25,14 +26,19 @@ export class GetMasterServiceReviewsUseCase {
       this.masterServiceReviewRepository.count({ where: params.where }),
     ]);
 
-    const stats =
-      await this.masterServiceReviewReactionRepository.getStatsByReviewIds(
-        items.map((item) => item.id),
-      );
+    const enriched = await applyReadEnrichments(items, {}, [
+      {
+        when: () => true,
+        apply: async (current) => {
+          const stats =
+            await this.masterServiceReviewReactionRepository.getStatsByReviewIds(
+              current.map((item) => item.id),
+            );
+          return enrichReactionStatsWithReviews(current, stats);
+        },
+      },
+    ]);
 
-    return {
-      items: attachReactionStatsToReviews(items, stats),
-      total,
-    };
+    return { items: enriched, total };
   }
 }

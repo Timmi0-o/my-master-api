@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import {
   TRANSACTION_MANAGER_TOKEN,
   type ITransactionManager,
@@ -17,12 +17,16 @@ import {
   NOTIFICATION_REPOSITORY_TOKEN,
   type INotificationRepository,
 } from 'src/modules/notifications/domain/repositories/notification';
+import { ImageModule } from 'src/modules/masters/infrastructure/modules/image/image.module';
+import type { IImageRepository } from 'src/modules/masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from 'src/modules/masters/domain/repositories/image/image.repository.tokens';
 import { PrismaNotificationRepository } from '../../persistence/repositories/notification/prisma-notification.repository';
 import { NotificationSseEventBus } from '../../sse/notification-sse.event-bus';
 import { RxjsNotificationRealtimePublisher } from '../../sse/rxjs-notification-realtime.publisher';
 import { NotificationMessageCatalog } from '../../i18n/notification-message-catalog';
 
 @Module({
+  imports: [forwardRef(() => ImageModule)],
   providers: [
     NotificationMessageCatalog,
     {
@@ -54,15 +58,19 @@ import { NotificationMessageCatalog } from '../../i18n/notification-message-cata
     },
     {
       provide: GetNotificationsUseCase,
-      useFactory: (repo: INotificationRepository) =>
-        new GetNotificationsUseCase(repo),
-      inject: [NOTIFICATION_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: INotificationRepository,
+        imageRepo: IImageRepository,
+      ) => new GetNotificationsUseCase(repo, imageRepo),
+      inject: [NOTIFICATION_REPOSITORY_TOKEN, IMAGE_REPOSITORY_TOKEN],
     },
     {
       provide: GetNotificationByIdUseCase,
-      useFactory: (repo: INotificationRepository) =>
-        new GetNotificationByIdUseCase(repo),
-      inject: [NOTIFICATION_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: INotificationRepository,
+        imageRepo: IImageRepository,
+      ) => new GetNotificationByIdUseCase(repo, imageRepo),
+      inject: [NOTIFICATION_REPOSITORY_TOKEN, IMAGE_REPOSITORY_TOKEN],
     },
     {
       provide: MarkNotificationReadByIdUseCase,

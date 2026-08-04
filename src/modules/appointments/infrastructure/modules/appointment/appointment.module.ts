@@ -21,6 +21,8 @@ import type { IMasterServiceRepository } from '../../../../masters/domain/reposi
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-service/master-service.repository.tokens';
 import type { IMasterWeeklyScheduleRepository } from '../../../../masters/domain/repositories/master-weekly-schedule/i-master-weekly-schedule.repository';
 import { MASTER_WEEKLY_SCHEDULE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/master-weekly-schedule/master-weekly-schedule.repository.tokens';
+import type { IImageRepository } from '../../../../masters/domain/repositories/image/i-image.repository';
+import { IMAGE_REPOSITORY_TOKEN } from '../../../../masters/domain/repositories/image/image.repository.tokens';
 import { ImageModule } from '../../../../masters/infrastructure/modules/image/image.module';
 import { MastersModule } from '../../../../masters/masters.module';
 import type { IUserBlockRepository } from '../../../../users/domain/repositories/user-block/i-user-block.repository';
@@ -154,9 +156,11 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
     AppointmentAutoCompleteRepeatableRegistrar,
     {
       provide: GetAppointmentsUseCase,
-      useFactory: (repo: IAppointmentRepository) =>
-        new GetAppointmentsUseCase(repo),
-      inject: [APPOINTMENT_REPOSITORY_TOKEN],
+      useFactory: (
+        repo: IAppointmentRepository,
+        imageRepo: IImageRepository,
+      ) => new GetAppointmentsUseCase(repo, imageRepo),
+      inject: [APPOINTMENT_REPOSITORY_TOKEN, IMAGE_REPOSITORY_TOKEN],
     },
     {
       provide: GetMyAppointmentsUseCase,
@@ -164,11 +168,19 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
         messageRepo: IAppointmentChatMessageRepository,
-      ) => new GetMyAppointmentsUseCase(repo, personalNoteRepo, messageRepo),
+        imageRepo: IImageRepository,
+      ) =>
+        new GetMyAppointmentsUseCase(
+          repo,
+          personalNoteRepo,
+          messageRepo,
+          imageRepo,
+        ),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -177,16 +189,19 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
         messageRepo: IAppointmentChatMessageRepository,
+        imageRepo: IImageRepository,
       ) =>
         new GetMyClientsAppointmentsUseCase(
           repo,
           personalNoteRepo,
           messageRepo,
+          imageRepo,
         ),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -194,10 +209,17 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       useFactory: (
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
-      ) => new GetMyInProgressAppointmentUseCase(repo, personalNoteRepo),
+        imageRepo: IImageRepository,
+      ) =>
+        new GetMyInProgressAppointmentUseCase(
+          repo,
+          personalNoteRepo,
+          imageRepo,
+        ),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -205,10 +227,17 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
       useFactory: (
         repo: IAppointmentRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
-      ) => new GetMyClientsInProgressAppointmentUseCase(repo, personalNoteRepo),
+        imageRepo: IImageRepository,
+      ) =>
+        new GetMyClientsInProgressAppointmentUseCase(
+          repo,
+          personalNoteRepo,
+          imageRepo,
+        ),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
       ],
     },
     {
@@ -217,16 +246,19 @@ import { AppointmentChatModule } from '../appointment-chat/appointment-chat.modu
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
         personalNoteRepo: IUserPersonalNoteRepository,
+        imageRepo: IImageRepository,
       ) =>
         new GetAppointmentByIdUseCase(
           appointmentRepo,
           profileRepo,
           personalNoteRepo,
+          imageRepo,
         ),
       inject: [
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         USER_PERSONAL_NOTE_REPOSITORY_TOKEN,
+        IMAGE_REPOSITORY_TOKEN,
       ],
     },
     {

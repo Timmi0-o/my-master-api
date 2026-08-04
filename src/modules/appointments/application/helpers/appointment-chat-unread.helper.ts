@@ -31,7 +31,7 @@ type IAppointmentWithOptionalChat = {
 /**
  * Вешает unreadCount (COUNT в БД) и опционально last message как chat.messages = [last].
  */
-export async function attachAppointmentChatsInboxFields<
+export async function enrichAppointmentChatsWithInboxFields<
   T extends IAppointmentWithOptionalChat,
 >(
   messageRepository: IAppointmentChatMessageRepository,
@@ -80,7 +80,7 @@ export async function attachAppointmentChatsInboxFields<
   });
 }
 
-export async function attachAppointmentChatUnreadCount<
+export async function enrichAppointmentChatWithUnreadCount<
   T extends IAppointmentChatPublicEntity,
 >(
   messageRepository: IAppointmentChatMessageRepository,
