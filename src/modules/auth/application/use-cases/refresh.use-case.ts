@@ -18,20 +18,16 @@ export class RefreshUseCase {
   ) {}
 
   async execute(refreshToken: string): Promise<IAuthResponse> {
-    console.log('refreshToken', refreshToken);
-
-    const payload = this.tokenService.verifyRefreshToken(refreshToken);
-
-    console.log('payload', payload);
+    let payload: { sub: string };
+    try {
+      payload = this.tokenService.verifyRefreshToken(refreshToken);
+    } catch {
+      throw new RefreshTokenInvalidError();
+    }
 
     const refreshHash = this.tokenService.hashToken(refreshToken);
-
-    console.log('refreshHash', refreshHash);
-
     const storedToken =
       await this.refreshTokenRepository.findByHash(refreshHash);
-
-    console.log('storedToken', storedToken);
 
     if (!storedToken || storedToken.userId !== payload.sub) {
       if (payload.sub) {
@@ -42,12 +38,14 @@ export class RefreshUseCase {
       throw new RefreshTokenInvalidError();
     }
 
-    if (
-      storedToken.revokedAt ||
-      storedToken.expiresAt.getTime() <= Date.now()
-    ) {
+    // Already rotated elsewhere (concurrent refresh race) — do not wipe sibling sessions.
+    if (storedToken.revokedAt) {
+      throw new RefreshTokenInvalidError();
+    }
+
+    if (storedToken.expiresAt.getTime() <= Date.now()) {
       await this.transactionManager.runInTransaction((scope) =>
-        this.refreshTokenRepository.revokeAllForUser(storedToken.userId, scope),
+        this.refreshTokenRepository.revokeById(storedToken.id, scope),
       );
       throw new RefreshTokenInvalidError();
     }
