@@ -1,6 +1,5 @@
-import { Controller, Get, Patch, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
@@ -15,18 +14,25 @@ import { idParamSchema } from '@modules/users/presentation/http/validation/schem
 import type { IIdParamPayload } from '@modules/users/presentation/http/validation/schemas/id-param.types';
 import { updateOwnLanguagePayloadSchema } from '@modules/users/presentation/http/validation/schemas/update-own-language-payload.schema';
 import type { IUpdateOwnLanguagePayload } from '@modules/users/presentation/http/validation/schemas/update-own-language-payload.types';
+import { Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
+import { mapAssignUserRoleHttpResponse } from '../http-responses/map-assign-user-role-response';
+import { mapGetUsersHttpResponse } from '../http-responses/map-get-users-response';
+import { mapUpdateOwnLanguageHttpResponse } from '../http-responses/map-update-own-language-response';
 import { requestBodyToAssignUserRoleUseCaseInput } from '../request-mappers/user/request-body-to-assign-user-role-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/user/request-query-params-to-find-many-params.mapper';
-import { mapGetUsersHttpResponse } from '../http-responses/map-get-users-response';
-import { mapAssignUserRoleHttpResponse } from '../http-responses/map-assign-user-role-response';
-import { mapUpdateOwnLanguageHttpResponse } from '../http-responses/map-update-own-language-response';
 
+@RateLimiter('admin')
 @Controller({ path: 'users', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class UsersController {

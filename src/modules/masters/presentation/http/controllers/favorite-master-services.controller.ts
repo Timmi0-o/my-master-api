@@ -17,6 +17,7 @@ import type { IIdParamPayload } from '@modules/masters/presentation/http/validat
 import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import {
@@ -35,6 +36,7 @@ import { requestParamsToDeleteFavoriteMasterServiceUseCaseInput } from '../reque
 import { requestQueryParamsToFindManyParams } from '../request-mappers/favorite-master-service/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToGetFavoriteMasterServiceByIdUseCaseInput } from '../request-mappers/favorite-master-service/request-query-params-to-get-favorite-master-service-by-id-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'favorite-master-services', version: '1' })
 export class FavoriteMasterServicesController {
   constructor(

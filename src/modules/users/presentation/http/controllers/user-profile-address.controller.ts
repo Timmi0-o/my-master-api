@@ -1,9 +1,10 @@
-import { Controller, Delete, Get, Put, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { Controller, Delete, Get, Put, UseGuards } from '@nestjs/common';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { HttpBody } from '@shared/presentation/http/decorators';
 import { DeleteUserProfileAddressUseCase } from 'src/modules/users/application/use-cases/user-profile/delete-user-profile-address.use-case';
 import { GetMyUserProfileUseCase } from 'src/modules/users/application/use-cases/user-profile/get-my-user-profile.use-case';
@@ -17,6 +18,7 @@ import { requestBodyToUpsertUserProfileAddressUseCaseInput } from '../request-ma
 import { upsertUserProfileAddressPayloadSchema } from '../validation/schemas/upsert-user-profile-address-payload.schema';
 import type { IUpsertUserProfileAddressPayload } from '../validation/schemas/upsert-user-profile-address-payload.types';
 
+@RateLimiter('standard')
 @Controller({ path: 'user-profiles', version: '1' })
 export class UserProfileAddressController {
   constructor(

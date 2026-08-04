@@ -1,12 +1,3 @@
-import {
-  BadRequestException,
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
@@ -25,24 +16,29 @@ import { PresignedUploadUseCase } from '@modules/files/application/use-cases/fil
 import { QueryFilesUseCase } from '@modules/files/application/use-cases/file/query-files.use-case';
 import { UpdateFileUseCase } from '@modules/files/application/use-cases/file/update-file.use-case';
 import { isAllowedFileUrl } from '@modules/files/shared/constants/url-whitelist';
+import {
+  BadRequestException,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
-import { normalizeIdParam, normalizeParams } from '@shared/presentation/http/helpers/normalize-id-param';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
+import {
+  normalizeIdParam,
+  normalizeParams,
+} from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeQueryFilesRaw } from '../helpers/normalize-query-files-raw';
-import { requestBodyToCreateFilesUseCaseInput } from '../request-mappers/file/request-body-to-create-files-use-case-input';
-import { requestBodyToDeleteFilesUseCaseInput } from '../request-mappers/file/request-body-to-delete-files-use-case-input';
-import { requestQueryParamsToGetFileUseCaseInput } from '../request-mappers/file/request-query-params-to-get-file-use-case-input';
-import { requestBodyToGetFilesByIdsUseCaseInput } from '../request-mappers/file/request-body-to-get-files-by-ids-use-case-input';
-import { requestBodyToMoveFileUseCaseInput } from '../request-mappers/file/request-body-to-move-file-use-case-input';
-import { requestBodyToPresignedUploadUseCaseInput } from '../request-mappers/file/request-body-to-presigned-upload-use-case-input';
-import { requestQueryParamsToQueryFilesUseCaseInput } from '../request-mappers/file/request-query-params-to-query-files-use-case-input';
-import { requestBodyToUpdateFileUseCaseInput } from '../request-mappers/file/request-body-to-update-file-use-case-input';
-import { requestBodyToGrantFileAccessUseCaseInput } from '../request-mappers/file-access/request-body-to-grant-file-access-use-case-input';
-import { requestParamsToRevokeFileAccessUseCaseInput } from '../request-mappers/file-access/request-params-to-revoke-file-access-use-case-input';
-import { requestBodyToCreateFileShareUseCaseInput } from '../request-mappers/file-share/request-body-to-create-file-share-use-case-input';
-import { requestParamsToRevokeFileShareUseCaseInput } from '../request-mappers/file-share/request-params-to-revoke-file-share-use-case-input';
 import {
   mapCreateFileShareHttpResponse,
   mapCreateFilesHttpResponse,
@@ -57,22 +53,34 @@ import {
   mapRevokeFileShareHttpResponse,
   mapUpdateFileHttpResponse,
 } from '../http-responses/map-files-http-response';
+import { requestBodyToGrantFileAccessUseCaseInput } from '../request-mappers/file-access/request-body-to-grant-file-access-use-case-input';
+import { requestParamsToRevokeFileAccessUseCaseInput } from '../request-mappers/file-access/request-params-to-revoke-file-access-use-case-input';
+import { requestBodyToCreateFileShareUseCaseInput } from '../request-mappers/file-share/request-body-to-create-file-share-use-case-input';
+import { requestParamsToRevokeFileShareUseCaseInput } from '../request-mappers/file-share/request-params-to-revoke-file-share-use-case-input';
+import { requestBodyToCreateFilesUseCaseInput } from '../request-mappers/file/request-body-to-create-files-use-case-input';
+import { requestBodyToDeleteFilesUseCaseInput } from '../request-mappers/file/request-body-to-delete-files-use-case-input';
+import { requestBodyToGetFilesByIdsUseCaseInput } from '../request-mappers/file/request-body-to-get-files-by-ids-use-case-input';
+import { requestBodyToMoveFileUseCaseInput } from '../request-mappers/file/request-body-to-move-file-use-case-input';
+import { requestBodyToPresignedUploadUseCaseInput } from '../request-mappers/file/request-body-to-presigned-upload-use-case-input';
+import { requestBodyToUpdateFileUseCaseInput } from '../request-mappers/file/request-body-to-update-file-use-case-input';
+import { requestQueryParamsToGetFileUseCaseInput } from '../request-mappers/file/request-query-params-to-get-file-use-case-input';
+import { requestQueryParamsToQueryFilesUseCaseInput } from '../request-mappers/file/request-query-params-to-query-files-use-case-input';
 import { createFileSharePayloadSchema } from '../validation/schemas/create-file-share-payload.schema';
 import type { ICreateFileSharePayload } from '../validation/schemas/create-file-share-payload.types';
-import { createFilesPayloadSchema } from '../validation/schemas/create-files-payload.schema';
 import type { ICreateFilesPayload } from '../validation/schemas/create-files-payload.schema';
+import { createFilesPayloadSchema } from '../validation/schemas/create-files-payload.schema';
 import { deleteFilesPayloadSchema } from '../validation/schemas/delete-files-payload.schema';
 import type { IDeleteFilesPayload } from '../validation/schemas/delete-files-payload.types';
-import { getFilesByIdsPayloadSchema } from '../validation/schemas/get-files-by-ids-payload.schema';
 import type { IGetFilesByIdsPayload } from '../validation/schemas/get-files-by-ids-payload.schema';
+import { getFilesByIdsPayloadSchema } from '../validation/schemas/get-files-by-ids-payload.schema';
 import { grantFileAccessPayloadSchema } from '../validation/schemas/grant-file-access-payload.schema';
 import type { IGrantFileAccessPayload } from '../validation/schemas/grant-file-access-payload.types';
 import { idParamSchema } from '../validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '../validation/schemas/id-param.types';
 import { moveFilePayloadSchema } from '../validation/schemas/move-file-payload.schema';
 import type { IMoveFilePayload } from '../validation/schemas/move-file-payload.types';
-import { presignedUploadPayloadSchema } from '../validation/schemas/presigned-upload-payload.schema';
 import type { IPresignedUploadPayload } from '../validation/schemas/presigned-upload-payload.schema';
+import { presignedUploadPayloadSchema } from '../validation/schemas/presigned-upload-payload.schema';
 import { queryFilesQuerySchema } from '../validation/schemas/query-files-query.schema';
 import type { IQueryFilesQueryPayload } from '../validation/schemas/query-files-query.types';
 import { revokeFileAccessParamsSchema } from '../validation/schemas/revoke-file-access-params.schema';
@@ -82,6 +90,7 @@ import type { IRevokeFileShareParamsPayload } from '../validation/schemas/revoke
 import { updateFilePayloadSchema } from '../validation/schemas/update-file-payload.schema';
 import type { IUpdateFilePayload } from '../validation/schemas/update-file-payload.types';
 
+@RateLimiter('mediaWrite')
 @Controller({ path: 'files', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class FilesController {
@@ -110,7 +119,11 @@ export class FilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToPresignedUploadUseCaseInput(payload, user, metadata);
+    const input = requestBodyToPresignedUploadUseCaseInput(
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.presignedUploadUseCase.execute(input);
     return mapPresignedUploadHttpResponse(output);
   }
@@ -126,7 +139,11 @@ export class FilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestQueryParamsToQueryFilesUseCaseInput(payload, user, metadata);
+    const input = requestQueryParamsToQueryFilesUseCaseInput(
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.queryFilesUseCase.execute(input);
     return mapQueryFilesHttpResponse(output);
   }
@@ -141,7 +158,11 @@ export class FilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToGetFilesByIdsUseCaseInput(payload, user, metadata);
+    const input = requestBodyToGetFilesByIdsUseCaseInput(
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.getFilesByIdsUseCase.execute(input);
     return mapGetFilesByIdsHttpResponse(output);
   }
@@ -178,7 +199,12 @@ export class FilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestQueryParamsToGetFileUseCaseInput(params.id, {}, user, metadata);
+    const input = requestQueryParamsToGetFileUseCaseInput(
+      params.id,
+      {},
+      user,
+      metadata,
+    );
     const output = await this.getFileUseCase.execute(input);
     return mapGetFileByIdHttpResponse(output);
   }
@@ -198,7 +224,12 @@ export class FilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToUpdateFileUseCaseInput(params.id, payload, user, metadata);
+    const input = requestBodyToUpdateFileUseCaseInput(
+      params.id,
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.updateFileUseCase.execute(input);
     return mapUpdateFileHttpResponse(output);
   }
@@ -218,7 +249,12 @@ export class FilesController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToMoveFileUseCaseInput(params.id, payload, user, metadata);
+    const input = requestBodyToMoveFileUseCaseInput(
+      params.id,
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.moveFileUseCase.execute(input);
     return mapMoveFileHttpResponse(output);
   }

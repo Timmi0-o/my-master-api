@@ -1,7 +1,6 @@
-import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
-import { GrantRolePermissionUseCase } from '@modules/authorization/application/use-cases/role-permission/grant-role-permission.use-case';
 import { GetRolePermissionsUseCase } from '@modules/authorization/application/use-cases/role-permission/get-role-permissions.use-case';
+import { GrantRolePermissionUseCase } from '@modules/authorization/application/use-cases/role-permission/grant-role-permission.use-case';
 import { RevokeRolePermissionUseCase } from '@modules/authorization/application/use-cases/role-permission/revoke-role-permission.use-case';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
@@ -12,17 +11,20 @@ import { roleIdParamSchema } from '@modules/authorization/presentation/http/vali
 import type { IRoleIdParamPayload } from '@modules/authorization/presentation/http/validation/schemas/role-id-param.types';
 import { rolePermissionParamsSchema } from '@modules/authorization/presentation/http/validation/schemas/role-permission-params.schema';
 import type { IRolePermissionParamsPayload } from '@modules/authorization/presentation/http/validation/schemas/role-permission-params.types';
+import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { HttpBody, HttpParams } from '@shared/presentation/http/decorators';
 import {
   normalizeIdParam,
   normalizeParams,
 } from '@shared/presentation/http/helpers/normalize-id-param';
-import { requestBodyToGrantRolePermissionUseCaseInput } from '../request-mappers/role-permission/request-body-to-grant-role-permission-use-case-input';
-import { paramsToRevokeRolePermissionUseCaseInput } from '../request-mappers/role-permission/params-to-revoke-role-permission-use-case-input';
 import { mapGetRolePermissionsHttpResponse } from '../http-responses/map-get-role-permissions-response';
 import { mapGrantRolePermissionHttpResponse } from '../http-responses/map-grant-role-permission-response';
 import { mapRevokeRolePermissionHttpResponse } from '../http-responses/map-revoke-role-permission-response';
+import { paramsToRevokeRolePermissionUseCaseInput } from '../request-mappers/role-permission/params-to-revoke-role-permission-use-case-input';
+import { requestBodyToGrantRolePermissionUseCaseInput } from '../request-mappers/role-permission/request-body-to-grant-role-permission-use-case-input';
 
+@RateLimiter('admin')
 @Controller({ path: 'roles/:roleId/permissions', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class RolePermissionsController {
@@ -60,7 +62,10 @@ export class RolePermissionsController {
     })
     payload: IGrantRolePermissionPayload,
   ) {
-    const input = requestBodyToGrantRolePermissionUseCaseInput(params.roleId, payload);
+    const input = requestBodyToGrantRolePermissionUseCaseInput(
+      params.roleId,
+      payload,
+    );
     const output = await this.grantRolePermissionUseCase.execute(input);
     return mapGrantRolePermissionHttpResponse(output);
   }

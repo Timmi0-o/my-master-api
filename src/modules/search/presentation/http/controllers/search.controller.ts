@@ -1,5 +1,5 @@
 import { BadRequestException, Controller, Get } from '@nestjs/common';
-import { SearchRateLimit } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpQuery } from '@shared/presentation/http/decorators';
 import { SearchByTextUseCase } from 'src/modules/search/application/use-cases/search-by-text.use-case';
@@ -8,13 +8,13 @@ import { requestQueryParamsToSearchByTextUseCaseInput } from '../request-mappers
 import { getSearchQuerySchema } from '../validation/schemas/get-search-query.schema';
 import type { IGetSearchQueryPayload } from '../validation/schemas/get-search-query.types';
 
+@RateLimiter('publicRead')
 @Controller({ path: 'search', version: '1' })
 export class SearchController {
   constructor(private readonly searchByTextUseCase: SearchByTextUseCase) {}
 
   @Get()
   @PublicEndpoint()
-  @SearchRateLimit()
   async search(
     @HttpQuery(getSearchQuerySchema, {
       errorMessage: 'Некорректные параметры поискового запроса',

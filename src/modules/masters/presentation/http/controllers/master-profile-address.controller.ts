@@ -1,23 +1,18 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
-import type { ISessionUser } from '@shared/domain/i-session-user';
-import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
+import { Controller, Delete, Get, Put, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
+import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
+import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { HttpBody } from '@shared/presentation/http/decorators';
 import { DeleteMasterAddressUseCase } from 'src/modules/masters/application/use-cases/master-profile/delete-master-address.use-case';
 import { GetMasterAddressUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-address.use-case';
 import { GetMasterOnboardingUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-master-onboarding.use-case';
-import { UpsertMasterAddressUseCase } from 'src/modules/masters/application/use-cases/master-profile/upsert-master-address.use-case';
 import { GetMyMasterProfileUseCase } from 'src/modules/masters/application/use-cases/master-profile/get-my-master-profile.use-case';
+import { UpsertMasterAddressUseCase } from 'src/modules/masters/application/use-cases/master-profile/upsert-master-address.use-case';
 import { MasterProfileNotFoundError } from 'src/modules/masters/domain/entities/master-profile';
 import { mapDeleteMasterAddressHttpResponse } from '../http-responses/map-delete-master-address-response';
 import { mapGetMasterAddressHttpResponse } from '../http-responses/map-get-master-address-response';
@@ -27,6 +22,7 @@ import { requestBodyToUpsertMasterAddressUseCaseInput } from '../request-mappers
 import { upsertMasterAddressPayloadSchema } from '../validation/schemas/upsert-master-address-payload.schema';
 import type { IUpsertMasterAddressPayload } from '../validation/schemas/upsert-master-address-payload.types';
 
+@RateLimiter('standard')
 @Controller({ path: 'masters', version: '1' })
 export class MasterProfileAddressController {
   constructor(

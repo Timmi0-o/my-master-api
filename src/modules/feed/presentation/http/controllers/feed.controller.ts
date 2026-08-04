@@ -4,6 +4,7 @@ import { Authorize } from '@modules/authorization/presentation/decorators/author
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { HttpBody, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { GetFeedServicesUseCase } from 'src/modules/feed/application/use-cases/get-feed-services.use-case';
@@ -17,6 +18,7 @@ import type { IGetFeedServicesQueryPayload } from '../validation/schemas/get-fee
 import { recordFeedEventsPayloadSchema } from '../validation/schemas/record-feed-events-payload.schema';
 import type { IRecordFeedEventsPayload } from '../validation/schemas/record-feed-events-payload.types';
 
+@RateLimiter('standard')
 @Controller({ path: 'feed', version: '1' })
 export class FeedController {
   constructor(

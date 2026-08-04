@@ -41,6 +41,7 @@ import {
 } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import {
   HttpBody,
@@ -75,6 +76,7 @@ import { requestQueryParamsToGetAppointmentByIdUseCaseInput } from '../request-m
 import { requestQueryParamsToGetMyClientsInProgressAppointmentUseCaseInput } from '../request-mappers/appointment/request-query-params-to-get-my-clients-in-progress-appointment-use-case-input';
 import { requestQueryParamsToGetMyInProgressAppointmentUseCaseInput } from '../request-mappers/appointment/request-query-params-to-get-my-in-progress-appointment-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'appointments', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class AppointmentsController {

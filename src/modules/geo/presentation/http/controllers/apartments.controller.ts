@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpQuery } from '@shared/presentation/http/decorators';
 import { GetApartmentsUseCase } from 'src/modules/geo/application/use-cases/apartment/get-apartments.use-case';
@@ -7,6 +8,7 @@ import { requestQueryParamsToGetApartmentsUseCaseInput } from '../request-mapper
 import { getApartmentsQuerySchema } from '../validation/schemas/get-apartments-query.schema';
 import type { IGetApartmentsQueryPayload } from '../validation/schemas/get-apartments-query.types';
 
+@RateLimiter('publicRead')
 @Controller({ path: 'geo/apartments', version: '1' })
 export class ApartmentsController {
   constructor(private readonly getApartmentsUseCase: GetApartmentsUseCase) {}

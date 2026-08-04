@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { GetLocalitiesUseCase } from 'src/modules/geo/application/use-cases/locality/get-localities.use-case';
@@ -12,6 +13,7 @@ import type { IGetLocalitiesQueryPayload } from '../validation/schemas/get-local
 import { slugOrIdParamSchema } from '../validation/schemas/slug-or-id-param.schema';
 import type { ISlugOrIdParamPayload } from '../validation/schemas/slug-or-id-param.types';
 
+@RateLimiter('publicRead')
 @Controller({ path: 'geo/localities', version: '1' })
 export class LocalitiesController {
   constructor(

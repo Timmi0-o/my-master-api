@@ -1,11 +1,13 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { GetPermissionsUseCase } from '@modules/authorization/application/use-cases/permission/get-permissions.use-case';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { mapGetPermissionsHttpResponse } from '../http-responses/map-get-permissions-response';
 
+@RateLimiter('admin')
 @Controller({ path: 'permissions', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class PermissionsController {

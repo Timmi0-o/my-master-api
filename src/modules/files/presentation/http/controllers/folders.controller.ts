@@ -1,11 +1,3 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
@@ -16,17 +8,25 @@ import { DeleteFolderUseCase } from '@modules/files/application/use-cases/folder
 import { GetFolderUseCase } from '@modules/files/application/use-cases/folder/get-folder.use-case';
 import { MoveFolderUseCase } from '@modules/files/application/use-cases/folder/move-folder.use-case';
 import { UpdateFolderUseCase } from '@modules/files/application/use-cases/folder/update-folder.use-case';
+import {
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeGetFolderQueryRaw } from '../helpers/normalize-get-folder-query-raw';
-import { requestBodyToCreateFolderUseCaseInput } from '../request-mappers/folder/request-body-to-create-folder-use-case-input';
-import { requestParamsToDeleteFolderUseCaseInput } from '../request-mappers/folder/request-params-to-delete-folder-use-case-input';
-import { requestQueryParamsToGetFolderUseCaseInput } from '../request-mappers/folder/request-query-params-to-get-folder-use-case-input';
-import { requestBodyToMoveFolderUseCaseInput } from '../request-mappers/folder/request-body-to-move-folder-use-case-input';
-import { requestBodyToUpdateFolderUseCaseInput } from '../request-mappers/folder/request-body-to-update-folder-use-case-input';
 import {
   mapCreateFolderHttpResponse,
   mapDeleteFolderHttpResponse,
@@ -34,19 +34,25 @@ import {
   mapMoveFolderHttpResponse,
   mapUpdateFolderHttpResponse,
 } from '../http-responses/map-folder-response';
+import { requestBodyToCreateFolderUseCaseInput } from '../request-mappers/folder/request-body-to-create-folder-use-case-input';
+import { requestBodyToMoveFolderUseCaseInput } from '../request-mappers/folder/request-body-to-move-folder-use-case-input';
+import { requestBodyToUpdateFolderUseCaseInput } from '../request-mappers/folder/request-body-to-update-folder-use-case-input';
+import { requestParamsToDeleteFolderUseCaseInput } from '../request-mappers/folder/request-params-to-delete-folder-use-case-input';
+import { requestQueryParamsToGetFolderUseCaseInput } from '../request-mappers/folder/request-query-params-to-get-folder-use-case-input';
+import type { ICreateFolderPayload } from '../validation/schemas/create-folder-payload.types';
 import {
   createFolderPayloadSchema,
   moveFolderPayloadSchema,
   updateFolderPayloadSchema,
 } from '../validation/schemas/folder-payload.schema';
-import type { ICreateFolderPayload } from '../validation/schemas/create-folder-payload.types';
-import type { IMoveFolderPayload } from '../validation/schemas/move-folder-payload.types';
-import type { IUpdateFolderPayload } from '../validation/schemas/update-folder-payload.types';
 import { getFolderQuerySchema } from '../validation/schemas/get-folder-query.schema';
 import type { IGetFolderQueryPayload } from '../validation/schemas/get-folder-query.types';
 import { idParamSchema } from '../validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '../validation/schemas/id-param.types';
+import type { IMoveFolderPayload } from '../validation/schemas/move-folder-payload.types';
+import type { IUpdateFolderPayload } from '../validation/schemas/update-folder-payload.types';
 
+@RateLimiter('mediaWrite')
 @Controller({ path: 'folders', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class FoldersController {
@@ -69,7 +75,11 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestQueryParamsToGetFolderUseCaseInput(payload, user, metadata);
+    const input = requestQueryParamsToGetFolderUseCaseInput(
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.getFolderUseCase.execute(input);
     return mapGetFolderHttpResponse(output);
   }
@@ -84,7 +94,11 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToCreateFolderUseCaseInput(payload, user, metadata);
+    const input = requestBodyToCreateFolderUseCaseInput(
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.createFolderUseCase.execute(input);
     return mapCreateFolderHttpResponse(output);
   }
@@ -104,7 +118,12 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToUpdateFolderUseCaseInput(params.id, payload, user, metadata);
+    const input = requestBodyToUpdateFolderUseCaseInput(
+      params.id,
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.updateFolderUseCase.execute(input);
     return mapUpdateFolderHttpResponse(output);
   }
@@ -124,7 +143,12 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestBodyToMoveFolderUseCaseInput(params.id, payload, user, metadata);
+    const input = requestBodyToMoveFolderUseCaseInput(
+      params.id,
+      payload,
+      user,
+      metadata,
+    );
     const output = await this.moveFolderUseCase.execute(input);
     return mapMoveFolderHttpResponse(output);
   }
@@ -140,7 +164,11 @@ export class FoldersController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestParamsToDeleteFolderUseCaseInput(params.id, user, metadata);
+    const input = requestParamsToDeleteFolderUseCaseInput(
+      params.id,
+      user,
+      metadata,
+    );
     const output = await this.deleteFolderUseCase.execute(input);
     return mapDeleteFolderHttpResponse(output);
   }

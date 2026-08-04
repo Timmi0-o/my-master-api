@@ -1,4 +1,3 @@
-import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
@@ -15,21 +14,28 @@ import { getUserBlocksQuerySchema } from '@modules/users/presentation/http/valid
 import type { IGetUserBlocksQueryPayload } from '@modules/users/presentation/http/validation/schemas/get-user-blocks-query.types';
 import { idParamSchema } from '@modules/users/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/users/presentation/http/validation/schemas/id-param.types';
+import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { requestBodyToCreateUserBlockUseCaseInput } from '../request-mappers/user-block/request-body-to-create-user-block-use-case-input';
-import { requestParamsToDeleteUserBlockUseCaseInput } from '../request-mappers/user-block/request-params-to-delete-user-block-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/user-block/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetUserBlockByIdUseCaseInput } from '../request-mappers/user-block/request-query-params-to-get-user-block-by-id-use-case-input';
 import { mapCreateUserBlockHttpResponse } from '../http-responses/map-create-user-block-response';
 import { mapDeleteUserBlockHttpResponse } from '../http-responses/map-delete-user-block-response';
 import { mapGetUserBlockByIdHttpResponse } from '../http-responses/map-get-user-block-by-id-response';
 import { mapGetUserBlocksHttpResponse } from '../http-responses/map-get-user-blocks-response';
+import { requestBodyToCreateUserBlockUseCaseInput } from '../request-mappers/user-block/request-body-to-create-user-block-use-case-input';
+import { requestParamsToDeleteUserBlockUseCaseInput } from '../request-mappers/user-block/request-params-to-delete-user-block-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/user-block/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetUserBlockByIdUseCaseInput } from '../request-mappers/user-block/request-query-params-to-get-user-block-by-id-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'user-blocks', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 @Authorize({ kind: 'authenticated' })
@@ -51,7 +57,11 @@ export class UserBlocksController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = requestQueryParamsToFindManyParams(queryParams, metadata, user.id);
+    const params = requestQueryParamsToFindManyParams(
+      queryParams,
+      metadata,
+      user.id,
+    );
     const output = await this.getUserBlocksUseCase.execute(params);
     return mapGetUserBlocksHttpResponse(output, queryParams);
   }

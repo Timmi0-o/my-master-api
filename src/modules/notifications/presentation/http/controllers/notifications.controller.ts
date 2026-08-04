@@ -21,19 +21,13 @@ import {
 } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { SkipResponseWrap } from '@shared/presentation/decorators/skip-response-wrap.decorator';
 import { HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { Observable, filter, interval, map, merge } from 'rxjs';
-import { requestParamsToArchiveNotificationUseCaseInput } from '../request-mappers/notification/request-params-to-archive-notification-use-case-input';
-import { requestParamsToDeleteNotificationUseCaseInput } from '../request-mappers/notification/request-params-to-delete-notification-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/notification/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetNotificationByIdUseCaseInput } from '../request-mappers/notification/request-query-params-to-get-notification-by-id-use-case-input';
-import { requestParamsToGetUnreadNotificationsCountUseCaseInput } from '../request-mappers/notification/request-params-to-get-unread-notifications-count-use-case-input';
-import { requestParamsToMarkAllNotificationsReadUseCaseInput } from '../request-mappers/notification/request-params-to-mark-all-notifications-read-use-case-input';
-import { requestParamsToMarkNotificationReadUseCaseInput } from '../request-mappers/notification/request-params-to-mark-notification-read-use-case-input';
 import { mapArchiveNotificationHttpResponse } from '../http-responses/map-archive-notification-response';
 import { mapDeleteNotificationHttpResponse } from '../http-responses/map-delete-notification-response';
 import { mapGetNotificationByIdHttpResponse } from '../http-responses/map-get-notification-by-id-response';
@@ -41,6 +35,13 @@ import { mapGetNotificationsHttpResponse } from '../http-responses/map-get-notif
 import { mapGetUnreadNotificationsCountHttpResponse } from '../http-responses/map-get-unread-notifications-count-response';
 import { mapMarkAllNotificationsReadHttpResponse } from '../http-responses/map-mark-all-notifications-read-response';
 import { mapMarkNotificationReadHttpResponse } from '../http-responses/map-mark-notification-read-response';
+import { requestParamsToArchiveNotificationUseCaseInput } from '../request-mappers/notification/request-params-to-archive-notification-use-case-input';
+import { requestParamsToDeleteNotificationUseCaseInput } from '../request-mappers/notification/request-params-to-delete-notification-use-case-input';
+import { requestParamsToGetUnreadNotificationsCountUseCaseInput } from '../request-mappers/notification/request-params-to-get-unread-notifications-count-use-case-input';
+import { requestParamsToMarkAllNotificationsReadUseCaseInput } from '../request-mappers/notification/request-params-to-mark-all-notifications-read-use-case-input';
+import { requestParamsToMarkNotificationReadUseCaseInput } from '../request-mappers/notification/request-params-to-mark-notification-read-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/notification/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetNotificationByIdUseCaseInput } from '../request-mappers/notification/request-query-params-to-get-notification-by-id-use-case-input';
 import { getByIdQuerySchema } from '../validation/schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from '../validation/schemas/get-by-id-query.types';
 import { getNotificationsQuerySchema } from '../validation/schemas/get-notifications-query.schema';
@@ -48,6 +49,7 @@ import type { IGetNotificationsQueryPayload } from '../validation/schemas/get-no
 import { idParamSchema } from '../validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '../validation/schemas/id-param.types';
 
+@RateLimiter('highRead')
 @Controller({ path: 'notifications', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 @Authorize({ kind: 'authenticated' })
@@ -73,7 +75,11 @@ export class NotificationsController {
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const params = requestQueryParamsToFindManyParams(queryParams, metadata, user.id);
+    const params = requestQueryParamsToFindManyParams(
+      queryParams,
+      metadata,
+      user.id,
+    );
     const output = await this.getNotificationsUseCase.execute(params);
     return mapGetNotificationsHttpResponse(output, queryParams);
   }

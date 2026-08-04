@@ -1,4 +1,3 @@
-import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
@@ -18,24 +17,38 @@ import { idParamSchema } from '@modules/masters/presentation/http/validation/sch
 import type { IIdParamPayload } from '@modules/masters/presentation/http/validation/schemas/id-param.types';
 import { updateMasterServiceReviewPayloadSchema } from '@modules/masters/presentation/http/validation/schemas/update-master-service-review-payload.schema';
 import type { IUpdateMasterServiceReviewPayload } from '@modules/masters/presentation/http/validation/schemas/update-master-service-review-payload.types';
+import {
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { requestBodyToCreateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-create-master-service-review-use-case-input';
-import { requestParamsToDeleteMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-params-to-delete-master-service-review-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput } from '../request-mappers/master-service-review/request-query-params-to-get-master-service-review-by-id-use-case-input';
-import { requestBodyToUpdateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-update-master-service-review-use-case-input';
 import { mapCreateMasterServiceReviewHttpResponse } from '../http-responses/map-create-master-service-review-response';
 import { mapDeleteMasterServiceReviewHttpResponse } from '../http-responses/map-delete-master-service-review-response';
 import { mapGetMasterServiceReviewByIdHttpResponse } from '../http-responses/map-get-master-service-review-by-id-response';
 import { mapGetMasterServiceReviewsHttpResponse } from '../http-responses/map-get-master-service-reviews-response';
 import { mapUpdateMasterServiceReviewHttpResponse } from '../http-responses/map-update-master-service-review-response';
+import { requestBodyToCreateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-create-master-service-review-use-case-input';
+import { requestBodyToUpdateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-update-master-service-review-use-case-input';
+import { requestParamsToDeleteMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-params-to-delete-master-service-review-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput } from '../request-mappers/master-service-review/request-query-params-to-get-master-service-review-by-id-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'master-service-reviews', version: '1' })
 export class MasterServiceReviewsController {
   constructor(

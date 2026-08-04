@@ -4,7 +4,7 @@ import { CreateBugReportUseCase } from '@modules/bug-reports/application/use-cas
 import { PresignBugReportImagesUseCase } from '@modules/bug-reports/application/use-cases/bug-report/presign-bug-report-images.use-case';
 import { Controller, Post, UseGuards } from '@nestjs/common';
 import type { ISessionUser } from '@shared/domain/i-session-user';
-import { BugReportRateLimit } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpBody, HttpParams } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
@@ -19,6 +19,7 @@ import type { IIdParamPayload } from '../validation/schemas/id-param.types';
 import { presignBugReportImagesPayloadSchema } from '../validation/schemas/presign-bug-report-images-payload.schema';
 import type { IPresignBugReportImagesPayload } from '../validation/schemas/presign-bug-report-images-payload.types';
 
+@RateLimiter('publicWrite')
 @Controller({ path: 'bug-reports', version: '1' })
 export class BugReportsController {
   constructor(
@@ -28,7 +29,6 @@ export class BugReportsController {
 
   @Post()
   @PublicEndpoint()
-  @BugReportRateLimit()
   @UseGuards(OptionalJwtAuthGuard)
   async createBugReport(
     @HttpBody(createBugReportPayloadSchema, {
@@ -44,7 +44,6 @@ export class BugReportsController {
 
   @Post(':id/images/presign')
   @PublicEndpoint()
-  @BugReportRateLimit()
   async presignBugReportImages(
     @HttpParams(idParamSchema, {
       preprocess: normalizeIdParam,

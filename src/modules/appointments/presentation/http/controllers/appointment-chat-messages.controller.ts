@@ -18,6 +18,7 @@ import { AuthorizeGuard } from '@modules/authorization/presentation/guards/autho
 import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import {
   HttpBody,
@@ -26,15 +27,16 @@ import {
 } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { requestBodyToCreateAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-body-to-create-appointment-chat-message-use-case-input';
-import { requestParamsToDeleteAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-params-to-delete-appointment-chat-message-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat-message/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetAppointmentChatMessageByIdUseCaseInput } from '../request-mappers/appointment-chat-message/request-query-params-to-get-appointment-chat-message-by-id-use-case-input';
 import { mapCreateAppointmentChatMessageHttpResponse } from '../http-responses/map-create-appointment-chat-message-response';
 import { mapDeleteAppointmentChatMessageHttpResponse } from '../http-responses/map-delete-appointment-chat-message-response';
 import { mapGetAppointmentChatMessageByIdHttpResponse } from '../http-responses/map-get-appointment-chat-message-by-id-response';
 import { mapGetAppointmentChatMessagesHttpResponse } from '../http-responses/map-get-appointment-chat-messages-response';
+import { requestBodyToCreateAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-body-to-create-appointment-chat-message-use-case-input';
+import { requestParamsToDeleteAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-params-to-delete-appointment-chat-message-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat-message/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetAppointmentChatMessageByIdUseCaseInput } from '../request-mappers/appointment-chat-message/request-query-params-to-get-appointment-chat-message-by-id-use-case-input';
 
+@RateLimiter('highRead')
 @Controller({ path: 'appointment-chat-messages', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class AppointmentChatMessagesController {

@@ -1,15 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  UnauthorizedException,
-  UseGuards,
-} from '@nestjs/common';
-import type { Request } from 'express';
-import { GetMeUseCase } from '@modules/auth/application/use-cases/get-me.use-case';
 import { ChangePasswordUseCase } from '@modules/auth/application/use-cases/change-password.use-case';
+import { GetMeUseCase } from '@modules/auth/application/use-cases/get-me.use-case';
 import { LoginUseCase } from '@modules/auth/application/use-cases/login.use-case';
 import { LogoutUseCase } from '@modules/auth/application/use-cases/logout.use-case';
 import { RefreshUseCase } from '@modules/auth/application/use-cases/refresh.use-case';
@@ -23,14 +13,6 @@ import type { ILoginPayload } from '@modules/auth/domain/auth.types';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { LocalAuthGuard } from '@modules/auth/presentation/guards/local-auth.guard';
-import { changePasswordSchema } from '@modules/auth/presentation/http/validation/schemas/change-password.schema';
-import { refreshTokenSchema } from '@modules/auth/presentation/http/validation/schemas/refresh-token.schema';
-import { registerPayloadSchema } from '@modules/auth/presentation/http/validation/schemas/register-payload.schema';
-import { resetPasswordSchema } from '@modules/auth/presentation/http/validation/schemas/reset-password.schema';
-import { sendResetPasswordEmailSchema } from '@modules/auth/presentation/http/validation/schemas/send-reset-password-email.schema';
-import { sendVerificationEmailSchema } from '@modules/auth/presentation/http/validation/schemas/send-verification-email.schema';
-import { validateResetPasswordTokenSchema } from '@modules/auth/presentation/http/validation/schemas/validate-reset-password-token.schema';
-import { verifyEmailSchema } from '@modules/auth/presentation/http/validation/schemas/verify-email.schema';
 import type {
   IChangePasswordPayload,
   IRefreshTokenInput,
@@ -41,18 +23,33 @@ import type {
   IValidateResetPasswordTokenPayload,
   IVerifyEmailPayload,
 } from '@modules/auth/presentation/http/validation/schemas/auth.schema.types';
+import { changePasswordSchema } from '@modules/auth/presentation/http/validation/schemas/change-password.schema';
+import { refreshTokenSchema } from '@modules/auth/presentation/http/validation/schemas/refresh-token.schema';
+import { registerPayloadSchema } from '@modules/auth/presentation/http/validation/schemas/register-payload.schema';
+import { resetPasswordSchema } from '@modules/auth/presentation/http/validation/schemas/reset-password.schema';
+import { sendResetPasswordEmailSchema } from '@modules/auth/presentation/http/validation/schemas/send-reset-password-email.schema';
+import { sendVerificationEmailSchema } from '@modules/auth/presentation/http/validation/schemas/send-verification-email.schema';
+import { validateResetPasswordTokenSchema } from '@modules/auth/presentation/http/validation/schemas/validate-reset-password-token.schema';
+import { verifyEmailSchema } from '@modules/auth/presentation/http/validation/schemas/verify-email.schema';
 import type { IUserEntity } from '@modules/users/domain/entities/user';
-import type { ISessionUser } from '@shared/domain/i-session-user';
 import {
-  AuthRelaxedRateLimit,
-  AuthStrictRateLimit,
-} from '@shared/infrastructure/throttler/http-rate-limit.decorators';
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
+import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpBody } from '@shared/presentation/http/decorators';
 import {
   buildLoginMetadataInput,
   normalizeRegisterPayload,
 } from '@shared/presentation/http/helpers/normalize-auth-payload';
+import type { Request } from 'express';
 import {
   mapLoginHttpResponse,
   mapRefreshHttpResponse,
@@ -78,7 +75,7 @@ export class AuthController {
   ) {}
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @Post('register')
   async register(
     @HttpBody(registerPayloadSchema, {
@@ -94,7 +91,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
@@ -111,7 +108,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthRelaxedRateLimit()
+  @RateLimiter('authRelaxed')
   @Post('refresh')
   async refresh(
     @HttpBody(refreshTokenSchema, {
@@ -124,7 +121,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthRelaxedRateLimit()
+  @RateLimiter('authRelaxed')
   @Post('logout')
   async logout(
     @HttpBody(refreshTokenSchema, {
@@ -137,7 +134,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @Post('send-reset-password-email')
   async sendResetPasswordEmail(
     @HttpBody(sendResetPasswordEmailSchema, {
@@ -149,7 +146,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @Post('validate-reset-password-token')
   async validateResetPasswordToken(
     @HttpBody(validateResetPasswordTokenSchema, {
@@ -161,7 +158,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @Post('reset-password')
   async resetPassword(
     @HttpBody(resetPasswordSchema, {
@@ -173,7 +170,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @Post('send-verification-email')
   async sendVerificationEmail(
     @HttpBody(sendVerificationEmailSchema, {
@@ -185,7 +182,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
-  @AuthStrictRateLimit()
+  @RateLimiter('authStrict')
   @Post('verify-email')
   async verifyEmail(
     @HttpBody(verifyEmailSchema, {
@@ -197,6 +194,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @RateLimiter('authStrict')
   @Post('change-password')
   async changePassword(
     @AuthenticatedUser() user: ISessionUser,
@@ -213,6 +211,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @RateLimiter('authRelaxed')
   @Get('me')
   async me(@AuthenticatedUser() user: ISessionUser) {
     const output = await this.getMeUseCase.execute(user.id);

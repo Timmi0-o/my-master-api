@@ -17,6 +17,7 @@ import type { IIdParamPayload } from '@modules/masters/presentation/http/validat
 import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import {
@@ -26,15 +27,16 @@ import {
 } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { requestBodyToCreateMasterSubscriptionUseCaseInput } from '../request-mappers/master-subscription/request-body-to-create-master-subscription-use-case-input';
-import { requestParamsToDeleteMasterSubscriptionUseCaseInput } from '../request-mappers/master-subscription/request-params-to-delete-master-subscription-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/master-subscription/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetMasterSubscriptionByIdUseCaseInput } from '../request-mappers/master-subscription/request-query-params-to-get-master-subscription-by-id-use-case-input';
 import { mapCreateMasterSubscriptionHttpResponse } from '../http-responses/map-create-master-subscription-response';
 import { mapDeleteMasterSubscriptionHttpResponse } from '../http-responses/map-delete-master-subscription-response';
 import { mapGetMasterSubscriptionByIdHttpResponse } from '../http-responses/map-get-master-subscription-by-id-response';
 import { mapGetMasterSubscriptionsHttpResponse } from '../http-responses/map-get-master-subscriptions-response';
+import { requestBodyToCreateMasterSubscriptionUseCaseInput } from '../request-mappers/master-subscription/request-body-to-create-master-subscription-use-case-input';
+import { requestParamsToDeleteMasterSubscriptionUseCaseInput } from '../request-mappers/master-subscription/request-params-to-delete-master-subscription-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-subscription/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterSubscriptionByIdUseCaseInput } from '../request-mappers/master-subscription/request-query-params-to-get-master-subscription-by-id-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'master-subscriptions', version: '1' })
 export class MasterSubscriptionsController {
   constructor(

@@ -1,4 +1,3 @@
-import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
@@ -27,32 +26,46 @@ import { presignUserProfileImagesPayloadSchema } from '@modules/users/presentati
 import type { IPresignUserProfileImagesPayload } from '@modules/users/presentation/http/validation/schemas/presign-user-profile-images-payload.types';
 import { updateUserProfilePayloadSchema } from '@modules/users/presentation/http/validation/schemas/update-user-profile-payload.schema';
 import type { IUpdateUserProfilePayload } from '@modules/users/presentation/http/validation/schemas/update-user-profile-payload.types';
+import {
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { outputCreateUserProfileToCreateRootFolderUseCaseInput } from '../request-mappers/user-profile/output-create-user-profile-to-create-root-folder-use-case-input';
-import { requestBodyToCreateUserProfileUseCaseInput } from '../request-mappers/user-profile/request-body-to-create-user-profile-use-case-input';
-import { requestBodyToDeleteUserProfileImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-delete-user-profile-images-use-case-input';
-import { requestBodyToDeleteUserProfileBannerImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-delete-user-profile-banner-images-use-case-input';
-import { requestParamsToDeleteUserProfileUseCaseInput } from '../request-mappers/user-profile/request-params-to-delete-user-profile-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/user-profile/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetMyUserProfileUseCaseInput } from '../request-mappers/user-profile/request-query-params-to-get-my-user-profile-use-case-input';
-import { requestQueryParamsToGetUserProfileByIdUseCaseInput } from '../request-mappers/user-profile/request-query-params-to-get-user-profile-by-id-use-case-input';
-import { requestBodyToPresignUserProfileImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-presign-user-profile-images-use-case-input';
-import { requestBodyToPresignUserProfileBannerImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-presign-user-profile-banner-images-use-case-input';
-import { requestBodyToUpdateUserProfileUseCaseInput } from '../request-mappers/user-profile/request-body-to-update-user-profile-use-case-input';
 import { mapCreateUserProfileHttpResponse } from '../http-responses/map-create-user-profile-response';
-import { mapDeleteUserProfileHttpResponse } from '../http-responses/map-delete-user-profile-response';
 import { mapDeleteUserProfileImagesHttpResponse } from '../http-responses/map-delete-user-profile-images-response';
+import { mapDeleteUserProfileHttpResponse } from '../http-responses/map-delete-user-profile-response';
 import { mapGetMyUserProfileHttpResponse } from '../http-responses/map-get-my-user-profile-response';
 import { mapGetUserProfileByIdHttpResponse } from '../http-responses/map-get-user-profile-by-id-response';
 import { mapGetUserProfilesHttpResponse } from '../http-responses/map-get-user-profiles-response';
 import { mapPresignUserProfileImagesHttpResponse } from '../http-responses/map-presign-user-profile-images-response';
 import { mapUpdateUserProfileHttpResponse } from '../http-responses/map-update-user-profile-response';
+import { outputCreateUserProfileToCreateRootFolderUseCaseInput } from '../request-mappers/user-profile/output-create-user-profile-to-create-root-folder-use-case-input';
+import { requestBodyToCreateUserProfileUseCaseInput } from '../request-mappers/user-profile/request-body-to-create-user-profile-use-case-input';
+import { requestBodyToDeleteUserProfileBannerImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-delete-user-profile-banner-images-use-case-input';
+import { requestBodyToDeleteUserProfileImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-delete-user-profile-images-use-case-input';
+import { requestBodyToPresignUserProfileBannerImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-presign-user-profile-banner-images-use-case-input';
+import { requestBodyToPresignUserProfileImagesUseCaseInput } from '../request-mappers/user-profile/request-body-to-presign-user-profile-images-use-case-input';
+import { requestBodyToUpdateUserProfileUseCaseInput } from '../request-mappers/user-profile/request-body-to-update-user-profile-use-case-input';
+import { requestParamsToDeleteUserProfileUseCaseInput } from '../request-mappers/user-profile/request-params-to-delete-user-profile-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/user-profile/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMyUserProfileUseCaseInput } from '../request-mappers/user-profile/request-query-params-to-get-my-user-profile-use-case-input';
+import { requestQueryParamsToGetUserProfileByIdUseCaseInput } from '../request-mappers/user-profile/request-query-params-to-get-user-profile-by-id-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'user-profiles', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class UserProfilesController {
@@ -194,7 +207,8 @@ export class UserProfilesController {
     })
     params: IIdParamPayload,
     @HttpBody(deleteUserProfileImagesPayloadSchema, {
-      errorMessage: 'Некорректный payload удаления аватара профиля пользователя',
+      errorMessage:
+        'Некорректный payload удаления аватара профиля пользователя',
     })
     payload: IDeleteUserProfileImagesPayload,
     @AuthenticatedUser() user: ISessionUser,
@@ -244,7 +258,8 @@ export class UserProfilesController {
     })
     params: IIdParamPayload,
     @HttpBody(deleteUserProfileImagesPayloadSchema, {
-      errorMessage: 'Некорректный payload удаления баннера профиля пользователя',
+      errorMessage:
+        'Некорректный payload удаления баннера профиля пользователя',
     })
     payload: IDeleteUserProfileImagesPayload,
     @AuthenticatedUser() user: ISessionUser,

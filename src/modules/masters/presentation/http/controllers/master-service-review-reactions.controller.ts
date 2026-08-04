@@ -1,4 +1,3 @@
-import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
@@ -12,20 +11,27 @@ import { getMasterServiceReviewReactionsQuerySchema } from '@modules/masters/pre
 import type { IGetMasterServiceReviewReactionsQueryPayload } from '@modules/masters/presentation/http/validation/schemas/get-master-service-review-reactions-query.types';
 import { idParamSchema } from '@modules/masters/presentation/http/validation/schemas/id-param.schema';
 import type { IIdParamPayload } from '@modules/masters/presentation/http/validation/schemas/id-param.types';
+import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { requestParamsToDeleteMasterServiceReviewReactionUseCaseInput } from '../request-mappers/master-service-review-reaction/request-params-to-delete-master-service-review-reaction-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review-reaction/request-query-params-to-find-many-params.mapper';
-import { requestBodyToUpsertMasterServiceReviewReactionUseCaseInput } from '../request-mappers/master-service-review-reaction/request-body-to-upsert-master-service-review-reaction-use-case-input';
 import { mapDeleteMasterServiceReviewReactionHttpResponse } from '../http-responses/map-delete-master-service-review-reaction-response';
 import { mapGetMasterServiceReviewReactionsHttpResponse } from '../http-responses/map-get-master-service-review-reactions-response';
 import { mapUpsertMasterServiceReviewReactionHttpResponse } from '../http-responses/map-upsert-master-service-review-reaction-response';
+import { requestBodyToUpsertMasterServiceReviewReactionUseCaseInput } from '../request-mappers/master-service-review-reaction/request-body-to-upsert-master-service-review-reaction-use-case-input';
+import { requestParamsToDeleteMasterServiceReviewReactionUseCaseInput } from '../request-mappers/master-service-review-reaction/request-params-to-delete-master-service-review-reaction-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review-reaction/request-query-params-to-find-many-params.mapper';
 
+@RateLimiter('standard')
 @Controller({ path: 'master-service-review-reactions', version: '1' })
 export class MasterServiceReviewReactionsController {
   constructor(
@@ -39,8 +45,7 @@ export class MasterServiceReviewReactionsController {
   async getMasterServiceReviewReactions(
     @HttpQuery(getMasterServiceReviewReactionsQuerySchema, {
       preprocess: normalizeListQueryRaw,
-      errorMessage:
-        'Некорректные параметры запроса списка реакций на отзывы',
+      errorMessage: 'Некорректные параметры запроса списка реакций на отзывы',
     })
     queryParams: IGetMasterServiceReviewReactionsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,

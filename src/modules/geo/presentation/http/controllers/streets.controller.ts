@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpQuery } from '@shared/presentation/http/decorators';
 import { GetStreetsUseCase } from 'src/modules/geo/application/use-cases/street/get-streets.use-case';
@@ -7,6 +8,7 @@ import { requestQueryParamsToGetStreetsUseCaseInput } from '../request-mappers/s
 import { getStreetsQuerySchema } from '../validation/schemas/get-streets-query.schema';
 import type { IGetStreetsQueryPayload } from '../validation/schemas/get-streets-query.types';
 
+@RateLimiter('publicRead')
 @Controller({ path: 'geo/streets', version: '1' })
 export class StreetsController {
   constructor(private readonly getStreetsUseCase: GetStreetsUseCase) {}

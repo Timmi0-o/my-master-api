@@ -1,4 +1,3 @@
-import { Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
@@ -28,33 +27,47 @@ import { presignMasterProfileImagesPayloadSchema } from '@modules/masters/presen
 import type { IPresignMasterProfileImagesPayload } from '@modules/masters/presentation/http/validation/schemas/presign-master-profile-images-payload.types';
 import { updateMasterProfilePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/update-master-profile-payload.schema';
 import type { IUpdateMasterProfilePayload } from '@modules/masters/presentation/http/validation/schemas/update-master-profile-payload.types';
+import {
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
-import { HttpBody, HttpParams, HttpQuery } from '@shared/presentation/http/decorators';
+import {
+  HttpBody,
+  HttpParams,
+  HttpQuery,
+} from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { outputCreateMasterProfileToCreateRootFolderUseCaseInput } from '../request-mappers/master-profile/output-create-master-profile-to-create-root-folder-use-case-input';
-import { requestBodyToCreateMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-body-to-create-master-profile-use-case-input';
-import { requestBodyToDeleteMasterProfileImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-delete-master-profile-images-use-case-input';
-import { requestBodyToDeleteMasterProfileBannerImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-delete-master-profile-banner-images-use-case-input';
-import { requestParamsToDeleteMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-params-to-delete-master-profile-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/master-profile/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetMasterProfileByIdUseCaseInput } from '../request-mappers/master-profile/request-query-params-to-get-master-profile-by-id-use-case-input';
-import { requestQueryParamsToGetMyMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-query-params-to-get-my-master-profile-use-case-input';
-import { requestBodyToPresignMasterProfileImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-presign-master-profile-images-use-case-input';
-import { requestBodyToPresignMasterProfileBannerImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-presign-master-profile-banner-images-use-case-input';
-import { requestBodyToUpdateMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-body-to-update-master-profile-use-case-input';
 import { mapCreateMasterProfileHttpResponse } from '../http-responses/map-create-master-profile-response';
-import { mapDeleteMasterProfileHttpResponse } from '../http-responses/map-delete-master-profile-response';
 import { mapDeleteMasterProfileImagesHttpResponse } from '../http-responses/map-delete-master-profile-images-response';
+import { mapDeleteMasterProfileHttpResponse } from '../http-responses/map-delete-master-profile-response';
 import { mapGetMasterProfileByIdHttpResponse } from '../http-responses/map-get-master-profile-by-id-response';
 import { mapGetMasterProfilesHttpResponse } from '../http-responses/map-get-master-profiles-response';
 import { mapGetMyMasterProfileHttpResponse } from '../http-responses/map-get-my-master-profile-response';
 import { mapPresignMasterProfileImagesHttpResponse } from '../http-responses/map-presign-master-profile-images-response';
 import { mapUpdateMasterProfileHttpResponse } from '../http-responses/map-update-master-profile-response';
+import { outputCreateMasterProfileToCreateRootFolderUseCaseInput } from '../request-mappers/master-profile/output-create-master-profile-to-create-root-folder-use-case-input';
+import { requestBodyToCreateMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-body-to-create-master-profile-use-case-input';
+import { requestBodyToDeleteMasterProfileBannerImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-delete-master-profile-banner-images-use-case-input';
+import { requestBodyToDeleteMasterProfileImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-delete-master-profile-images-use-case-input';
+import { requestBodyToPresignMasterProfileBannerImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-presign-master-profile-banner-images-use-case-input';
+import { requestBodyToPresignMasterProfileImagesUseCaseInput } from '../request-mappers/master-profile/request-body-to-presign-master-profile-images-use-case-input';
+import { requestBodyToUpdateMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-body-to-update-master-profile-use-case-input';
+import { requestParamsToDeleteMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-params-to-delete-master-profile-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/master-profile/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetMasterProfileByIdUseCaseInput } from '../request-mappers/master-profile/request-query-params-to-get-master-profile-by-id-use-case-input';
+import { requestQueryParamsToGetMyMasterProfileUseCaseInput } from '../request-mappers/master-profile/request-query-params-to-get-my-master-profile-use-case-input';
 
+@RateLimiter('standard')
 @Controller({ path: 'master-profiles', version: '1' })
 export class MasterProfilesController {
   constructor(
@@ -75,8 +88,7 @@ export class MasterProfilesController {
   async getMasterProfiles(
     @HttpQuery(getMasterProfilesQuerySchema, {
       preprocess: normalizeListQueryRaw,
-      errorMessage:
-        'Некорректные параметры запроса списка профилей мастеров',
+      errorMessage: 'Некорректные параметры запроса списка профилей мастеров',
     })
     queryParams: IGetMasterProfilesQueryPayload,
     @GetMetadata() metadata: IGetMetadata,

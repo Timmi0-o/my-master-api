@@ -3,10 +3,10 @@ import { GetAppointmentChatByIdUseCase } from '@modules/appointments/application
 import { GetAppointmentChatMessageWindowUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chat-message-window.use-case';
 import { GetAppointmentChatsUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chats.use-case';
 import { MarkAppointmentChatReadUseCase } from '@modules/appointments/application/use-cases/appointment-chat/mark-appointment-chat-read.use-case';
-import { getAppointmentChatsQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.schema';
-import type { IGetAppointmentChatsQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.types';
 import { getAppointmentChatMessageWindowQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-message-window-query.schema';
 import type { IGetAppointmentChatMessageWindowQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-message-window-query.types';
+import { getAppointmentChatsQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.schema';
+import type { IGetAppointmentChatsQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.types';
 import { getByIdQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.schema';
 import type { IGetByIdQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.types';
 import { idParamSchema } from '@modules/appointments/presentation/http/validation/schemas/id-param.schema';
@@ -21,6 +21,7 @@ import { AuthorizeGuard } from '@modules/authorization/presentation/guards/autho
 import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { GetMetadata } from '@shared/presentation/decorators/get-metadata';
 import {
   HttpBody,
@@ -29,17 +30,18 @@ import {
 } from '@shared/presentation/http/decorators';
 import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id-param';
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
-import { requestBodyToMarkAppointmentChatReadUseCaseInput } from '../request-mappers/appointment-chat/request-body-to-mark-appointment-chat-read-use-case-input';
-import { requestParamsToDeleteAppointmentChatUseCaseInput } from '../request-mappers/appointment-chat/request-params-to-delete-appointment-chat-use-case-input';
-import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat/request-query-params-to-find-many-params.mapper';
-import { requestQueryParamsToGetAppointmentChatByIdUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-by-id-use-case-input';
-import { requestQueryParamsToGetAppointmentChatMessageWindowUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-message-window-use-case-input';
 import { mapDeleteAppointmentChatHttpResponse } from '../http-responses/map-delete-appointment-chat-response';
 import { mapGetAppointmentChatByIdHttpResponse } from '../http-responses/map-get-appointment-chat-by-id-response';
 import { mapGetAppointmentChatMessageWindowHttpResponse } from '../http-responses/map-get-appointment-chat-message-window-response';
 import { mapGetAppointmentChatsHttpResponse } from '../http-responses/map-get-appointment-chats-response';
 import { mapMarkAppointmentChatReadHttpResponse } from '../http-responses/map-mark-appointment-chat-read-response';
+import { requestBodyToMarkAppointmentChatReadUseCaseInput } from '../request-mappers/appointment-chat/request-body-to-mark-appointment-chat-read-use-case-input';
+import { requestParamsToDeleteAppointmentChatUseCaseInput } from '../request-mappers/appointment-chat/request-params-to-delete-appointment-chat-use-case-input';
+import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat/request-query-params-to-find-many-params.mapper';
+import { requestQueryParamsToGetAppointmentChatByIdUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-by-id-use-case-input';
+import { requestQueryParamsToGetAppointmentChatMessageWindowUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-message-window-use-case-input';
 
+@RateLimiter('highRead')
 @Controller({ path: 'appointment-chats', version: '1' })
 @UseGuards(JwtAuthGuard, AuthorizeGuard)
 export class AppointmentChatsController {
