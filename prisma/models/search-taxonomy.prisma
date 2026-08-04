@@ -1,0 +1,26 @@
+model SearchCanonicalTag {
+  id       String                 @id @default(uuid())
+  value    String                 @unique @map("value")
+  category MasterServiceCategory? @map("category")
+
+  synonyms SearchSynonym[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("SearchCanonicalTags")
+}
+
+model SearchSynonym {
+  id              String @id @default(uuid())
+  alias           String @unique @map("alias")
+  canonicalTagId  String @map("canonical_tag_id")
+
+  canonicalTag SearchCanonicalTag @relation(fields: [canonicalTagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([canonicalTagId])
+  @@map("SearchSynonyms")
+}

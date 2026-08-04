@@ -12,6 +12,8 @@ export type WhereOperator<T> = {
   isNull?: boolean;
   contains?: T extends string ? string : never;
   containsInsensitive?: T extends string ? string : never;
+  has?: T extends ReadonlyArray<infer E> ? E : never;
+  hasSome?: T extends ReadonlyArray<infer E> ? E[] : never;
 };
 
 type UnwrapRelationValue<V> =
@@ -51,6 +53,8 @@ export function isWhereOperator<T>(value: unknown): value is WhereOperator<T> {
     'isNull',
     'contains',
     'containsInsensitive',
+    'has',
+    'hasSome',
   ] as const;
 
   return keys.some((k) => k in value);

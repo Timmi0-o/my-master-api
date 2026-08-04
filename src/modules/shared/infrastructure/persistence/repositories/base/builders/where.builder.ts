@@ -36,6 +36,14 @@ function buildOperator<T>(op: WhereOperator<T>): Record<string, unknown> {
     result.mode = 'insensitive';
   }
 
+  if (op.has !== undefined) {
+    result.has = op.has;
+  }
+
+  if (op.hasSome !== undefined) {
+    result.hasSome = op.hasSome;
+  }
+
   return result;
 }
 

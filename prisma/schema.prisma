@@ -5,5 +5,5 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
-  extensions = [postgis(schema: "public")]
+  extensions = [postgis(schema: "public"), pg_trgm(schema: "public")]
 }

@@ -6,6 +6,7 @@ import { masterServiceReviewsSeed } from './master-service-reviews.seed';
 import { mastersSeed } from './masters.seed';
 import { profileAvatarsSeed } from './profile-avatars.seed';
 import { rbacSeed } from './rbac.seed';
+import { searchTaxonomySeed } from './search-taxonomy.seed';
 import { userProfilesSeed } from './user-profiles.seed';
 import { usersSeed } from './users.seed';
 
@@ -15,6 +16,7 @@ export const seeds: SeedRunner[] = [
   rbacSeed,
   usersSeed,
   userProfilesSeed,
+  searchTaxonomySeed,
   mastersSeed,
   masterServiceImagesSeed,
   profileAvatarsSeed,

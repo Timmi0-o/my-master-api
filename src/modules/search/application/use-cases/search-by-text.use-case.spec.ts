@@ -5,9 +5,10 @@ import type { IAddressRepository } from 'src/modules/geo/domain/repositories/add
 import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile';
 import { MASTER_OWNER_EMAIL_VERIFIED_WHERE } from 'src/modules/masters/domain/entities/master-profile/filters/master-owner-email-verified.where';
 import { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service';
+import type { ISearchTaxonomyReader } from 'src/modules/search/domain/repositories/search-taxonomy';
 
 describe('SearchByTextUseCase discovery filters', () => {
-  const createUseCase = () => {
+  const createUseCase = (taxonomyOverrides?: Partial<ISearchTaxonomyReader>) => {
     const masterProfileRepository = {
       findMany: jest.fn().mockResolvedValue([]),
     } as unknown as IMasterProfileRepository;
@@ -21,10 +22,18 @@ describe('SearchByTextUseCase discovery filters', () => {
       findEntityIdsByLocalityId: jest.fn(),
     } as unknown as IAddressRepository;
 
+    const searchTaxonomyReader: ISearchTaxonomyReader = {
+      findExactMatch: jest.fn().mockResolvedValue(null),
+      findFuzzyMatches: jest.fn().mockResolvedValue([]),
+      findFuzzyServiceIdsByName: jest.fn().mockResolvedValue([]),
+      ...taxonomyOverrides,
+    };
+
     const useCase = new SearchByTextUseCase(
       masterProfileRepository,
       masterServiceRepository,
       addressRepository,
+      searchTaxonomyReader,
     );
 
     return {
@@ -32,6 +41,7 @@ describe('SearchByTextUseCase discovery filters', () => {
       masterProfileRepository,
       masterServiceRepository,
       addressRepository,
+      searchTaxonomyReader,
     };
   };
 
@@ -144,5 +154,81 @@ describe('SearchByTextUseCase discovery filters', () => {
     const call = (masterProfileRepository.findMany as jest.Mock).mock
       .calls[0][0];
     expect(call.selectOptions?.include?.services).toBeUndefined();
+  });
+
+  it('expands synonym query into canonical terms and hasSome tags', async () => {
+    const { useCase, masterServiceRepository, searchTaxonomyReader } =
+      createUseCase({
+        findExactMatch: jest.fn().mockResolvedValue({
+          canonical: 'маникюр',
+          aliases: ['ноготочки', 'ногти', 'nails'],
+        }),
+      });
+
+    await useCase.execute({ q: 'ноготочки' });
+
+    expect(searchTaxonomyReader.findExactMatch).toHaveBeenCalledWith(
+      'ноготочки',
+    );
+
+    const where = (masterServiceRepository.findMany as jest.Mock).mock
+      .calls[0][0].where;
+
+    expect(where.or).toEqual(
+      expect.arrayContaining([
+        { name: { containsInsensitive: 'маникюр' } },
+        { description: { containsInsensitive: 'маникюр' } },
+        { name: { containsInsensitive: 'ноготочки' } },
+        {
+          tags: {
+            hasSome: expect.arrayContaining([
+              'ноготочки',
+              'маникюр',
+              'ногти',
+              'nails',
+            ]),
+          },
+        },
+      ]),
+    );
+  });
+
+  it('falls back to contains on normalized query when taxonomy has no hits', async () => {
+    const { useCase, masterServiceRepository, searchTaxonomyReader } =
+      createUseCase();
+
+    await useCase.execute({ q: 'unique-query' });
+
+    expect(searchTaxonomyReader.findExactMatch).toHaveBeenCalledWith(
+      'unique-query',
+    );
+    expect(searchTaxonomyReader.findFuzzyMatches).toHaveBeenCalled();
+
+    const where = (masterServiceRepository.findMany as jest.Mock).mock
+      .calls[0][0].where;
+
+    expect(where.or).toEqual(
+      expect.arrayContaining([
+        { name: { containsInsensitive: 'unique-query' } },
+        { description: { containsInsensitive: 'unique-query' } },
+        { tags: { hasSome: ['unique-query'] } },
+      ]),
+    );
+  });
+
+  it('includes fuzzy service ids in the or clause', async () => {
+    const fuzzyId = '22222222-2222-2222-2222-222222222222';
+    const { useCase, masterServiceRepository } = createUseCase({
+      findFuzzyServiceIdsByName: jest.fn().mockResolvedValue([fuzzyId]),
+    });
+
+    await useCase.execute({ q: 'маникюрр' });
+
+    const where = (masterServiceRepository.findMany as jest.Mock).mock
+      .calls[0][0].where;
+
+    expect(where.or).toEqual(
+      expect.arrayContaining([{ id: { in: [fuzzyId] } }]),
+    );
   });
 });

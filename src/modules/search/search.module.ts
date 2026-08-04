@@ -8,6 +8,9 @@ import type { IMasterServiceRepository } from '../masters/domain/repositories/ma
 import { MASTER_SERVICE_REPOSITORY_TOKEN } from '../masters/domain/repositories/master-service';
 import { MastersModule } from '../masters/masters.module';
 import { SearchByTextUseCase } from './application/use-cases/search-by-text.use-case';
+import type { ISearchTaxonomyReader } from './domain/repositories/search-taxonomy';
+import { SEARCH_TAXONOMY_READER_TOKEN } from './domain/repositories/search-taxonomy';
+import { PrismaSearchTaxonomyReader } from './infrastructure/persistence/prisma-search-taxonomy.reader';
 import { SearchController } from './presentation/http/controllers/search.controller';
 
 @Module({
@@ -15,21 +18,28 @@ import { SearchController } from './presentation/http/controllers/search.control
   controllers: [SearchController],
   providers: [
     {
+      provide: SEARCH_TAXONOMY_READER_TOKEN,
+      useClass: PrismaSearchTaxonomyReader,
+    },
+    {
       provide: SearchByTextUseCase,
       useFactory: (
         masterProfileRepository: IMasterProfileRepository,
         masterServiceRepository: IMasterServiceRepository,
         addressRepository: IAddressRepository,
+        searchTaxonomyReader: ISearchTaxonomyReader,
       ) =>
         new SearchByTextUseCase(
           masterProfileRepository,
           masterServiceRepository,
           addressRepository,
+          searchTaxonomyReader,
         ),
       inject: [
         MASTER_PROFILE_REPOSITORY_TOKEN,
         MASTER_SERVICE_REPOSITORY_TOKEN,
         ADDRESS_REPOSITORY_TOKEN,
+        SEARCH_TAXONOMY_READER_TOKEN,
       ],
     },
   ],

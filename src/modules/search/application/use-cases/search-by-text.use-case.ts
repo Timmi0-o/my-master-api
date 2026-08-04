@@ -14,6 +14,14 @@ import type { IMasterProfileRepository } from 'src/modules/masters/domain/reposi
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service';
 import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-profile/preset-to-select-options.mapper';
 import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-service/preset-to-select-options.mapper';
+import {
+  expandSearchQueryTerms,
+  normalizeSearchQuery,
+  SEARCH_FUZZY_SERVICE_NAME_LIMIT,
+  SEARCH_FUZZY_TAXONOMY_LIMIT,
+  SEARCH_SIMILARITY_THRESHOLD,
+} from 'src/modules/search/domain/entities/search-query-expansion';
+import type { ISearchTaxonomyReader } from 'src/modules/search/domain/repositories/search-taxonomy';
 import { splitPresetReadOptions } from 'src/modules/shared/application/presets/common/split-preset-read-options.helper';
 import type { FindManyParams, OrderBy } from 'src/modules/shared/domain/query';
 import { buildPaginatedListResponse } from 'src/modules/shared/presentation/http/http-responses/build-paginated-list-response';
@@ -28,12 +36,26 @@ const DEFAULT_SEARCH_LIMIT = 20;
 const DEFAULT_SEARCH_PAGE = 1;
 const DEFAULT_SEARCH_SORT: TSearchSort = 'relevance';
 
-function buildServiceTextSearchOr(q: string): Record<string, unknown>[] {
-  return [
-    { name: { containsInsensitive: q } },
-    { description: { containsInsensitive: q } },
-    { tags: { has: q.trim().toLowerCase() } },
-  ];
+function buildServiceTextSearchOr(
+  terms: string[],
+  fuzzyServiceIds: string[],
+): Record<string, unknown>[] {
+  const clauses: Record<string, unknown>[] = [];
+
+  for (const term of terms) {
+    clauses.push({ name: { containsInsensitive: term } });
+    clauses.push({ description: { containsInsensitive: term } });
+  }
+
+  if (terms.length > 0) {
+    clauses.push({ tags: { hasSome: terms } });
+  }
+
+  if (fuzzyServiceIds.length > 0) {
+    clauses.push({ id: { in: fuzzyServiceIds } });
+  }
+
+  return clauses;
 }
 
 function buildPriceWhere(
@@ -62,14 +84,25 @@ function buildServiceDiscoverabilityWhere(
   };
 }
 
+function buildMasterProfileTextOr(terms: string[]): Record<string, unknown>[] {
+  const clauses: Record<string, unknown>[] = [];
+  for (const term of terms) {
+    clauses.push({ displayName: { containsInsensitive: term } });
+    clauses.push({ description: { containsInsensitive: term } });
+  }
+  return clauses;
+}
+
 function buildMasterWhere(
   input: Pick<
     ISearchByTextApplicationInput,
-    'q' | 'category' | 'minPrice' | 'maxPrice' | 'minRating'
+    'category' | 'minPrice' | 'maxPrice' | 'minRating'
   >,
+  terms: string[] | undefined,
+  fuzzyServiceIds: string[],
   masterProfileIds?: string[],
 ): Record<string, unknown> {
-  const { q, category, minPrice, maxPrice, minRating } = input;
+  const { category, minPrice, maxPrice, minRating } = input;
   const hasPriceFilter = minPrice != null || maxPrice != null;
 
   const base: Record<string, unknown> = {
@@ -86,11 +119,11 @@ function buildMasterWhere(
     category,
   );
 
-  if (!q && category == null && !hasPriceFilter) {
+  if (!terms && category == null && !hasPriceFilter) {
     return base;
   }
 
-  if (!q) {
+  if (!terms) {
     return {
       ...base,
       services: {
@@ -99,14 +132,14 @@ function buildMasterWhere(
     };
   }
 
-  const serviceTextOr = buildServiceTextSearchOr(q);
+  const serviceTextOr = buildServiceTextSearchOr(terms, fuzzyServiceIds);
+  const masterTextOr = buildMasterProfileTextOr(terms);
 
   if (category == null && !hasPriceFilter) {
     return {
       ...base,
       or: [
-        { displayName: { containsInsensitive: q } },
-        { description: { containsInsensitive: q } },
+        ...masterTextOr,
         {
           services: {
             some: {
@@ -125,10 +158,7 @@ function buildMasterWhere(
       {
         and: [
           {
-            or: [
-              { displayName: { containsInsensitive: q } },
-              { description: { containsInsensitive: q } },
-            ],
+            or: masterTextOr,
           },
           {
             services: {
@@ -152,13 +182,17 @@ function buildMasterWhere(
 function buildServiceWhere(
   input: Pick<
     ISearchByTextApplicationInput,
-    'q' | 'category' | 'minPrice' | 'maxPrice' | 'minRating'
+    'category' | 'minPrice' | 'maxPrice' | 'minRating'
   >,
+  terms: string[] | undefined,
+  fuzzyServiceIds: string[],
   masterProfileIds?: string[],
 ): Record<string, unknown> {
-  const { q, category, minPrice, maxPrice, minRating } = input;
+  const { category, minPrice, maxPrice, minRating } = input;
   const price = buildPriceWhere(minPrice, maxPrice);
-  const serviceTextOr = q ? buildServiceTextSearchOr(q) : undefined;
+  const serviceTextOr = terms
+    ? buildServiceTextSearchOr(terms, fuzzyServiceIds)
+    : undefined;
 
   return {
     deletedAt: { isNull: true },
@@ -221,12 +255,15 @@ export class SearchByTextUseCase {
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly masterServiceRepository: IMasterServiceRepository,
     private readonly addressRepository: IAddressRepository,
+    private readonly searchTaxonomyReader: ISearchTaxonomyReader,
   ) {}
 
   async execute(
     input: ISearchByTextApplicationInput,
   ): Promise<ISearchByTextApplicationOutput> {
-    const q = input.q?.trim() || undefined;
+    const rawQ = input.q?.trim() || undefined;
+    const normalizedQ = rawQ ? normalizeSearchQuery(rawQ) : undefined;
+    const q = normalizedQ || undefined;
     const category = input.category;
     const localityId = input.localityId;
     const minPrice = input.minPrice;
@@ -254,9 +291,47 @@ export class SearchByTextUseCase {
       }
     }
 
-    const filterInput = { q, category, minPrice, maxPrice, minRating };
-    const masterWhere = buildMasterWhere(filterInput, masterProfileIds);
-    const serviceWhere = buildServiceWhere(filterInput, masterProfileIds);
+    let terms: string[] | undefined;
+    let fuzzyServiceIds: string[] = [];
+
+    if (q) {
+      const [exact, fuzzy, fuzzyIds] = await Promise.all([
+        this.searchTaxonomyReader.findExactMatch(q),
+        this.searchTaxonomyReader.findFuzzyMatches(
+          q,
+          SEARCH_SIMILARITY_THRESHOLD,
+          SEARCH_FUZZY_TAXONOMY_LIMIT,
+        ),
+        this.searchTaxonomyReader.findFuzzyServiceIdsByName(
+          q,
+          SEARCH_SIMILARITY_THRESHOLD,
+          SEARCH_FUZZY_SERVICE_NAME_LIMIT,
+        ),
+      ]);
+
+      terms = expandSearchQueryTerms({
+        normalizedQuery: q,
+        exact,
+        fuzzy: exact
+          ? fuzzy.filter((hit) => hit.canonical !== exact.canonical)
+          : fuzzy,
+      });
+      fuzzyServiceIds = fuzzyIds;
+    }
+
+    const filterInput = { category, minPrice, maxPrice, minRating };
+    const masterWhere = buildMasterWhere(
+      filterInput,
+      terms,
+      fuzzyServiceIds,
+      masterProfileIds,
+    );
+    const serviceWhere = buildServiceWhere(
+      filterInput,
+      terms,
+      fuzzyServiceIds,
+      masterProfileIds,
+    );
 
     const masterParams: FindManyParams<
       IMasterProfilePublicEntity,

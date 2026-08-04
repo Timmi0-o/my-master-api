@@ -1293,3 +1293,23 @@ export const MASTERS_CATALOG_STATS = {
   ),
   categories: ALL_CATEGORIES.length,
 };
+
+/** First-seen category wins for each unique service tag. */
+export function collectMasterCatalogTagsByCategory(): Map<
+  string,
+  MasterServiceCategory
+> {
+  const tags = new Map<string, MasterServiceCategory>();
+
+  for (const master of MASTERS_CATALOG) {
+    for (const service of master.services) {
+      for (const tag of service.tags) {
+        if (!tags.has(tag)) {
+          tags.set(tag, service.category);
+        }
+      }
+    }
+  }
+
+  return tags;
+}
