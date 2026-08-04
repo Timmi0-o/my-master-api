@@ -1,4 +1,8 @@
 export type { IAppointmentActor } from './appointment-actor.types';
+export {
+  NO_SHOW_LATE_MINUTES,
+  NO_SHOW_LATE_MS,
+} from './appointment-no-show.constants';
 export { ensureActorCanCancelAppointment } from './ensure-actor-can-cancel-appointment.policy';
 export { ensureActorCanConfirmAppointment } from './ensure-actor-can-confirm-appointment.policy';
 export { ensureActorCanMarkNoShow } from './ensure-actor-can-mark-no-show.policy';

@@ -14,12 +14,14 @@ Layout: `domain/entities/<entity>/` (kebab-case, singular). Etalon: `masters/...
 - `i-<entity>-relations.ts` — only if real includes exist
 - `i-create-<entity>.input.ts` / `i-update-<entity>.input.ts`
 - `<entity>-select-fields.ts` — `*_SELECT_FIELDS` + `*_STAFF_ONLY_FIELDS`
-- enums/constants, `policies/`, `errors/`, `index.ts`
+- enums, `policies/` (включая `*.constants.ts` поведения), `errors/`, `index.ts`
+- **Вся политика** (functions + behavior knobs) → только `entities/<entity>/policies/`. См. `domain-policies-folder.mdc`.
 
 ## Shape
 
 - Entity = **interface**, not class-aggregate
-- Behavior = **pure** policies (`ensure*`, `build*`, `resolve*`)
+- Behavior = **pure** policies in `policies/` (`ensure*`, `build*`, `resolve*`)
+- Behavior constants = `policies/*.constants.ts` (SoT); application **только импортирует**
 - Update: all optional; `null` = clear, `undefined` = leave; no id/timestamps
 - Select lists — SoT here; presets live in presentation mappers
 
@@ -28,3 +30,5 @@ Layout: `domain/entities/<entity>/` (kebab-case, singular). Etalon: `masters/...
 - Import Nest / Prisma / application ports / infrastructure
 - Put I/O or orchestration in policies
 - Duplicate select field arrays in presentation as a second SoT
+- Keep `*.constants.ts` (behavior) outside `policies/`
+- Keep business weights/thresholds/windows as local `const` in application

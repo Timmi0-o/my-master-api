@@ -7,17 +7,15 @@ export type { IUpdateMasterServiceInput } from './i-update-master-service.input'
 export type { IMasterServiceRelations, IMasterServiceImageView, IMasterServiceMasterProfileView } from './i-master-service-relations';
 export { EMasterServiceCategory } from './master-service-category.enum';
 export {
-  MASTER_SERVICE_TAGS_MIN_COUNT,
-  MASTER_SERVICE_TAGS_MAX_COUNT,
-  MASTER_SERVICE_TAG_MAX_LENGTH,
-} from './master-service-tags.constants';
-export { DEFAULT_MASTER_SERVICE_DURATION_MINUTES } from './master-service.constants';
-export {
   MasterServiceNotFoundError,
   MasterServiceForbiddenError,
   MasterServiceInvalidTagsError,
 } from './errors';
 export {
+  MASTER_SERVICE_TAGS_MIN_COUNT,
+  MASTER_SERVICE_TAGS_MAX_COUNT,
+  MASTER_SERVICE_TAG_MAX_LENGTH,
+  DEFAULT_MASTER_SERVICE_DURATION_MINUTES,
   ensureMasterServiceExists,
   ensureMasterServiceTagsValid,
 } from './policies';

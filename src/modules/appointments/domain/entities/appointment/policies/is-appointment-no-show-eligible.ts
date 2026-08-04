@@ -1,6 +1,6 @@
 import type { IAppointmentEntity } from '../i-appointment.entity';
 import { EAppointmentStatus } from '../appointment.enum';
-import { NO_SHOW_LATE_MS } from '../appointment-no-show.constants';
+import { NO_SHOW_LATE_MS } from './appointment-no-show.constants';
 
 export function getAppointmentNoShowEligibleAt(
   appointment: Pick<IAppointmentEntity, 'startsAt'>,

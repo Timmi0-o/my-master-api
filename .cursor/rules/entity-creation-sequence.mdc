@@ -48,7 +48,7 @@ flowchart TB
 | `i-<entity>.entity.ts` | `I*Entity`, `I*PublicEntity` |
 | `i-create-<entity>.input.ts` | `ICreate*Input` |
 | `i-update-<entity>.input.ts` | `IUpdate*Input` |
-| `policies/` | `ensure*Exists`, `ensure*Accessible` — pure functions |
+| `policies/` | pure functions + behavior `*.constants.ts` (обязательно в этой папке) |
 | `errors/` | co-located domain errors |
 | `i-<entity>-relations.ts` | Типы вложений для `ReadResult` (если есть relations в list/get-by-id) |
 | `<entity>-select-fields.ts` | `*_SELECT_FIELDS` + `*_STAFF_ONLY_FIELDS` (поля только для staff: filter/select) |
@@ -59,7 +59,7 @@ flowchart TB
 ### 2.2 Доменные ошибки и policies
 
 `domain/entities/<entity>/errors/` — `*-not-found.error.ts`, `*-forbidden.error.ts`.  
-`domain/entities/<entity>/policies/` — `ensure*Exists`, `ensure*Accessible` с `asserts` typing.
+`domain/entities/<entity>/policies/` — **вся политика**: pure functions (`ensure*`, `build*`, `resolve*`) **и** behavior `*.constants.ts`. См. `domain-policies-folder.mdc`.
 
 ### 2.3 Порт репозитория
 
@@ -102,9 +102,11 @@ Prisma-ошибки (`P20xx`) мапить в доменные/прикладн�
 
 | # | Путь | Назначение |
 |---|------|------------|
-| 4.1 | `application/dtos/<entity>/*.input.ts` | `I*ApplicationInput` |
-| 4.2 | `application/dtos/<entity>/*.output.ts` | `I*ApplicationOutput` на каждую операцию |
+| 4.1 | `application/dtos/i-<operation>-input.dto.ts` | `I*ApplicationInput` — **отдельный файл** |
+| 4.2 | `application/dtos/i-<operation>-output.dto.ts` | `I*ApplicationOutput` — **отдельный файл** на каждую операцию |
 | 4.3 | `application/use-cases/<entity>/` | `execute(input) → Output`; mutate через `ITransactionManager` |
+
+**Запрещено** класть input и output в один `*.dto.ts`. См. `application-dtos.mdc`.
 
 Типичный набор use-case:
 
@@ -193,7 +195,7 @@ src/modules/<feature>/
   domain/repositories/<entity>/    # i-*.repository.ts, *.repository.tokens.ts
   infrastructure/persistence/row-mappers/<entity>/
   infrastructure/persistence/repositories/<entity>/  # relations, prisma-*.repository.ts
-  application/dtos/<entity>/
+  application/dtos/                  # i-<op>-input.dto.ts + i-<op>-output.dto.ts (раздельно!)
   application/use-cases/<entity>/    # get many, get by id, create, update, delete
   application/helpers/               # при необходимости
   presentation/http/validation/schemas/

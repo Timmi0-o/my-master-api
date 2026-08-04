@@ -1,0 +1,59 @@
+---
+description: All domain policy and behavior constants live under entities/*/policies/
+globs: src/modules/**/domain/**/*.ts
+alwaysApply: false
+---
+
+# Domain policies folder
+
+## Hard rule
+
+Вся **политика** сущности — только в:
+
+```text
+domain/entities/<entity>/policies/
+```
+
+Сюда входят:
+
+- pure policy functions (`ensure*`, `build*`, `resolve*`, `is*`, `score*`)
+- **behavior constants** (веса, TTL, пороги, окна антифлуда, half-life, лимиты…)
+- actor types для policy, если нужны только политикам
+
+## Layout
+
+```text
+domain/entities/<entity>/
+  i-<entity>.entity.ts
+  ...
+  policies/
+    <entity>.constants.ts          # или <concern>.constants.ts
+    ensure-<...>.policy.ts
+    build-<...>.policy.ts
+    index.ts                       # re-export policies + constants
+  index.ts                         # re-export из ./policies
+```
+
+## Examples
+
+```text
+# ✅
+entities/master-service/policies/master-service-tags.constants.ts
+entities/master-service/policies/ensure-master-service-tags-valid.policy.ts
+entities/feed-ranking/policies/feed-ranking.constants.ts
+entities/feed-ranking/policies/score-feed-service.policy.ts
+entities/user-service-interaction/policies/user-service-interaction.constants.ts
+
+# ❌
+entities/master-service/master-service-tags.constants.ts   # не в policies/
+domain/feed-ranking/feed-ranking.constants.ts              # вне entities/*/policies/
+application/services/score-feed-service.ts                 # политика в application
+```
+
+Логическая entity без Prisma (например `feed-ranking`) — тоже `entities/<name>/policies/`.
+
+## Do not
+
+- Класть `*.constants.ts` поведения рядом с entity root
+- Держать веса/пороги/окна в `application/` или `infrastructure/`
+- Дублировать SoT констант вне `policies/`

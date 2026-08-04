@@ -36,7 +36,7 @@ alwaysApply: false
 - Mutate use cases оборачивают write-flow в `ITransactionManager.runInTransaction`.
 - Use-case возвращает `I*ApplicationOutput`, не HTTP-ответ.
 - **Use-case не вызывает другой use-case** — оркестрация нескольких use-case только в controller (без репозиториев).
-- **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/<entity>/`.
+- **Не использовать `*Command`** — вход use-case: `I*ApplicationInput` в `application/dtos/i-<operation>-input.dto.ts` (output — отдельный `i-<operation>-output.dto.ts`, см. `application-dtos.mdc`).
 - HTTP: `@HttpBody` / `@HttpQuery` / `@HttpParams` (AJV schema) → request mapper в `presentation/http/request-mappers/<entity>/` → `useCase.execute(input)`.
 - Именование request-мапперов (strict): `request-body-to-*` | `request-query-params-to-*` | `request-params-to-*` — см. `http-request-mappers.mdc`.
 - Оркестрация в controller: после `execute` первого use-case — `output-*-to-*-use-case-input.ts` → `secondUseCase.execute(...)`.

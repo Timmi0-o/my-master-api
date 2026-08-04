@@ -1,0 +1,22 @@
+model UserServiceInteraction {
+  id String @id @default(uuid())
+
+  userId          String                    @map("user_id")
+  masterServiceId String                    @map("master_service_id")
+  type            UserServiceInteractionType @map("type")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  masterService MasterService @relation(fields: [masterServiceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, masterServiceId, type, createdAt])
+  @@index([masterServiceId])
+  @@map("UserServiceInteractions")
+}
+
+enum UserServiceInteractionType {
+  VIEW
+  CLICK
+}

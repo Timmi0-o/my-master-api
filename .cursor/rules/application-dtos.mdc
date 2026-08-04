@@ -1,0 +1,48 @@
+---
+description: Application DTO naming — separate input/output files, never combine
+globs: src/modules/**/application/dtos/**/*.ts
+alwaysApply: false
+---
+
+# Application DTOs
+
+## Hard rule
+
+Input и output use-case **никогда** не живут в одном файле.
+
+На каждую операцию — ровно два файла:
+
+| Файл | Тип |
+|------|-----|
+| `i-<operation>-input.dto.ts` | `I*ApplicationInput` |
+| `i-<operation>-output.dto.ts` | `I*ApplicationOutput` |
+
+## Examples
+
+```text
+application/dtos/
+  i-get-feed-services-input.dto.ts   → IGetFeedServicesApplicationInput
+  i-get-feed-services-output.dto.ts  → IGetFeedServicesApplicationOutput
+  i-record-feed-events-input.dto.ts  → IRecordFeedEventsApplicationInput
+  i-record-feed-events-output.dto.ts → IRecordFeedEventsApplicationOutput
+```
+
+```typescript
+// ❌ BAD — всё в одном файле
+// get-feed-services.dto.ts
+export type IGetFeedServicesApplicationInput = { ... }
+export type IGetFeedServicesApplicationOutput = { ... }
+
+// ✅ GOOD
+// i-get-feed-services-input.dto.ts
+export type IGetFeedServicesApplicationInput = { ... }
+
+// i-get-feed-services-output.dto.ts
+export type IGetFeedServicesApplicationOutput = { ... }
+```
+
+## Also
+
+- Путь: `application/dtos/` (опционально подпапка сущности/фичи)
+- Без `*Command` — только `I*ApplicationInput` / `I*ApplicationOutput`
+- Вспомогательные типы для input (items батча и т.п.) — в том же `*-input.dto.ts`

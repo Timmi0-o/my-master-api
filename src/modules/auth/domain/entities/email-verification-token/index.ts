@@ -2,5 +2,5 @@ export type { IEmailVerificationTokenEntity } from './i-email-verification-token
 export {
   EMAIL_VERIFICATION_TOKEN_TTL_HOURS,
   EMAIL_VERIFICATION_TOKEN_TTL_MS,
-} from './email-verification-token.constants';
+} from './policies';
 export { InvalidEmailVerificationTokenError } from './errors';

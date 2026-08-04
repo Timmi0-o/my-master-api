@@ -1,4 +1,4 @@
-import { IMAGE_ENTITY_CONFIG } from '../image-entity-config';
+import { IMAGE_ENTITY_CONFIG } from './image-entity-config';
 import { ImageMaxCountError } from '../errors';
 import type { ImageEntityType } from '../image-entity-type.enum';
 

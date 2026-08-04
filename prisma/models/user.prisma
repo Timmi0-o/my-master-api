@@ -38,6 +38,7 @@ model User {
   masterServiceReviewReactions   MasterServiceReviewReaction[]
   masterSubscriptions            MasterSubscription[]
   favoriteMasterServices         FavoriteMasterService[]
+  userServiceInteractions        UserServiceInteraction[]
   userBlocksCreated              UserBlock[]             @relation("UserBlocksCreated")
   userBlocksReceived             UserBlock[]             @relation("UserBlocksReceived")
   userPersonalNotesOwned         UserPersonalNote[]      @relation("UserPersonalNotesOwned")

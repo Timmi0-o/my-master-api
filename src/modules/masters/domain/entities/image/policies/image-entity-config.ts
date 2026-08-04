@@ -4,7 +4,7 @@ import {
   FilePurpose,
   FileType,
 } from 'src/modules/files/domain/entities/file';
-import { ImageEntityType } from './image-entity-type.enum';
+import { ImageEntityType } from '../image-entity-type.enum';
 
 export type ImageEntityConfig = {
   maxCount: number;

@@ -1,5 +1,5 @@
 import { DomainError } from '@shared/domain/errors';
-import { NO_SHOW_LATE_MINUTES } from '../appointment-no-show.constants';
+import { NO_SHOW_LATE_MINUTES } from '../policies/appointment-no-show.constants';
 
 export class AppointmentNotNoShowableError extends DomainError {
   constructor(

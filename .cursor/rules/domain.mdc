@@ -16,7 +16,8 @@ alwaysApply: false
 
 | What | Where |
 |---|---|
-| Fields, enums, policies, entity errors, select-fields | `entities/<entity>/` |
+| Fields, enums, entity errors, select-fields | `entities/<entity>/` |
+| **All policy** (pure functions + behavior constants) | `entities/<entity>/policies/` only — see `domain-policies-folder.mdc` |
 | DB ports + tokens | `repositories/<entity>/` |
 | Auth kinds / caller types (authorization feature) | `authorization/domain/auth/` |
 | Shared ISP repos, query types, TX | `@shared/domain/...` |

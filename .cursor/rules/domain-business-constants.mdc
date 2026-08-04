@@ -1,0 +1,44 @@
+---
+description: Business behavior constants belong in entities/*/policies/, not application
+globs: src/modules/**/{domain,application}/**/*.ts
+alwaysApply: false
+---
+
+# Domain business / policy constants
+
+## Hard rule
+
+Настройки поведения домена (веса, пороги, окна антифлуда, half-life, лимиты кандидатов, cold-start, TTL…) живут **только** в:
+
+```text
+domain/entities/<entity>/policies/*.constants.ts
+```
+
+Не в `application/services`, `application/use-cases`, infrastructure и **не** в корне `entities/<entity>/`.
+
+См. также `domain-policies-folder.mdc`.
+
+## Examples
+
+```typescript
+// ❌ BAD
+// application/services/score-feed-service.ts
+const SCORE_WEIGHTS = { category: 0.4, ... }
+
+// entities/master-service/master-service-tags.constants.ts  // вне policies/
+
+// ✅ GOOD
+// entities/feed-ranking/policies/feed-ranking.constants.ts
+export const FEED_SCORE_WEIGHTS = { category: 0.4, ... } as const
+
+// application только импортирует
+import { FEED_SCORE_WEIGHTS } from '../../domain/entities/feed-ranking'
+```
+
+Etalon: `master-service/policies/master-service-tags.constants.ts` + `ensureMasterServiceTagsValid`.  
+Etalon фичи: `feed-ranking/policies/feed-ranking.constants.ts`.
+
+## Do not
+
+- Дублировать магические числа весов/порогов в use-case / prisma-reader / presentation (presentation может импортировать те же константы)
+- Класть Nest/Prisma-зависимые значения в domain constants

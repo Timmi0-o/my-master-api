@@ -6,7 +6,7 @@ export { EAppointmentStatus, EAppointmentCancelledBy } from './appointment.enum'
 export {
   NO_SHOW_LATE_MINUTES,
   NO_SHOW_LATE_MS,
-} from './appointment-no-show.constants';
+} from './policies';
 export {
   AppointmentNotAvailableError,
   AppointmentNotFoundError,

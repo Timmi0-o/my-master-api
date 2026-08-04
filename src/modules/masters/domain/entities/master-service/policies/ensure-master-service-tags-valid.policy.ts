@@ -3,7 +3,7 @@ import {
   MASTER_SERVICE_TAG_MAX_LENGTH,
   MASTER_SERVICE_TAGS_MAX_COUNT,
   MASTER_SERVICE_TAGS_MIN_COUNT,
-} from '../master-service-tags.constants';
+} from './master-service-tags.constants';
 
 /**
  * Normalizes and validates service tags.
