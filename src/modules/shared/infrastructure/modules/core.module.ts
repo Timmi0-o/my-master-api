@@ -10,10 +10,11 @@ import { PrismaTransactionManager } from '../persistence/transactions';
 import { RedisModule } from '../redis/redis.module';
 import { LoggerService } from '../services/logger.service';
 import { TemplatingModule } from '../templating/templating.module';
+import { HttpRateLimitModule } from '../throttler/http-rate-limit.module';
 
 @Global()
 @Module({
-  imports: [PrismaModule, TemplatingModule, RedisModule],
+  imports: [PrismaModule, TemplatingModule, RedisModule, HttpRateLimitModule],
   providers: [
     LoggerService,
     PrismaTransactionManager,
@@ -30,6 +31,7 @@ import { TemplatingModule } from '../templating/templating.module';
     PrismaModule,
     TemplatingModule,
     RedisModule,
+    HttpRateLimitModule,
     ILoggerSymbol,
     LOGGER_TOKEN,
     TRANSACTION_MANAGER_TOKEN,

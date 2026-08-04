@@ -13,6 +13,9 @@ import { RedisIoAdapter } from './modules/shared/infrastructure/websocket/redis-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Behind nginx / Cloudflare — req.ip must reflect the real client for rate limits.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   const redisService = app.get(RedisService);
   const redisIoAdapter = new RedisIoAdapter(app, redisService);
   await redisIoAdapter.connectToRedis();

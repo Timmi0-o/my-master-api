@@ -43,6 +43,10 @@ import type {
 } from '@modules/auth/presentation/http/validation/schemas/auth.schema.types';
 import type { IUserEntity } from '@modules/users/domain/entities/user';
 import type { ISessionUser } from '@shared/domain/i-session-user';
+import {
+  AuthRelaxedRateLimit,
+  AuthStrictRateLimit,
+} from '@shared/infrastructure/throttler/http-rate-limit.decorators';
 import { PublicEndpoint } from '@shared/presentation/decorators/public-endpoint.decorator';
 import { HttpBody } from '@shared/presentation/http/decorators';
 import {
@@ -74,6 +78,7 @@ export class AuthController {
   ) {}
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @Post('register')
   async register(
     @HttpBody(registerPayloadSchema, {
@@ -89,6 +94,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
@@ -105,6 +111,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthRelaxedRateLimit()
   @Post('refresh')
   async refresh(
     @HttpBody(refreshTokenSchema, {
@@ -117,6 +124,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthRelaxedRateLimit()
   @Post('logout')
   async logout(
     @HttpBody(refreshTokenSchema, {
@@ -129,6 +137,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @Post('send-reset-password-email')
   async sendResetPasswordEmail(
     @HttpBody(sendResetPasswordEmailSchema, {
@@ -140,6 +149,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @Post('validate-reset-password-token')
   async validateResetPasswordToken(
     @HttpBody(validateResetPasswordTokenSchema, {
@@ -151,6 +161,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @Post('reset-password')
   async resetPassword(
     @HttpBody(resetPasswordSchema, {
@@ -162,6 +173,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @Post('send-verification-email')
   async sendVerificationEmail(
     @HttpBody(sendVerificationEmailSchema, {
@@ -173,6 +185,7 @@ export class AuthController {
   }
 
   @PublicEndpoint()
+  @AuthStrictRateLimit()
   @Post('verify-email')
   async verifyEmail(
     @HttpBody(verifyEmailSchema, {
