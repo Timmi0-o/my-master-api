@@ -113,6 +113,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         transactionManager: ITransactionManager,
         messageRepo: IAppointmentChatMessageRepository,
         chatRepo: IAppointmentChatRepository,
+        appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
       ) =>
@@ -120,6 +121,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
           transactionManager,
           messageRepo,
           chatRepo,
+          appointmentRepo,
           profileRepo,
           realtimePublisher,
         ),
@@ -127,6 +129,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         TRANSACTION_MANAGER_TOKEN,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REPOSITORY_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
       ],
