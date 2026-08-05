@@ -12,3 +12,8 @@ export enum EAppointmentChatSystemAction {
   APPOINTMENT_NO_SHOW = 'APPOINTMENT_NO_SHOW',
   APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
 }
+
+export enum EAppointmentChatMessageDeleteMode {
+  FOR_EVERYONE = 'FOR_EVERYONE',
+  FOR_ME = 'FOR_ME',
+}

@@ -8,6 +8,9 @@ export const APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS = [
   'body',
   'systemAction',
   'payload',
+  'editedAt',
+  'editedHistory',
+  'deletedForUserIds',
   'createdAt',
   'updatedAt',
   'deletedAt',
@@ -15,4 +18,6 @@ export const APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS = [
 
 export const APPOINTMENT_CHAT_MESSAGE_STAFF_ONLY_FIELDS = [
   'deletedAt',
+  'editedHistory',
+  'deletedForUserIds',
 ] as const satisfies readonly (keyof IAppointmentChatMessagePublicEntity)[];

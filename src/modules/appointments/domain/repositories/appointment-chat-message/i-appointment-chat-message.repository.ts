@@ -27,6 +27,7 @@ export type IMessageWindowCursor = {
 export type IFindMessageWindowInput = {
   chatId: string;
   limit: number;
+  viewerUserId?: string;
   before?: IMessageWindowCursor;
   after?: IMessageWindowCursor;
 };
@@ -66,6 +67,7 @@ export type IAppointmentChatMessageRepository = IReadRepository<
 
     findLatestByChatIds(
       chatIds: readonly string[],
+      viewerUserId?: string,
     ): Promise<Map<string, IAppointmentChatMessagePublicEntity>>;
 
     findMessageWindow(

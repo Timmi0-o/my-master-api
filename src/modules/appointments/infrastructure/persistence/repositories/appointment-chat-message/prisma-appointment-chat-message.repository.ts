@@ -218,6 +218,7 @@ export class PrismaAppointmentChatMessageRepository
 
   async findLatestByChatIds(
     chatIds: readonly string[],
+    viewerUserId?: string,
   ): Promise<Map<string, IAppointmentChatMessagePublicEntity>> {
     const result = new Map<string, IAppointmentChatMessagePublicEntity>();
     const uniqueIds = [...new Set(chatIds.filter(Boolean))];
@@ -229,10 +230,7 @@ export class PrismaAppointmentChatMessageRepository
     await Promise.all(
       uniqueIds.map(async (chatId) => {
         const row = await this.getDelegate().findFirst({
-          where: {
-            chatId,
-            deletedAt: null,
-          },
+          where: this.buildVisibleWhere({ chatId, viewerUserId }),
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         });
 
@@ -251,6 +249,7 @@ export class PrismaAppointmentChatMessageRepository
   async findMessageWindow(input: {
     chatId: string;
     limit: number;
+    viewerUserId?: string;
     before?: { createdAt: Date; id?: string };
     after?: { createdAt: Date; id?: string };
   }): Promise<{
@@ -259,10 +258,10 @@ export class PrismaAppointmentChatMessageRepository
     hasMoreAfter: boolean;
   }> {
     const take = input.limit + 1;
-    const baseWhere: Prisma.AppointmentChatMessageWhereInput = {
+    const baseWhere = this.buildVisibleWhere({
       chatId: input.chatId,
-      deletedAt: null,
-    };
+      viewerUserId: input.viewerUserId,
+    });
 
     if (input.before && input.after) {
       throw new Error('before and after cursors are mutually exclusive');
@@ -363,14 +362,29 @@ export class PrismaAppointmentChatMessageRepository
     };
   }
 
+  private buildVisibleWhere(input: {
+    chatId: string;
+    viewerUserId?: string;
+  }): Prisma.AppointmentChatMessageWhereInput {
+    return {
+      chatId: input.chatId,
+      deletedAt: null,
+      ...(input.viewerUserId
+        ? { NOT: { deletedForUserIds: { has: input.viewerUserId } } }
+        : {}),
+    };
+  }
+
   private buildUnreadWhere(input: {
     chatId: string;
     viewerUserId: string;
     myLastReadAt: Date | null;
   }): Prisma.AppointmentChatMessageWhereInput {
     return {
-      chatId: input.chatId,
-      deletedAt: null,
+      ...this.buildVisibleWhere({
+        chatId: input.chatId,
+        viewerUserId: input.viewerUserId,
+      }),
       actor: 'USER',
       AND: [
         { senderUserId: { not: null } },

@@ -13,6 +13,8 @@ import {
 } from 'src/modules/appointments/domain/entities/appointment-chat';
 import {
   AppointmentChatMessageForbiddenError,
+  AppointmentChatMessageNotDeletableError,
+  AppointmentChatMessageNotEditableError,
   AppointmentChatMessageNotFoundError,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 
@@ -34,7 +36,9 @@ export const mapAppointmentsDomainError: DomainErrorMapper = (error) => {
   if (
     error instanceof AppointmentNotAvailableError ||
     error instanceof AppointmentNotCompletableError ||
-    error instanceof AppointmentNotReschedulableError
+    error instanceof AppointmentNotReschedulableError ||
+    error instanceof AppointmentChatMessageNotEditableError ||
+    error instanceof AppointmentChatMessageNotDeletableError
   ) {
     return new ConflictException(error.message);
   }

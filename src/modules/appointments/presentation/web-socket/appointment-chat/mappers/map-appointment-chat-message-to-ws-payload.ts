@@ -2,10 +2,12 @@ import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointmen
 
 export interface IAppointmentChatMessageWsPayload extends Omit<
   IAppointmentChatMessagePublicEntity,
-  'createdAt' | 'updatedAt'
+  'createdAt' | 'updatedAt' | 'editedAt' | 'deletedAt'
 > {
   createdAt: string;
   updatedAt: string;
+  editedAt: string | null;
+  deletedAt?: string | null;
 }
 
 export function mapAppointmentChatMessageToWsPayload(
@@ -19,7 +21,11 @@ export function mapAppointmentChatMessageToWsPayload(
     body: message.body,
     systemAction: message.systemAction,
     payload: message.payload,
+    editedAt: message.editedAt?.toISOString() ?? null,
+    editedHistory: message.editedHistory,
+    deletedForUserIds: message.deletedForUserIds,
     createdAt: message.createdAt.toISOString(),
     updatedAt: message.updatedAt.toISOString(),
+    deletedAt: message.deletedAt?.toISOString() ?? null,
   };
 }

@@ -2,6 +2,7 @@ import type { IAppointmentChatMessagePublicEntity } from '../../../domain/entiti
 
 export const APPOINTMENT_CHAT_REALTIME_WS_EVENTS = {
   MESSAGE_CREATED: 'appointment-chat.message.created',
+  MESSAGE_UPDATED: 'appointment-chat.message.updated',
   MESSAGE_DELETED: 'appointment-chat.message.deleted',
   CHAT_READ: 'appointment-chat.read',
 } as const;
@@ -16,9 +17,15 @@ export interface AppointmentChatRealtimeMessageCreatedEvent extends AppointmentC
   recipientUserId?: string | null;
 }
 
+export interface AppointmentChatRealtimeMessageUpdatedEvent extends AppointmentChatRealtimeMessageEvent {
+  type: 'message.updated';
+  message: IAppointmentChatMessagePublicEntity;
+}
+
 export interface AppointmentChatRealtimeMessageDeletedEvent extends AppointmentChatRealtimeMessageEvent {
   type: 'message.deleted';
   messageId: string;
+  forUserId?: string;
 }
 
 export interface AppointmentChatRealtimeChatReadEvent {
@@ -30,5 +37,6 @@ export interface AppointmentChatRealtimeChatReadEvent {
 
 export type AppointmentChatRealtimeEvent =
   | AppointmentChatRealtimeMessageCreatedEvent
+  | AppointmentChatRealtimeMessageUpdatedEvent
   | AppointmentChatRealtimeMessageDeletedEvent
   | AppointmentChatRealtimeChatReadEvent;

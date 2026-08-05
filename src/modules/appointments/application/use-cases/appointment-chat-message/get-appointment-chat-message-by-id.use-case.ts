@@ -21,7 +21,13 @@ export class GetAppointmentChatMessageByIdUseCase {
     input: IGetAppointmentChatMessageByIdApplicationInput,
   ): Promise<IGetAppointmentChatMessageByIdApplicationOutput> {
     const message = await this.messageRepository.findEntityById(input.id);
-    if (!message || (!input.actor.isStaffUser && message.deletedAt != null)) {
+    const hiddenForViewer =
+      !input.actor.isStaffUser &&
+      message != null &&
+      (message.deletedAt != null ||
+        message.deletedForUserIds.includes(input.actor.userId));
+
+    if (!message || hiddenForViewer) {
       throw new AppointmentChatMessageNotFoundError(input.id);
     }
 

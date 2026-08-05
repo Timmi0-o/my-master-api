@@ -57,7 +57,10 @@ export async function enrichAppointmentChatsWithInboxFields<
   );
 
   const latestByChatId = includeLastMessage
-    ? await messageRepository.findLatestByChatIds(chats.map((chat) => chat.id))
+    ? await messageRepository.findLatestByChatIds(
+        chats.map((chat) => chat.id),
+        viewerUserId,
+      )
     : new Map<string, IAppointmentChatMessagePublicEntity>();
 
   return items.map((item) => {

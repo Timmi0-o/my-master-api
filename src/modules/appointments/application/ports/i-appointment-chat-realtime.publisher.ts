@@ -11,6 +11,11 @@ export interface IAppointmentChatRealtimePublisher {
     message: IAppointmentChatMessagePublicEntity,
     options?: { recipientUserId?: string | null },
   ): Promise<void>;
-  messageDeleted(payload: { chatId: string; messageId: string }): Promise<void>;
+  messageUpdated(message: IAppointmentChatMessagePublicEntity): Promise<void>;
+  messageDeleted(payload: {
+    chatId: string;
+    messageId: string;
+    forUserId?: string;
+  }): Promise<void>;
   chatRead(payload: IAppointmentChatReadRealtimePayload): Promise<void>;
 }

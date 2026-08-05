@@ -36,6 +36,7 @@ export class GetAppointmentChatMessageWindowUseCase {
     const window = await this.messageRepository.findMessageWindow({
       chatId: input.chatId,
       limit,
+      viewerUserId: input.actor.userId,
       ...(hasBeforeTime
         ? {
             before: {

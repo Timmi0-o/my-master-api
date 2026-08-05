@@ -22,14 +22,26 @@ export class SocketIoAppointmentChatRealtimePublisher implements IAppointmentCha
     });
   }
 
+  async messageUpdated(
+    message: IAppointmentChatMessagePublicEntity,
+  ): Promise<void> {
+    await this.eventBus.publish({
+      type: 'message.updated',
+      chatId: message.chatId,
+      message,
+    });
+  }
+
   async messageDeleted(payload: {
     chatId: string;
     messageId: string;
+    forUserId?: string;
   }): Promise<void> {
     await this.eventBus.publish({
       type: 'message.deleted',
       chatId: payload.chatId,
       messageId: payload.messageId,
+      forUserId: payload.forUserId,
     });
   }
 

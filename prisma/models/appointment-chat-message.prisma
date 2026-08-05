@@ -9,6 +9,10 @@ model AppointmentChatMessage {
   systemAction AppointmentChatSystemAction? @map("system_action")
   payload      Json?
 
+  editedAt          DateTime? @map("edited_at")
+  editedHistory     String[]  @default([]) @map("edited_history")
+  deletedForUserIds String[]  @default([]) @map("deleted_for_user_ids")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")

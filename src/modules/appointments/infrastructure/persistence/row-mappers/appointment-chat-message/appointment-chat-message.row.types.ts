@@ -13,6 +13,9 @@ export type AppointmentChatMessageRow = {
   body: string | null;
   systemAction: EAppointmentChatSystemAction | null;
   payload: unknown | null;
+  editedAt: Date | null;
+  editedHistory: string[];
+  deletedForUserIds: string[];
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

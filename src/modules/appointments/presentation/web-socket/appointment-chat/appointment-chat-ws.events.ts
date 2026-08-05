@@ -2,6 +2,7 @@ export const APPOINTMENT_CHAT_WS_EVENTS = {
   JOIN: 'appointment-chat.join',
   LEAVE: 'appointment-chat.leave',
   MESSAGE_CREATED: 'appointment-chat.message.created',
+  MESSAGE_UPDATED: 'appointment-chat.message.updated',
   MESSAGE_DELETED: 'appointment-chat.message.deleted',
   READ: 'appointment-chat.read',
   TYPING_START: 'appointment-chat.typing.start',

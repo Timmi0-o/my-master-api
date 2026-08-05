@@ -4,19 +4,18 @@ import {
   ensureAppointmentChatExists,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
 import {
-  EAppointmentChatMessageDeleteMode,
-  ensureAppointmentChatMessageDeletable,
+  ensureAppointmentChatMessageEditable,
   ensureAppointmentChatMessageExists,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
-import type { IDeleteAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/delete-appointment-chat-message.input';
-import type { IDeleteAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/delete-appointment-chat-message.output';
+import type { IEditAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/edit-appointment-chat-message.input';
+import type { IEditAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/edit-appointment-chat-message.output';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 
-export class DeleteAppointmentChatMessageByIdUseCase {
+export class EditAppointmentChatMessageUseCase {
   constructor(
     private readonly transactionManager: ITransactionManager,
     private readonly messageRepository: IAppointmentChatMessageRepository,
@@ -26,8 +25,8 @@ export class DeleteAppointmentChatMessageByIdUseCase {
   ) {}
 
   async execute(
-    input: IDeleteAppointmentChatMessageApplicationInput,
-  ): Promise<IDeleteAppointmentChatMessageApplicationOutput> {
+    input: IEditAppointmentChatMessageApplicationInput,
+  ): Promise<IEditAppointmentChatMessageApplicationOutput> {
     const message = await this.messageRepository.findEntityById(input.id);
     ensureAppointmentChatMessageExists(message, input.id);
 
@@ -41,44 +40,30 @@ export class DeleteAppointmentChatMessageByIdUseCase {
     );
     ensureMasterProfileExists(profile, chat.masterProfileId);
     ensureAppointmentChatAccessible(chat, input.actor, profile.userId);
-    ensureAppointmentChatMessageDeletable(message, input.actor);
 
-    if (input.mode === EAppointmentChatMessageDeleteMode.FOR_ME) {
-      if (message.deletedForUserIds.includes(input.actor.userId)) {
-        return message;
-      }
+    const nextBody = input.body.trim();
+    ensureAppointmentChatMessageEditable(message, input.actor, nextBody);
 
-      const updated = await this.transactionManager.runInTransaction((scope) =>
-        this.messageRepository.update(
-          input.id,
-          {
-            deletedForUserIds: [
-              ...message.deletedForUserIds,
-              input.actor.userId,
-            ],
-          },
-          scope,
-        ),
-      );
+    const now = new Date();
+    const editedHistory =
+      message.body != null && message.body !== nextBody
+        ? [...message.editedHistory, message.body]
+        : message.editedHistory;
 
-      await this.realtimePublisher.messageDeleted({
-        chatId: message.chatId,
-        messageId: input.id,
-        forUserId: input.actor.userId,
-      });
-
-      return updated;
-    }
-
-    const deleted = await this.transactionManager.runInTransaction((scope) =>
-      this.messageRepository.softDelete(input.id, scope),
+    const updated = await this.transactionManager.runInTransaction((scope) =>
+      this.messageRepository.update(
+        input.id,
+        {
+          body: nextBody,
+          editedAt: now,
+          editedHistory,
+        },
+        scope,
+      ),
     );
 
-    await this.realtimePublisher.messageDeleted({
-      chatId: message.chatId,
-      messageId: input.id,
-    });
+    await this.realtimePublisher.messageUpdated(updated);
 
-    return deleted;
+    return updated;
   }
 }

@@ -83,6 +83,15 @@ export class AppointmentChatGateway
         return;
       }
 
+      if (event.type === 'message.updated') {
+        server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_UPDATED, {
+          result: {
+            data: mapAppointmentChatMessageToWsPayload(event.message),
+          },
+        });
+        return;
+      }
+
       if (event.type === 'chat.read') {
         server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.READ, {
           result: {
@@ -92,14 +101,25 @@ export class AppointmentChatGateway
         return;
       }
 
-      server.to(room).emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_DELETED, {
+      const deletedPayload = {
         result: {
           data: {
             chatId: event.chatId,
             messageId: event.messageId,
+            forUserId: event.forUserId ?? null,
           },
         },
-      });
+      };
+
+      server
+        .to(room)
+        .emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_DELETED, deletedPayload);
+
+      if (event.forUserId) {
+        server
+          .to(APPOINTMENT_CHAT_WS_USER_ROOM_NAME(event.forUserId))
+          .emit(APPOINTMENT_CHAT_WS_EVENTS.MESSAGE_DELETED, deletedPayload);
+      }
     });
   }
 

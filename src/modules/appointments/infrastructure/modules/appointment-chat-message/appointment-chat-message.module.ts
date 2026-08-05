@@ -17,6 +17,7 @@ import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/
 import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { CreateAppointmentChatMessageUseCase } from '../../../application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
 import { DeleteAppointmentChatMessageByIdUseCase } from '../../../application/use-cases/appointment-chat-message/delete-appointment-chat-message-by-id.use-case';
+import { EditAppointmentChatMessageUseCase } from '../../../application/use-cases/appointment-chat-message/edit-appointment-chat-message.use-case';
 import { GetAppointmentChatMessageByIdUseCase } from '../../../application/use-cases/appointment-chat-message/get-appointment-chat-message-by-id.use-case';
 import { GetAppointmentChatMessagesUseCase } from '../../../application/use-cases/appointment-chat-message/get-appointment-chat-messages.use-case';
 import { APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-message/appointment-chat-message.repository.tokens';
@@ -107,6 +108,30 @@ import { AppointmentModule } from '../appointment/appointment.module';
       ],
     },
     {
+      provide: EditAppointmentChatMessageUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        messageRepo: IAppointmentChatMessageRepository,
+        chatRepo: IAppointmentChatRepository,
+        profileRepo: IMasterProfileRepository,
+        realtimePublisher: IAppointmentChatRealtimePublisher,
+      ) =>
+        new EditAppointmentChatMessageUseCase(
+          transactionManager,
+          messageRepo,
+          chatRepo,
+          profileRepo,
+          realtimePublisher,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+      ],
+    },
+    {
       provide: DeleteAppointmentChatMessageByIdUseCase,
       useFactory: (
         transactionManager: ITransactionManager,
@@ -136,6 +161,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
     GetAppointmentChatMessagesUseCase,
     GetAppointmentChatMessageByIdUseCase,
     CreateAppointmentChatMessageUseCase,
+    EditAppointmentChatMessageUseCase,
     DeleteAppointmentChatMessageByIdUseCase,
   ],
 })

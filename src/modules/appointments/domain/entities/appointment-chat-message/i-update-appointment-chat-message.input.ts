@@ -1,5 +1,14 @@
-import type { ICreateAppointmentChatMessageInput } from './i-create-appointment-chat-message.input';
+import type {
+  EAppointmentChatMessageActor,
+  EAppointmentChatSystemAction,
+} from './appointment-chat-message.enum';
 
-export type IUpdateAppointmentChatMessageInput = Partial<
-  Omit<ICreateAppointmentChatMessageInput, 'chatId' | 'senderUserId'>
->;
+export type IUpdateAppointmentChatMessageInput = {
+  body?: string | null;
+  actor?: EAppointmentChatMessageActor;
+  systemAction?: EAppointmentChatSystemAction | null;
+  payload?: unknown | null;
+  editedAt?: Date | null;
+  editedHistory?: string[];
+  deletedForUserIds?: string[];
+};

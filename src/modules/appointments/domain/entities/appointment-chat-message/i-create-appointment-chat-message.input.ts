@@ -2,5 +2,11 @@ import type { IAppointmentChatMessageEntity } from './i-appointment-chat-message
 
 export type ICreateAppointmentChatMessageInput = Omit<
   IAppointmentChatMessageEntity,
-  'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'deletedAt'
+  | 'editedAt'
+  | 'editedHistory'
+  | 'deletedForUserIds'
 >;

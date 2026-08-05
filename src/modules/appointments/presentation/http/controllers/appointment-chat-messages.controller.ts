@@ -1,9 +1,14 @@
 import { CreateAppointmentChatMessageUseCase } from '@modules/appointments/application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
 import { DeleteAppointmentChatMessageByIdUseCase } from '@modules/appointments/application/use-cases/appointment-chat-message/delete-appointment-chat-message-by-id.use-case';
+import { EditAppointmentChatMessageUseCase } from '@modules/appointments/application/use-cases/appointment-chat-message/edit-appointment-chat-message.use-case';
 import { GetAppointmentChatMessageByIdUseCase } from '@modules/appointments/application/use-cases/appointment-chat-message/get-appointment-chat-message-by-id.use-case';
 import { GetAppointmentChatMessagesUseCase } from '@modules/appointments/application/use-cases/appointment-chat-message/get-appointment-chat-messages.use-case';
 import { createAppointmentChatMessagePayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/create-appointment-chat-message-payload.schema';
 import type { ICreateAppointmentChatMessagePayload } from '@modules/appointments/presentation/http/validation/schemas/create-appointment-chat-message-payload.types';
+import { deleteAppointmentChatMessageQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/delete-appointment-chat-message-query.schema';
+import type { IDeleteAppointmentChatMessageQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/delete-appointment-chat-message-query.types';
+import { editAppointmentChatMessagePayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/edit-appointment-chat-message-payload.schema';
+import type { IEditAppointmentChatMessagePayload } from '@modules/appointments/presentation/http/validation/schemas/edit-appointment-chat-message-payload.types';
 import { getAppointmentChatMessagesQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-messages-query.schema';
 import type { IGetAppointmentChatMessagesQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-messages-query.types';
 import { getByIdQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-by-id-query.schema';
@@ -15,7 +20,14 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
-import { Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { IGetMetadata } from '@shared/domain/decorators/i-get-metadata';
 import type { ISessionUser } from '@shared/domain/i-session-user';
 import { RateLimiter } from '@shared/infrastructure/throttler/http-rate-limit.decorators';
@@ -29,12 +41,14 @@ import { normalizeIdParam } from '@shared/presentation/http/helpers/normalize-id
 import { normalizeListQueryRaw } from '@shared/presentation/http/helpers/normalize-list-query-raw';
 import { mapCreateAppointmentChatMessageHttpResponse } from '../http-responses/map-create-appointment-chat-message-response';
 import { mapDeleteAppointmentChatMessageHttpResponse } from '../http-responses/map-delete-appointment-chat-message-response';
+import { mapEditAppointmentChatMessageHttpResponse } from '../http-responses/map-edit-appointment-chat-message-response';
 import { mapGetAppointmentChatMessageByIdHttpResponse } from '../http-responses/map-get-appointment-chat-message-by-id-response';
 import { mapGetAppointmentChatMessagesHttpResponse } from '../http-responses/map-get-appointment-chat-messages-response';
 import { requestBodyToCreateAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-body-to-create-appointment-chat-message-use-case-input';
-import { requestParamsToDeleteAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-params-to-delete-appointment-chat-message-use-case-input';
+import { requestBodyToEditAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-body-to-edit-appointment-chat-message-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat-message/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToGetAppointmentChatMessageByIdUseCaseInput } from '../request-mappers/appointment-chat-message/request-query-params-to-get-appointment-chat-message-by-id-use-case-input';
+import { requestToDeleteAppointmentChatMessageUseCaseInput } from '../request-mappers/appointment-chat-message/request-to-delete-appointment-chat-message-use-case-input';
 
 @RateLimiter('highRead')
 @Controller({ path: 'appointment-chat-messages', version: '1' })
@@ -44,6 +58,7 @@ export class AppointmentChatMessagesController {
     private readonly getAppointmentChatMessagesUseCase: GetAppointmentChatMessagesUseCase,
     private readonly getAppointmentChatMessageByIdUseCase: GetAppointmentChatMessageByIdUseCase,
     private readonly createAppointmentChatMessageUseCase: CreateAppointmentChatMessageUseCase,
+    private readonly editAppointmentChatMessageUseCase: EditAppointmentChatMessageUseCase,
     private readonly deleteAppointmentChatMessageByIdUseCase: DeleteAppointmentChatMessageByIdUseCase,
   ) {}
 
@@ -117,6 +132,31 @@ export class AppointmentChatMessagesController {
     return mapCreateAppointmentChatMessageHttpResponse(output);
   }
 
+  @Patch(':id')
+  @Authorize({ kind: 'authenticated' })
+  async editAppointmentChatMessage(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(editAppointmentChatMessagePayloadSchema, {
+      errorMessage: 'Некорректный payload редактирования сообщения',
+    })
+    payload: IEditAppointmentChatMessagePayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestBodyToEditAppointmentChatMessageUseCaseInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.editAppointmentChatMessageUseCase.execute(input);
+    return mapEditAppointmentChatMessageHttpResponse(output);
+  }
+
   @Delete(':id')
   @Authorize({ kind: 'authenticated' })
   async deleteAppointmentChatMessage(
@@ -125,11 +165,16 @@ export class AppointmentChatMessagesController {
       errorMessage: 'Некорректный идентификатор',
     })
     params: IIdParamPayload,
+    @HttpQuery(deleteAppointmentChatMessageQuerySchema, {
+      errorMessage: 'Некорректные параметры удаления сообщения',
+    })
+    query: IDeleteAppointmentChatMessageQueryPayload,
     @AuthenticatedUser() user: ISessionUser,
     @GetMetadata() metadata: IGetMetadata,
   ) {
-    const input = requestParamsToDeleteAppointmentChatMessageUseCaseInput(
+    const input = requestToDeleteAppointmentChatMessageUseCaseInput(
       params.id,
+      query,
       user,
       metadata.isStaffUser,
     );
