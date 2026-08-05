@@ -1,5 +1,12 @@
+import type { IAppointmentChatMessageAttachmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message-attachment';
+import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IProfileAvatarView } from 'src/modules/masters/domain/entities/image';
 import { mapProfileAvatarToHttpResponse } from 'src/modules/masters/presentation/http/http-responses/map-profile-avatar-http-response';
+import { mapAppointmentChatMessageWithAttachmentsToHttp } from './map-appointment-chat-message-with-attachments';
+
+type AppointmentChatInboxMessage = IAppointmentChatMessagePublicEntity & {
+  attachments?: IAppointmentChatMessageAttachmentPublicEntity[];
+};
 
 type AppointmentPeerAvatarCarrier = {
   masterProfile?: {
@@ -10,11 +17,14 @@ type AppointmentPeerAvatarCarrier = {
       avatar?: IProfileAvatarView | null;
     } | null;
   } | null;
+  chat?: {
+    messages?: AppointmentChatInboxMessage[];
+  } | null;
 };
 
 export function mapAppointmentPeerAvatarsToHttpResponse<T>(appointment: T): T {
   const carrier = appointment as T & AppointmentPeerAvatarCarrier;
-  let next = carrier;
+  let next: T & AppointmentPeerAvatarCarrier = carrier;
 
   if (next.masterProfile != null && next.masterProfile.avatar !== undefined) {
     next = {
@@ -40,6 +50,19 @@ export function mapAppointmentPeerAvatarsToHttpResponse<T>(appointment: T): T {
             next.clientUser.userProfile.avatar,
           ),
         },
+      },
+    };
+  }
+
+  if (next.chat?.messages != null) {
+    // Wire DTO (fileSize: number) is not the domain entity shape; cast back to T.
+    next = {
+      ...next,
+      chat: {
+        ...next.chat,
+        messages: next.chat.messages.map(
+          mapAppointmentChatMessageWithAttachmentsToHttp,
+        ) as unknown as AppointmentChatInboxMessage[],
       },
     };
   }

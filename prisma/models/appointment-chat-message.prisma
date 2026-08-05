@@ -17,8 +17,9 @@ model AppointmentChatMessage {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  chat   AppointmentChat @relation(fields: [chatId], references: [id])
-  sender User?           @relation("AppointmentChatMessages", fields: [senderUserId], references: [id])
+  chat        AppointmentChat                      @relation(fields: [chatId], references: [id])
+  sender      User?                                @relation("AppointmentChatMessages", fields: [senderUserId], references: [id])
+  attachments AppointmentChatMessageAttachment[]
 
   @@index([chatId, createdAt])
   @@index([senderUserId])

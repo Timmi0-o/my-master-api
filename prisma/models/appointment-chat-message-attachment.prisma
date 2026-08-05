@@ -1,0 +1,27 @@
+enum AppointmentChatMessageAttachmentKind {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  VOICE
+}
+
+model AppointmentChatMessageAttachment {
+  id String @id @default(uuid())
+
+  messageId  String                               @map("message_id")
+  fileId     String                               @map("file_id")
+  kind       AppointmentChatMessageAttachmentKind @map("kind")
+  sortOrder  Int                                  @default(0) @map("sort_order")
+  durationMs Int?                                 @map("duration_ms")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  message AppointmentChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  file    File                   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, fileId])
+  @@index([messageId])
+  @@index([fileId])
+  @@map("AppointmentChatMessageAttachments")
+}

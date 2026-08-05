@@ -3,6 +3,7 @@ import type {
   EAppointmentChatSystemAction,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { AppointmentChatRow } from '../appointment-chat/appointment-chat.row.types';
+import type { AppointmentChatMessageAttachmentRow } from '../appointment-chat-message-attachment/map-appointment-chat-message-attachment-row';
 import type { UserRow } from 'src/modules/users/infrastructure/persistence/row-mappers/user/user.row.types';
 
 export type AppointmentChatMessageRow = {
@@ -21,4 +22,5 @@ export type AppointmentChatMessageRow = {
   deletedAt: Date | null;
   chat?: AppointmentChatRow | null;
   sender?: UserRow | null;
+  attachments?: AppointmentChatMessageAttachmentRow[] | null;
 };

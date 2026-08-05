@@ -23,11 +23,14 @@ import {
 } from '../../row-mappers/appointment-chat-message';
 import { mapAppointmentChatMessageWriteError } from './appointment-chat-message-write-error.mapper';
 import {
+  APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
   APPOINTMENT_CHAT_MESSAGE_RELATIONS,
   APPOINTMENT_CHAT_MESSAGE_VALIDATION_CONFIG,
 } from './appointment-chat-message.relations';
 
 function toPrismaCreateData(input: ICreateAppointmentChatMessageInput) {
+  const attachments = input.attachments ?? [];
+
   return {
     chatId: input.chatId,
     senderUserId: input.senderUserId,
@@ -38,6 +41,18 @@ function toPrismaCreateData(input: ICreateAppointmentChatMessageInput) {
       input.payload === undefined || input.payload === null
         ? undefined
         : (input.payload as Prisma.InputJsonValue),
+    ...(attachments.length > 0
+      ? {
+          attachments: {
+            create: attachments.map((attachment) => ({
+              fileId: attachment.fileId,
+              kind: attachment.kind,
+              sortOrder: attachment.sortOrder,
+              durationMs: attachment.durationMs ?? null,
+            })),
+          },
+        }
+      : {}),
   };
 }
 
@@ -102,6 +117,7 @@ export class PrismaAppointmentChatMessageRepository
     try {
       const row = await tx.appointmentChatMessage.create({
         data: toPrismaCreateData(input),
+        include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
       });
       return mapAppointmentChatMessageRow(row as AppointmentChatMessageRow);
     } catch (error) {
@@ -155,6 +171,7 @@ export class PrismaAppointmentChatMessageRepository
                 ? Prisma.JsonNull
                 : (patch.payload as Prisma.InputJsonValue),
         },
+        include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
       });
       return mapAppointmentChatMessageRow(row as AppointmentChatMessageRow);
     } catch (error) {
@@ -232,6 +249,7 @@ export class PrismaAppointmentChatMessageRepository
         const row = await this.getDelegate().findFirst({
           where: this.buildVisibleWhere({ chatId, viewerUserId }),
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
         });
 
         if (row) {
@@ -288,6 +306,7 @@ export class PrismaAppointmentChatMessageRepository
         },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         take,
+        include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
       });
 
       const hasMoreBefore = rows.length > input.limit;
@@ -326,6 +345,7 @@ export class PrismaAppointmentChatMessageRepository
         },
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         take,
+        include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
       });
 
       const hasMoreAfter = rows.length > input.limit;
@@ -345,6 +365,7 @@ export class PrismaAppointmentChatMessageRepository
       where: baseWhere,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take,
+      include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
     });
 
     const hasMoreBefore = rows.length > input.limit;

@@ -3,6 +3,7 @@ import { GetAppointmentChatByIdUseCase } from '@modules/appointments/application
 import { GetAppointmentChatMessageWindowUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chat-message-window.use-case';
 import { GetAppointmentChatsUseCase } from '@modules/appointments/application/use-cases/appointment-chat/get-appointment-chats.use-case';
 import { MarkAppointmentChatReadUseCase } from '@modules/appointments/application/use-cases/appointment-chat/mark-appointment-chat-read.use-case';
+import { PresignAppointmentChatAttachmentsUseCase } from '@modules/appointments/application/use-cases/appointment-chat/presign-appointment-chat-attachments.use-case';
 import { getAppointmentChatMessageWindowQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-message-window-query.schema';
 import type { IGetAppointmentChatMessageWindowQueryPayload } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chat-message-window-query.types';
 import { getAppointmentChatsQuerySchema } from '@modules/appointments/presentation/http/validation/schemas/get-appointment-chats-query.schema';
@@ -13,6 +14,8 @@ import { idParamSchema } from '@modules/appointments/presentation/http/validatio
 import type { IIdParamPayload } from '@modules/appointments/presentation/http/validation/schemas/id-param.types';
 import { markAppointmentChatReadPayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/mark-appointment-chat-read-payload.schema';
 import type { IMarkAppointmentChatReadPayload } from '@modules/appointments/presentation/http/validation/schemas/mark-appointment-chat-read-payload.types';
+import { presignAppointmentChatAttachmentsPayloadSchema } from '@modules/appointments/presentation/http/validation/schemas/presign-appointment-chat-attachments-payload.schema';
+import type { IPresignAppointmentChatAttachmentsPayload } from '@modules/appointments/presentation/http/validation/schemas/presign-appointment-chat-attachments-payload.types';
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
 import { Permissions } from '@modules/authorization/domain/permissions/permission-names';
@@ -35,7 +38,9 @@ import { mapGetAppointmentChatByIdHttpResponse } from '../http-responses/map-get
 import { mapGetAppointmentChatMessageWindowHttpResponse } from '../http-responses/map-get-appointment-chat-message-window-response';
 import { mapGetAppointmentChatsHttpResponse } from '../http-responses/map-get-appointment-chats-response';
 import { mapMarkAppointmentChatReadHttpResponse } from '../http-responses/map-mark-appointment-chat-read-response';
+import { mapPresignAppointmentChatAttachmentsHttpResponse } from '../http-responses/map-presign-appointment-chat-attachments-response';
 import { requestBodyToMarkAppointmentChatReadUseCaseInput } from '../request-mappers/appointment-chat/request-body-to-mark-appointment-chat-read-use-case-input';
+import { requestBodyToPresignAppointmentChatAttachmentsUseCaseInput } from '../request-mappers/appointment-chat/request-body-to-presign-appointment-chat-attachments-use-case-input';
 import { requestParamsToDeleteAppointmentChatUseCaseInput } from '../request-mappers/appointment-chat/request-params-to-delete-appointment-chat-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/appointment-chat/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToGetAppointmentChatByIdUseCaseInput } from '../request-mappers/appointment-chat/request-query-params-to-get-appointment-chat-by-id-use-case-input';
@@ -51,6 +56,7 @@ export class AppointmentChatsController {
     private readonly getAppointmentChatMessageWindowUseCase: GetAppointmentChatMessageWindowUseCase,
     private readonly markAppointmentChatReadUseCase: MarkAppointmentChatReadUseCase,
     private readonly deleteAppointmentChatByIdUseCase: DeleteAppointmentChatByIdUseCase,
+    private readonly presignAppointmentChatAttachmentsUseCase: PresignAppointmentChatAttachmentsUseCase,
   ) {}
 
   @Get()
@@ -96,6 +102,35 @@ export class AppointmentChatsController {
     const output =
       await this.getAppointmentChatMessageWindowUseCase.execute(input);
     return mapGetAppointmentChatMessageWindowHttpResponse(output);
+  }
+
+  @Post(':id/attachments/presign')
+  @Authorize({
+    kind: 'permissions',
+    permissions: [Permissions.appointmentChatMessages.create],
+  })
+  async presignAppointmentChatAttachments(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @HttpBody(presignAppointmentChatAttachmentsPayloadSchema, {
+      errorMessage: 'Некорректный payload presign вложений чата',
+    })
+    payload: IPresignAppointmentChatAttachmentsPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestBodyToPresignAppointmentChatAttachmentsUseCaseInput(
+      params.id,
+      payload,
+      user,
+      metadata.isStaffUser,
+    );
+    const output =
+      await this.presignAppointmentChatAttachmentsUseCase.execute(input);
+    return mapPresignAppointmentChatAttachmentsHttpResponse(output);
   }
 
   @Get(':id')

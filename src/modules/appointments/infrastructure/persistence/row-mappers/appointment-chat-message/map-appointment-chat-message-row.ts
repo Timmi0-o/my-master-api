@@ -6,6 +6,7 @@ import { mapUserRow } from 'src/modules/users/infrastructure/persistence/row-map
 import type { UserRow } from 'src/modules/users/infrastructure/persistence/row-mappers/user/user.row.types';
 import { mapAppointmentChatRow } from '../appointment-chat/map-appointment-chat-row';
 import type { AppointmentChatRow } from '../appointment-chat/appointment-chat.row.types';
+import { mapAppointmentChatMessageAttachmentRow } from '../appointment-chat-message-attachment/map-appointment-chat-message-attachment-row';
 import type { AppointmentChatMessageRow } from './appointment-chat-message.row.types';
 
 export function mapAppointmentChatMessageRow(
@@ -34,6 +35,11 @@ export function mapAppointmentChatMessageRow(
   }
   if (row.sender != null) {
     entity.sender = mapUserRow(row.sender as UserRow);
+  }
+  if (row.attachments != null) {
+    entity.attachments = row.attachments.map((attachment) =>
+      mapAppointmentChatMessageAttachmentRow(attachment),
+    );
   }
 
   return entity;

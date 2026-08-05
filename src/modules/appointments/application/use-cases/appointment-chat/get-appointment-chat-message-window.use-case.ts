@@ -1,7 +1,9 @@
 import { InvalidQueryError } from '@shared/domain/errors';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
+import { ResolveFileDisplayUrlUseCase } from 'src/modules/files/application/use-cases/file/resolve-file-display-url.use-case';
 import type { IGetAppointmentChatMessageWindowApplicationInput } from '../../dtos/appointment-chat/get-appointment-chat-message-window.input';
 import type { IGetAppointmentChatMessageWindowApplicationOutput } from '../../dtos/appointment-chat/get-appointment-chat-message-window.output';
+import { enrichAppointmentChatMessagesAttachmentDisplayUrls } from '../../helpers/enrich-appointment-chat-message-attachment-display-urls.helper';
 import { AssertAppointmentChatAccessUseCase } from './assert-appointment-chat-access.use-case';
 
 const DEFAULT_LIMIT = 40;
@@ -11,6 +13,7 @@ export class GetAppointmentChatMessageWindowUseCase {
   constructor(
     private readonly assertAccessUseCase: AssertAppointmentChatAccessUseCase,
     private readonly messageRepository: IAppointmentChatMessageRepository,
+    private readonly resolveFileDisplayUrlUseCase: ResolveFileDisplayUrlUseCase,
   ) {}
 
   async execute(
@@ -55,8 +58,13 @@ export class GetAppointmentChatMessageWindowUseCase {
         : {}),
     });
 
+    const items = await enrichAppointmentChatMessagesAttachmentDisplayUrls(
+      window.items,
+      this.resolveFileDisplayUrlUseCase,
+    );
+
     return {
-      items: window.items,
+      items,
       hasMoreBefore: window.hasMoreBefore,
       hasMoreAfter: window.hasMoreAfter,
       limit,

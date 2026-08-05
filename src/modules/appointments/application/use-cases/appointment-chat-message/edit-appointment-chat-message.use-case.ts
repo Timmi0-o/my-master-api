@@ -1,5 +1,5 @@
-import type { ITransactionManager } from '@shared/domain/transactions';
 import { ensureChatHasActiveAppointment } from '@modules/appointments/domain/entities/appointment/policies/ensure-chat-has-active-appointment.policy';
+import type { ITransactionManager } from '@shared/domain/transactions';
 import {
   ensureAppointmentChatAccessible,
   ensureAppointmentChatExists,
@@ -11,10 +11,12 @@ import {
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
+import { ResolveFileDisplayUrlUseCase } from 'src/modules/files/application/use-cases/file/resolve-file-display-url.use-case';
 import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IEditAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/edit-appointment-chat-message.input';
 import type { IEditAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/edit-appointment-chat-message.output';
+import { enrichAppointmentChatMessageAttachmentDisplayUrls } from '../../helpers/enrich-appointment-chat-message-attachment-display-urls.helper';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 
 export class EditAppointmentChatMessageUseCase {
@@ -25,6 +27,7 @@ export class EditAppointmentChatMessageUseCase {
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly realtimePublisher: IAppointmentChatRealtimePublisher,
+    private readonly resolveFileDisplayUrlUseCase: ResolveFileDisplayUrlUseCase,
   ) {}
 
   async execute(
@@ -70,8 +73,14 @@ export class EditAppointmentChatMessageUseCase {
       ),
     );
 
-    await this.realtimePublisher.messageUpdated(updated);
+    const messageWithDisplayUrls =
+      await enrichAppointmentChatMessageAttachmentDisplayUrls(
+        updated,
+        this.resolveFileDisplayUrlUseCase,
+      );
 
-    return updated;
+    await this.realtimePublisher.messageUpdated(messageWithDisplayUrls);
+
+    return messageWithDisplayUrls;
   }
 }

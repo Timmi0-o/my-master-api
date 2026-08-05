@@ -17,6 +17,7 @@ import {
   AppointmentChatMessageNotEditableError,
   AppointmentChatMessageNotFoundError,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import { AppointmentChatMessageAttachmentInvalidError } from 'src/modules/appointments/domain/entities/appointment-chat-message-attachment';
 
 export const mapAppointmentsDomainError: DomainErrorMapper = (error) => {
   if (
@@ -38,7 +39,8 @@ export const mapAppointmentsDomainError: DomainErrorMapper = (error) => {
     error instanceof AppointmentNotCompletableError ||
     error instanceof AppointmentNotReschedulableError ||
     error instanceof AppointmentChatMessageNotEditableError ||
-    error instanceof AppointmentChatMessageNotDeletableError
+    error instanceof AppointmentChatMessageNotDeletableError ||
+    error instanceof AppointmentChatMessageAttachmentInvalidError
   ) {
     return new ConflictException(error.message);
   }

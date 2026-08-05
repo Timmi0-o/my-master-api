@@ -10,7 +10,8 @@ export function requestBodyToCreateAppointmentChatMessageUseCaseInput(
 ): ICreateAppointmentChatMessageApplicationInput {
   return {
     chatId: payload.chatId,
-    body: payload.body,
+    body: payload.body ?? null,
+    attachments: payload.attachments ?? [],
     actor: toAppointmentActor(sessionUser, isStaffUser),
   };
 }

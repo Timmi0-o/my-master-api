@@ -30,12 +30,20 @@ import { GetAppointmentChatByIdUseCase } from '../../../application/use-cases/ap
 import { GetAppointmentChatMessageWindowUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chat-message-window.use-case';
 import { GetAppointmentChatsUseCase } from '../../../application/use-cases/appointment-chat/get-appointment-chats.use-case';
 import { MarkAppointmentChatReadUseCase } from '../../../application/use-cases/appointment-chat/mark-appointment-chat-read.use-case';
+import { PresignAppointmentChatAttachmentsUseCase } from '../../../application/use-cases/appointment-chat/presign-appointment-chat-attachments.use-case';
 import { APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-message/appointment-chat-message.repository.tokens';
 import type { IAppointmentChatMessageRepository } from '../../../domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import { APPOINTMENT_CHAT_UNREAD_REMINDER_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat-unread-reminder/appointment-chat-unread-reminder.repository.tokens';
 import type { IAppointmentChatUnreadReminderRepository } from '../../../domain/repositories/appointment-chat-unread-reminder/i-appointment-chat-unread-reminder.repository';
 import { APPOINTMENT_CHAT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment-chat/appointment-chat.repository.tokens';
 import type { IAppointmentChatRepository } from '../../../domain/repositories/appointment-chat/i-appointment-chat.repository';
+import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../domain/repositories/appointment/appointment.repository.tokens';
+import type { IAppointmentRepository } from '../../../domain/repositories/appointment/i-appointment.repository';
+import { PresignedUploadUseCase } from 'src/modules/files/application/use-cases/file/presigned-upload.use-case';
+import { ResolveFileDisplayUrlUseCase } from 'src/modules/files/application/use-cases/file/resolve-file-display-url.use-case';
+import { FilesModule } from 'src/modules/files/files.module';
+import type { IUserBlockRepository } from 'src/modules/users/domain/repositories/user-block/i-user-block.repository';
+import { USER_BLOCK_REPOSITORY_TOKEN } from 'src/modules/users/domain/repositories/user-block/user-block.repository.tokens';
 import { AppointmentChatGateway } from '../../../presentation/web-socket/appointment-chat/appointment-chat.gateway';
 import { WsJwtAuthGuard } from '../../../presentation/web-socket/appointment-chat/guards/ws-jwt-auth.guard';
 import { PrismaAppointmentChatUnreadReminderRepository } from '../../persistence/repositories/appointment-chat-unread-reminder/prisma-appointment-chat-unread-reminder.repository';
@@ -56,6 +64,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
     UsersModule,
     NotificationsModule,
     WebPushSubscriptionsModule,
+    FilesModule,
     JwtModule.register({}),
   ],
   providers: [
@@ -126,11 +135,41 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
       useFactory: (
         assertAccess: AssertAppointmentChatAccessUseCase,
         messageRepo: IAppointmentChatMessageRepository,
+        resolveFileDisplayUrlUseCase: ResolveFileDisplayUrlUseCase,
       ) =>
-        new GetAppointmentChatMessageWindowUseCase(assertAccess, messageRepo),
+        new GetAppointmentChatMessageWindowUseCase(
+          assertAccess,
+          messageRepo,
+          resolveFileDisplayUrlUseCase,
+        ),
       inject: [
         AssertAppointmentChatAccessUseCase,
         APPOINTMENT_CHAT_MESSAGE_REPOSITORY_TOKEN,
+        ResolveFileDisplayUrlUseCase,
+      ],
+    },
+    {
+      provide: PresignAppointmentChatAttachmentsUseCase,
+      useFactory: (
+        chatRepo: IAppointmentChatRepository,
+        appointmentRepo: IAppointmentRepository,
+        profileRepo: IMasterProfileRepository,
+        userBlockRepo: IUserBlockRepository,
+        presignedUploadUseCase: PresignedUploadUseCase,
+      ) =>
+        new PresignAppointmentChatAttachmentsUseCase(
+          chatRepo,
+          appointmentRepo,
+          profileRepo,
+          userBlockRepo,
+          presignedUploadUseCase,
+        ),
+      inject: [
+        APPOINTMENT_CHAT_REPOSITORY_TOKEN,
+        APPOINTMENT_REPOSITORY_TOKEN,
+        MASTER_PROFILE_REPOSITORY_TOKEN,
+        USER_BLOCK_REPOSITORY_TOKEN,
+        PresignedUploadUseCase,
       ],
     },
     {
@@ -220,6 +259,7 @@ import { AppointmentChatMessageModule } from '../appointment-chat-message/appoin
     GetAppointmentChatsUseCase,
     GetAppointmentChatByIdUseCase,
     GetAppointmentChatMessageWindowUseCase,
+    PresignAppointmentChatAttachmentsUseCase,
     AssertAppointmentChatAccessUseCase,
     MarkAppointmentChatReadUseCase,
     DeleteAppointmentChatByIdUseCase,

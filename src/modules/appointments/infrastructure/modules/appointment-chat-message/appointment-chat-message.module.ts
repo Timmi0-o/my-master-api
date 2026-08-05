@@ -13,6 +13,12 @@ import { USER_REPOSITORY_TOKEN } from '../../../../users/domain/repositories/use
 import { UsersModule } from '../../../../users/users.module';
 import { SendWebPushToUserUseCase } from '../../../../web-push-subscriptions/application/use-cases/web-push-subscription/send-web-push-to-user.use-case';
 import { WebPushSubscriptionsModule } from '../../../../web-push-subscriptions/web-push-subscriptions.module';
+import { ResolveFileDisplayUrlUseCase } from 'src/modules/files/application/use-cases/file/resolve-file-display-url.use-case';
+import { FILE_ACCESS_REPOSITORY_TOKEN } from 'src/modules/files/domain/repositories/file-access/file-access.repository.tokens';
+import type { IFileAccessRepository } from 'src/modules/files/domain/repositories/file-access/i-file-access.repository';
+import { FILE_REPOSITORY_TOKEN } from 'src/modules/files/domain/repositories/file/file.repository.tokens';
+import type { IFileRepository } from 'src/modules/files/domain/repositories/file/i-file.repository';
+import { FilesModule } from 'src/modules/files/files.module';
 import { APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN } from '../../../application/ports/appointment-chat-realtime.publisher.tokens';
 import type { IAppointmentChatRealtimePublisher } from '../../../application/ports/i-appointment-chat-realtime.publisher';
 import { CreateAppointmentChatMessageUseCase } from '../../../application/use-cases/appointment-chat-message/create-appointment-chat-message.use-case';
@@ -34,6 +40,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
   imports: [
     forwardRef(() => MastersModule),
     UsersModule,
+    FilesModule,
     forwardRef(() => AppointmentModule),
     forwardRef(() => AppointmentChatModule),
     NotificationsModule,
@@ -81,6 +88,9 @@ import { AppointmentModule } from '../appointment/appointment.module';
         userBlockRepo: IUserBlockRepository,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
         notificationMessageCatalog: NotificationMessageCatalog,
+        fileRepo: IFileRepository,
+        fileAccessRepo: IFileAccessRepository,
+        resolveFileDisplayUrlUseCase: ResolveFileDisplayUrlUseCase,
       ) =>
         new CreateAppointmentChatMessageUseCase(
           transactionManager,
@@ -93,6 +103,9 @@ import { AppointmentModule } from '../appointment/appointment.module';
           userBlockRepo,
           sendWebPushToUserUseCase,
           notificationMessageCatalog,
+          fileRepo,
+          fileAccessRepo,
+          resolveFileDisplayUrlUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -105,6 +118,9 @@ import { AppointmentModule } from '../appointment/appointment.module';
         USER_BLOCK_REPOSITORY_TOKEN,
         SendWebPushToUserUseCase,
         NotificationMessageCatalog,
+        FILE_REPOSITORY_TOKEN,
+        FILE_ACCESS_REPOSITORY_TOKEN,
+        ResolveFileDisplayUrlUseCase,
       ],
     },
     {
@@ -116,6 +132,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
         realtimePublisher: IAppointmentChatRealtimePublisher,
+        resolveFileDisplayUrlUseCase: ResolveFileDisplayUrlUseCase,
       ) =>
         new EditAppointmentChatMessageUseCase(
           transactionManager,
@@ -124,6 +141,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
           appointmentRepo,
           profileRepo,
           realtimePublisher,
+          resolveFileDisplayUrlUseCase,
         ),
       inject: [
         TRANSACTION_MANAGER_TOKEN,
@@ -132,6 +150,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         APPOINTMENT_CHAT_REALTIME_PUBLISHER_TOKEN,
+        ResolveFileDisplayUrlUseCase,
       ],
     },
     {
