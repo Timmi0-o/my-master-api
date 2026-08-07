@@ -17,3 +17,8 @@ export enum EAppointmentChatMessageDeleteMode {
   FOR_EVERYONE = 'FOR_EVERYONE',
   FOR_ME = 'FOR_ME',
 }
+
+export enum EAppointmentChatMessageReplyPreviewStatus {
+  AVAILABLE = 'AVAILABLE',
+  DELETED = 'DELETED',
+}

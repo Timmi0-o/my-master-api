@@ -1,14 +1,15 @@
-import type { IGetAppointmentChatMessageByIdApplicationInput } from '../../dtos/appointment-chat-message/get-appointment-chat-message-by-id.input';
-import type { IGetAppointmentChatMessageByIdApplicationOutput } from '../../dtos/appointment-chat-message/get-appointment-chat-message-by-id.output';
 import { AppointmentChatMessageNotFoundError } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import {
   ensureAppointmentChatAccessible,
   ensureAppointmentChatExists,
 } from 'src/modules/appointments/domain/entities/appointment-chat';
-import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IAppointmentChatMessageRepository } from 'src/modules/appointments/domain/repositories/appointment-chat-message/i-appointment-chat-message.repository';
 import type { IAppointmentChatRepository } from 'src/modules/appointments/domain/repositories/appointment-chat/i-appointment-chat.repository';
+import { ensureMasterProfileExists } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
+import type { IGetAppointmentChatMessageByIdApplicationInput } from '../../dtos/appointment-chat-message/get-appointment-chat-message-by-id.input';
+import type { IGetAppointmentChatMessageByIdApplicationOutput } from '../../dtos/appointment-chat-message/get-appointment-chat-message-by-id.output';
+import { enrichAppointmentChatMessageReplyTo } from '../../helpers/enrich-appointment-chat-message-reply-to.helper';
 
 export class GetAppointmentChatMessageByIdUseCase {
   constructor(
@@ -46,6 +47,11 @@ export class GetAppointmentChatMessageByIdUseCase {
     if (!item) {
       throw new AppointmentChatMessageNotFoundError(input.id);
     }
-    return item;
+
+    return enrichAppointmentChatMessageReplyTo(
+      item,
+      this.messageRepository,
+      input.actor.userId,
+    );
   }
 }

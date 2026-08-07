@@ -17,6 +17,7 @@ import type { IMasterProfileRepository } from 'src/modules/masters/domain/reposi
 import type { IEditAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/edit-appointment-chat-message.input';
 import type { IEditAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/edit-appointment-chat-message.output';
 import { enrichAppointmentChatMessageAttachmentDisplayUrls } from '../../helpers/enrich-appointment-chat-message-attachment-display-urls.helper';
+import { enrichAppointmentChatMessageReplyTo } from '../../helpers/enrich-appointment-chat-message-reply-to.helper';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 
 export class EditAppointmentChatMessageUseCase {
@@ -79,8 +80,14 @@ export class EditAppointmentChatMessageUseCase {
         this.resolveFileDisplayUrlUseCase,
       );
 
-    await this.realtimePublisher.messageUpdated(messageWithDisplayUrls);
+    const messageWithReplyTo = await enrichAppointmentChatMessageReplyTo(
+      messageWithDisplayUrls,
+      this.messageRepository,
+      input.actor.userId,
+    );
 
-    return messageWithDisplayUrls;
+    await this.realtimePublisher.messageUpdated(messageWithReplyTo);
+
+    return messageWithReplyTo;
   }
 }

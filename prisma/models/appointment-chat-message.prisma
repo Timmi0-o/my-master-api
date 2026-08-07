@@ -13,16 +13,21 @@ model AppointmentChatMessage {
   editedHistory     String[]  @default([]) @map("edited_history")
   deletedForUserIds String[]  @default([]) @map("deleted_for_user_ids")
 
+  replyToMessageId String? @map("reply_to_message_id")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  chat        AppointmentChat                      @relation(fields: [chatId], references: [id])
-  sender      User?                                @relation("AppointmentChatMessages", fields: [senderUserId], references: [id])
-  attachments AppointmentChatMessageAttachment[]
+  chat             AppointmentChat                      @relation(fields: [chatId], references: [id])
+  sender           User?                                @relation("AppointmentChatMessages", fields: [senderUserId], references: [id])
+  attachments      AppointmentChatMessageAttachment[]
+  replyToMessage   AppointmentChatMessage?              @relation("AppointmentChatMessageReplies", fields: [replyToMessageId], references: [id], onDelete: SetNull)
+  replies          AppointmentChatMessage[]             @relation("AppointmentChatMessageReplies")
 
   @@index([chatId, createdAt])
   @@index([senderUserId])
+  @@index([replyToMessageId])
   @@map("AppointmentChatMessages")
 }
 

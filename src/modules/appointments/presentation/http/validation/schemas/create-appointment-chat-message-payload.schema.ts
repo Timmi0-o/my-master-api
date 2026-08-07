@@ -14,6 +14,7 @@ export const createAppointmentChatMessagePayloadSchema: JSONSchemaType<ICreateAp
     properties: {
       chatId: idSchema,
       body: { type: 'string', nullable: true, maxLength: 10000 },
+      replyToMessageId: { ...idSchema, nullable: true },
       attachments: {
         type: 'array',
         nullable: true,

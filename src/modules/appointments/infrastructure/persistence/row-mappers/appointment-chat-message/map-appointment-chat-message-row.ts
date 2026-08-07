@@ -25,6 +25,7 @@ export function mapAppointmentChatMessageRow(
     editedAt: row.editedAt ?? null,
     editedHistory: row.editedHistory ?? [],
     deletedForUserIds: row.deletedForUserIds ?? [],
+    replyToMessageId: row.replyToMessageId ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt ?? null,

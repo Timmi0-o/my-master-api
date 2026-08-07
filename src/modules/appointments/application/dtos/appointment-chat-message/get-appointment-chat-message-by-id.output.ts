@@ -1,3 +1,4 @@
-import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import type { IAppointmentChatMessageWithReplyTo } from '../../helpers/enrich-appointment-chat-message-reply-to.helper';
 
-export type IGetAppointmentChatMessageByIdApplicationOutput = IAppointmentChatMessagePublicEntity;
+export type IGetAppointmentChatMessageByIdApplicationOutput =
+  IAppointmentChatMessageWithReplyTo;

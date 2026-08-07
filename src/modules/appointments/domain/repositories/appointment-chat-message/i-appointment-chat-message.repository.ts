@@ -73,4 +73,8 @@ export type IAppointmentChatMessageRepository = IReadRepository<
     findMessageWindow(
       input: IFindMessageWindowInput,
     ): Promise<IFindMessageWindowResult>;
+
+    findEntitiesByIds(
+      ids: readonly string[],
+    ): Promise<Map<string, IAppointmentChatMessagePublicEntity>>;
   };

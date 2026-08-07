@@ -11,6 +11,7 @@ export const APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS = [
   'editedAt',
   'editedHistory',
   'deletedForUserIds',
+  'replyToMessageId',
   'createdAt',
   'updatedAt',
   'deletedAt',

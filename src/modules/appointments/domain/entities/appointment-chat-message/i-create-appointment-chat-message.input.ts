@@ -10,6 +10,8 @@ export type ICreateAppointmentChatMessageInput = Omit<
   | 'editedAt'
   | 'editedHistory'
   | 'deletedForUserIds'
+  | 'replyToMessageId'
 > & {
+  replyToMessageId?: string | null;
   attachments?: readonly ICreateAppointmentChatMessageAttachmentInput[];
 };

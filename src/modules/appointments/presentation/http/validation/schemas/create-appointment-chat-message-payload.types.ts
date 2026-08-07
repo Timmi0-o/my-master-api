@@ -3,6 +3,7 @@ import type { EAppointmentChatMessageAttachmentKind } from 'src/modules/appointm
 export interface ICreateAppointmentChatMessagePayload {
   chatId: string;
   body?: string | null;
+  replyToMessageId?: string | null;
   attachments?: Array<{
     fileId: string;
     kind: EAppointmentChatMessageAttachmentKind;

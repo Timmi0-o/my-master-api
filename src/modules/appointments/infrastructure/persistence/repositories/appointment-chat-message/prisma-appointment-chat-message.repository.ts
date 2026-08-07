@@ -37,6 +37,7 @@ function toPrismaCreateData(input: ICreateAppointmentChatMessageInput) {
     actor: input.actor,
     body: input.body,
     systemAction: input.systemAction,
+    replyToMessageId: input.replyToMessageId ?? null,
     payload:
       input.payload === undefined || input.payload === null
         ? undefined
@@ -381,6 +382,31 @@ export class PrismaAppointmentChatMessageRepository
       hasMoreBefore,
       hasMoreAfter: false,
     };
+  }
+
+  async findEntitiesByIds(
+    ids: readonly string[],
+  ): Promise<Map<string, IAppointmentChatMessagePublicEntity>> {
+    const result = new Map<string, IAppointmentChatMessagePublicEntity>();
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+
+    if (uniqueIds.length === 0) {
+      return result;
+    }
+
+    const rows = await this.getDelegate().findMany({
+      where: { id: { in: uniqueIds } },
+      include: APPOINTMENT_CHAT_MESSAGE_ATTACHMENTS_INCLUDE,
+    });
+
+    for (const row of rows) {
+      const entity = mapAppointmentChatMessageRow(
+        row as AppointmentChatMessageRow,
+      );
+      result.set(entity.id, entity);
+    }
+
+    return result;
   }
 
   private buildVisibleWhere(input: {

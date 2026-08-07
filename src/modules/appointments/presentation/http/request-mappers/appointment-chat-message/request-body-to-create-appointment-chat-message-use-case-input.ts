@@ -11,6 +11,7 @@ export function requestBodyToCreateAppointmentChatMessageUseCaseInput(
   return {
     chatId: payload.chatId,
     body: payload.body ?? null,
+    replyToMessageId: payload.replyToMessageId ?? null,
     attachments: payload.attachments ?? [],
     actor: toAppointmentActor(sessionUser, isStaffUser),
   };

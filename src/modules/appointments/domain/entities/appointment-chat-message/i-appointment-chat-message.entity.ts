@@ -14,6 +14,7 @@ export interface IAppointmentChatMessageEntity {
   editedAt: Date | null;
   editedHistory: string[];
   deletedForUserIds: string[];
+  replyToMessageId: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

@@ -29,6 +29,8 @@ const PRESETS: Record<
       'body',
       'systemAction',
       'payload',
+      'replyToMessageId',
+      'editedAt',
       'createdAt',
       'updatedAt',
     ],
@@ -36,6 +38,35 @@ const PRESETS: Record<
   BASE: {
     select: [...APPOINTMENT_CHAT_MESSAGE_SELECT_FIELDS],
     include: {
+      attachments: {
+        select: [
+          'id',
+          'messageId',
+          'fileId',
+          'kind',
+          'sortOrder',
+          'durationMs',
+          'createdAt',
+          'updatedAt',
+        ],
+        include: {
+          file: {
+            select: [
+              'id',
+              'fileUrl',
+              'originalName',
+              'mimeType',
+              'fileType',
+              'purpose',
+              'accessLevel',
+              'status',
+              'fileSize',
+              'createdAt',
+              'updatedAt',
+            ],
+          },
+        },
+      },
       chat: {
         select: [
           'id',

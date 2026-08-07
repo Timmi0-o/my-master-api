@@ -8,6 +8,7 @@ export type { IAppointmentChatMessageRelations } from './i-appointment-chat-mess
 export {
   EAppointmentChatMessageActor,
   EAppointmentChatMessageDeleteMode,
+  EAppointmentChatMessageReplyPreviewStatus,
   EAppointmentChatSystemAction,
 } from './appointment-chat-message.enum';
 export {
@@ -15,11 +16,13 @@ export {
   AppointmentChatMessageForbiddenError,
   AppointmentChatMessageNotEditableError,
   AppointmentChatMessageNotDeletableError,
+  AppointmentChatMessageReplyTargetInvalidError,
 } from './errors';
 export {
   ensureAppointmentChatMessageExists,
   ensureAppointmentChatMessageEditable,
   ensureAppointmentChatMessageDeletable,
+  ensureAppointmentChatMessageReplyable,
   APPOINTMENT_CHAT_MESSAGE_EDIT_WINDOW_HOURS,
   APPOINTMENT_CHAT_MESSAGE_EDIT_WINDOW_MS,
 } from './policies';

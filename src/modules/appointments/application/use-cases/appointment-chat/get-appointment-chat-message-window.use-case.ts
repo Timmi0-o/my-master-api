@@ -4,6 +4,7 @@ import { ResolveFileDisplayUrlUseCase } from 'src/modules/files/application/use-
 import type { IGetAppointmentChatMessageWindowApplicationInput } from '../../dtos/appointment-chat/get-appointment-chat-message-window.input';
 import type { IGetAppointmentChatMessageWindowApplicationOutput } from '../../dtos/appointment-chat/get-appointment-chat-message-window.output';
 import { enrichAppointmentChatMessagesAttachmentDisplayUrls } from '../../helpers/enrich-appointment-chat-message-attachment-display-urls.helper';
+import { enrichAppointmentChatMessagesReplyTo } from '../../helpers/enrich-appointment-chat-message-reply-to.helper';
 import { AssertAppointmentChatAccessUseCase } from './assert-appointment-chat-access.use-case';
 
 const DEFAULT_LIMIT = 40;
@@ -58,9 +59,16 @@ export class GetAppointmentChatMessageWindowUseCase {
         : {}),
     });
 
-    const items = await enrichAppointmentChatMessagesAttachmentDisplayUrls(
-      window.items,
-      this.resolveFileDisplayUrlUseCase,
+    const itemsWithDisplayUrls =
+      await enrichAppointmentChatMessagesAttachmentDisplayUrls(
+        window.items,
+        this.resolveFileDisplayUrlUseCase,
+      );
+
+    const items = await enrichAppointmentChatMessagesReplyTo(
+      itemsWithDisplayUrls,
+      this.messageRepository,
+      input.actor.userId,
     );
 
     return {

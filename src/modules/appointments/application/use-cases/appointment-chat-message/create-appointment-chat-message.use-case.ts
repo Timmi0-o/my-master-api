@@ -8,6 +8,7 @@ import type { ICreateAppointmentChatMessageInput } from 'src/modules/appointment
 import {
   AppointmentChatMessageForbiddenError,
   EAppointmentChatMessageActor,
+  ensureAppointmentChatMessageReplyable,
 } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import {
   EAppointmentChatMessageAttachmentKind,
@@ -39,6 +40,7 @@ import type { SendWebPushToUserUseCase } from 'src/modules/web-push-subscription
 import type { ICreateAppointmentChatMessageApplicationInput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.input';
 import type { ICreateAppointmentChatMessageApplicationOutput } from '../../dtos/appointment-chat-message/create-appointment-chat-message.output';
 import { enrichAppointmentChatMessageAttachmentDisplayUrls } from '../../helpers/enrich-appointment-chat-message-attachment-display-urls.helper';
+import { enrichAppointmentChatMessageReplyTo } from '../../helpers/enrich-appointment-chat-message-reply-to.helper';
 import type { IAppointmentChatRealtimePublisher } from '../../ports/i-appointment-chat-realtime.publisher';
 
 const WEB_PUSH_BODY_MAX_LENGTH = 120;
@@ -116,6 +118,20 @@ export class CreateAppointmentChatMessageUseCase {
       });
     }
 
+    let replyToMessageId: string | null = null;
+    if (input.replyToMessageId) {
+      const replyTarget = await this.messageRepository.findEntityById(
+        input.replyToMessageId,
+      );
+      ensureAppointmentChatMessageReplyable({
+        chatId: chat.id,
+        replyToMessageId: input.replyToMessageId,
+        replyTarget,
+        actorUserId: input.actor.userId,
+      });
+      replyToMessageId = input.replyToMessageId;
+    }
+
     const createInput: ICreateAppointmentChatMessageInput = {
       chatId: input.chatId,
       senderUserId: input.actor.userId,
@@ -123,6 +139,7 @@ export class CreateAppointmentChatMessageUseCase {
       body,
       systemAction: null,
       payload: null,
+      replyToMessageId,
       attachments: attachments.map((attachment) => ({
         fileId: attachment.fileId,
         kind: attachment.kind,
@@ -207,13 +224,19 @@ export class CreateAppointmentChatMessageUseCase {
         this.resolveFileDisplayUrlUseCase,
       );
 
+    const messageWithReplyTo = await enrichAppointmentChatMessageReplyTo(
+      messageWithDisplayUrls,
+      this.messageRepository,
+      input.actor.userId,
+    );
+
     const recipientUserId = isClient
       ? profile.userId
       : isMaster
         ? chat.clientUserId
         : null;
 
-    await this.realtimeChatPublisher.messageCreated(messageWithDisplayUrls, {
+    await this.realtimeChatPublisher.messageCreated(messageWithReplyTo, {
       recipientUserId,
     });
 
@@ -250,7 +273,7 @@ export class CreateAppointmentChatMessageUseCase {
       }
     }
 
-    return messageWithDisplayUrls;
+    return messageWithReplyTo;
   }
 }
 

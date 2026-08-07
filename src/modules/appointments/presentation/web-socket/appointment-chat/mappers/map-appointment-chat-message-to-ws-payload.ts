@@ -1,5 +1,6 @@
 import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageAttachmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message-attachment';
+import type { IAppointmentChatMessageReplyToPreview } from 'src/modules/appointments/application/helpers/enrich-appointment-chat-message-reply-to.helper';
 
 export interface IAppointmentChatMessageAttachmentWsPayload {
   id: string;
@@ -25,6 +26,15 @@ export interface IAppointmentChatMessageAttachmentWsPayload {
   };
 }
 
+export interface IAppointmentChatMessageReplyToWsPayload {
+  id: string;
+  status: string;
+  senderUserId?: string | null;
+  body?: string | null;
+  createdAt?: string | null;
+  firstAttachmentKind?: string | null;
+}
+
 export interface IAppointmentChatMessageWsPayload extends Omit<
   IAppointmentChatMessagePublicEntity,
   'createdAt' | 'updatedAt' | 'editedAt' | 'deletedAt'
@@ -34,6 +44,7 @@ export interface IAppointmentChatMessageWsPayload extends Omit<
   editedAt: string | null;
   deletedAt?: string | null;
   attachments?: IAppointmentChatMessageAttachmentWsPayload[];
+  replyTo?: IAppointmentChatMessageReplyToWsPayload | null;
 }
 
 function mapAttachmentToWsPayload(
@@ -68,9 +79,34 @@ function mapAttachmentToWsPayload(
   };
 }
 
+function mapReplyToToWsPayload(
+  replyTo: IAppointmentChatMessageReplyToPreview | null | undefined,
+): IAppointmentChatMessageReplyToWsPayload | null {
+  if (!replyTo) {
+    return null;
+  }
+
+  if (replyTo.status === 'DELETED') {
+    return {
+      id: replyTo.id,
+      status: replyTo.status,
+    };
+  }
+
+  return {
+    id: replyTo.id,
+    status: replyTo.status,
+    senderUserId: replyTo.senderUserId ?? null,
+    body: replyTo.body ?? null,
+    createdAt: replyTo.createdAt?.toISOString() ?? null,
+    firstAttachmentKind: replyTo.firstAttachmentKind ?? null,
+  };
+}
+
 export function mapAppointmentChatMessageToWsPayload(
   message: IAppointmentChatMessagePublicEntity & {
     attachments?: IAppointmentChatMessageAttachmentPublicEntity[];
+    replyTo?: IAppointmentChatMessageReplyToPreview | null;
   },
 ): IAppointmentChatMessageWsPayload {
   return {
@@ -84,9 +120,11 @@ export function mapAppointmentChatMessageToWsPayload(
     editedAt: message.editedAt?.toISOString() ?? null,
     editedHistory: message.editedHistory,
     deletedForUserIds: message.deletedForUserIds,
+    replyToMessageId: message.replyToMessageId,
     createdAt: message.createdAt.toISOString(),
     updatedAt: message.updatedAt.toISOString(),
     deletedAt: message.deletedAt?.toISOString() ?? null,
+    replyTo: mapReplyToToWsPayload(message.replyTo),
     attachments: (message.attachments ?? []).map(mapAttachmentToWsPayload),
   };
 }

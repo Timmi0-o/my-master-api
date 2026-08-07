@@ -1,5 +1,6 @@
 import type { IAppointmentChatMessageAttachmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message-attachment';
 import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import type { IAppointmentChatMessageReplyToPreview } from 'src/modules/appointments/application/helpers/enrich-appointment-chat-message-reply-to.helper';
 
 function mapAttachmentFileToHttp(
   file: NonNullable<IAppointmentChatMessageAttachmentPublicEntity['file']>,
@@ -37,19 +38,47 @@ export function mapAppointmentChatMessageAttachmentToHttp(
   };
 }
 
+function mapReplyToToHttp(
+  replyTo: IAppointmentChatMessageReplyToPreview | null | undefined,
+) {
+  if (!replyTo) {
+    return null;
+  }
+
+  if (replyTo.status === 'DELETED') {
+    return {
+      id: replyTo.id,
+      status: replyTo.status,
+    };
+  }
+
+  return {
+    id: replyTo.id,
+    status: replyTo.status,
+    senderUserId: replyTo.senderUserId ?? null,
+    body: replyTo.body ?? null,
+    createdAt: replyTo.createdAt ?? null,
+    firstAttachmentKind: replyTo.firstAttachmentKind ?? null,
+  };
+}
+
 /** Flat message DTO for list/window items (no `{ data }` envelope). */
 export function mapAppointmentChatMessageWithAttachmentsToHttp(
   message: IAppointmentChatMessagePublicEntity & {
     attachments?: IAppointmentChatMessageAttachmentPublicEntity[];
+    replyTo?: IAppointmentChatMessageReplyToPreview | null;
   },
 ) {
-  const { attachments, chat, sender, ...rest } = message as typeof message & {
-    chat?: unknown;
-    sender?: unknown;
-  };
+  const { attachments, chat, sender, replyTo, ...rest } =
+    message as typeof message & {
+      chat?: unknown;
+      sender?: unknown;
+      replyTo?: IAppointmentChatMessageReplyToPreview | null;
+    };
 
   return {
     ...rest,
+    replyTo: mapReplyToToHttp(replyTo),
     attachments: (attachments ?? []).map(
       mapAppointmentChatMessageAttachmentToHttp,
     ),

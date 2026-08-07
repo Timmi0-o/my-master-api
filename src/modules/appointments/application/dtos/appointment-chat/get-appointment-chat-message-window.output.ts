@@ -1,7 +1,7 @@
-import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
+import type { IAppointmentChatMessageWithReplyTo } from '../../helpers/enrich-appointment-chat-message-reply-to.helper';
 
 export type IGetAppointmentChatMessageWindowApplicationOutput = {
-  items: IAppointmentChatMessagePublicEntity[];
+  items: IAppointmentChatMessageWithReplyTo[];
   hasMoreBefore: boolean;
   hasMoreAfter: boolean;
   limit: number;
