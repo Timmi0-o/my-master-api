@@ -28,6 +28,8 @@
     "prisma:seed:force-profile-avatars": "SEED_FORCE_PROFILE_AVATARS=true prisma db seed",
     "geo:db:restore": "ts-node -r tsconfig-paths/register prisma/scripts/db/geo-db-restore.ts",
     "geo:db:restore:host": "bash scripts/geo-db-restore-host.sh",
+    "backfill:image-variants": "ts-node -r tsconfig-paths/register src/scripts/backfill-image-variants.ts",
+    "backfill:image-variants:prod": "node dist/src/scripts/backfill-image-variants.js",
     "deploy:prod": "bash scripts/deploy-prod.sh"
   },
   "dependencies": {
@@ -65,6 +67,7 @@
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.35.3",
     "socket.io": "^4.8.3",
     "socket.io-adapter": "^2.5.8",
     "web-push": "^3.6.7"

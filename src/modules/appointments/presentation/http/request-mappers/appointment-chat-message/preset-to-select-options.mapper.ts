@@ -61,6 +61,7 @@ const PRESETS: Record<
               'accessLevel',
               'status',
               'fileSize',
+              'metadata',
               'createdAt',
               'updatedAt',
             ],

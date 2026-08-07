@@ -76,6 +76,7 @@ export const IMAGE_FILE_SELECT_FIELDS = [
   'accessLevel',
   'status',
   'fileSize',
+  'metadata',
   'createdAt',
   'updatedAt',
 ] as const;

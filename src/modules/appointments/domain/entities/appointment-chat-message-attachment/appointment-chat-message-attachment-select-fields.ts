@@ -24,6 +24,7 @@ export const APPOINTMENT_CHAT_MESSAGE_ATTACHMENT_FILE_SELECT_FIELDS = [
   'accessLevel',
   'status',
   'fileSize',
+  'metadata',
   'createdAt',
   'updatedAt',
 ] as const;

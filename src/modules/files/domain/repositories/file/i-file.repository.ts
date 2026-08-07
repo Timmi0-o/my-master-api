@@ -7,6 +7,16 @@ import type {
   IUpdateFileInput,
 } from '../../entities/file';
 
+export type IFindImageFileIdsPageInput = {
+  take: number;
+  cursorId?: string | null;
+};
+
+export type IFindImageFileIdsPageResult = {
+  ids: string[];
+  nextCursorId: string | null;
+};
+
 export type IFileRepository = IReadRepository<
   IFilePublicEntity,
   string,
@@ -24,6 +34,10 @@ export type IFileRepository = IReadRepository<
     ids: string[],
     scope?: TransactionScope,
   ): Promise<IFileEntity[]>;
+  findImageFileIdsPage(
+    input: IFindImageFileIdsPageInput,
+    scope?: TransactionScope,
+  ): Promise<IFindImageFileIdsPageResult>;
   create(
     data: ICreateFileInput,
     scope?: TransactionScope,

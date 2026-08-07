@@ -11,6 +11,7 @@ import type {
   IFilePublicEntity,
   IUpdateFileInput,
 } from 'src/modules/files/domain/entities/file';
+import { FileType } from 'src/modules/files/domain/entities/file';
 import type { IFileRepository } from 'src/modules/files/domain/repositories/file/i-file.repository';
 import {
   mapFileRow,
@@ -91,6 +92,36 @@ export class PrismaFileRepository
       where: { id: { in: ids }, deletedAt: null },
     });
     return rows.map((row) => mapFileRow(row as FileRow));
+  }
+
+  async findImageFileIdsPage(
+    input: { take: number; cursorId?: string | null },
+    scope?: TransactionScope,
+  ): Promise<{ ids: string[]; nextCursorId: string | null }> {
+    const take = Math.max(1, Math.min(input.take, 500));
+    const rows = await this.getDelegate(scope).findMany({
+      where: {
+        deletedAt: null,
+        fileType: FileType.IMAGE,
+        ...(input.cursorId
+          ? {
+              id: {
+                gt: input.cursorId,
+              },
+            }
+          : {}),
+      },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+      take: take + 1,
+    });
+
+    const hasMore = rows.length > take;
+    const pageRows = hasMore ? rows.slice(0, take) : rows;
+    const ids = pageRows.map((row) => row.id);
+    const nextCursorId = hasMore ? (ids[ids.length - 1] ?? null) : null;
+
+    return { ids, nextCursorId };
   }
 
   async create(

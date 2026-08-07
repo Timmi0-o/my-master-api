@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CHECKSUM_CALCULATOR_PORT_TOKEN } from '../../../application/ports/i-checksum-calculator.port';
+import { IMAGE_VARIANTS_QUEUE_PORT_TOKEN } from '../../../application/ports/i-image-variants-queue.port';
 import { MIME_DETECTOR_PORT_TOKEN } from '../../../application/ports/i-mime-detector.port';
 import type { IChecksumCalculatorPort } from '../../../application/ports/i-checksum-calculator.port';
+import type { IImageVariantsQueuePort } from '../../../application/ports/i-image-variants-queue.port';
 import type { IMimeDetectorPort } from '../../../application/ports/i-mime-detector.port';
 import { FileUploadedUseCase } from '../../../application/use-cases/file/file-uploaded.use-case';
 import { FILE_REPOSITORY_TOKEN } from '../../../domain/repositories/file/file.repository.tokens';
@@ -19,12 +21,19 @@ import { FileModule } from '../file/file.module';
         fileRepo: IFileRepository,
         mimeDetector: IMimeDetectorPort,
         checksumCalculator: IChecksumCalculatorPort,
+        imageVariantsQueue: IImageVariantsQueuePort,
       ) =>
-        new FileUploadedUseCase(fileRepo, mimeDetector, checksumCalculator),
+        new FileUploadedUseCase(
+          fileRepo,
+          mimeDetector,
+          checksumCalculator,
+          imageVariantsQueue,
+        ),
       inject: [
         FILE_REPOSITORY_TOKEN,
         MIME_DETECTOR_PORT_TOKEN,
         CHECKSUM_CALCULATOR_PORT_TOKEN,
+        IMAGE_VARIANTS_QUEUE_PORT_TOKEN,
       ],
     },
   ],

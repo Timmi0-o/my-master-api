@@ -17,6 +17,7 @@ import { REDIS_SERVICE_TOKEN } from './redis.tokens';
       { name: QUEUE_NAMES.APPOINTMENT_CHAT_UNREAD_REMINDERS },
       { name: QUEUE_NAMES.MASTER_ONBOARDING_DEMOTE },
       { name: QUEUE_NAMES.CALL_RING_TIMEOUT },
+      { name: QUEUE_NAMES.IMAGE_VARIANTS },
     ),
   ],
   providers: [

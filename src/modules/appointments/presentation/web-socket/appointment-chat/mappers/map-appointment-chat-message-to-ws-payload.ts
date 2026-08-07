@@ -1,6 +1,7 @@
 import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageAttachmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message-attachment';
 import type { IAppointmentChatMessageReplyToPreview } from 'src/modules/appointments/application/helpers/enrich-appointment-chat-message-reply-to.helper';
+import { parseImageVariantsFromMetadata } from 'src/modules/files/domain/entities/file';
 
 export interface IAppointmentChatMessageAttachmentWsPayload {
   id: string;
@@ -23,6 +24,26 @@ export interface IAppointmentChatMessageAttachmentWsPayload {
     fileSize: number;
     createdAt: string;
     updatedAt: string;
+    variants?: {
+      small: {
+        fileUrl: string;
+        width: number;
+        height: number;
+        mimeType: string;
+      };
+      medium: {
+        fileUrl: string;
+        width: number;
+        height: number;
+        mimeType: string;
+      };
+      high: {
+        fileUrl: string;
+        width: number;
+        height: number;
+        mimeType: string;
+      };
+    };
   };
 }
 
@@ -50,6 +71,10 @@ export interface IAppointmentChatMessageWsPayload extends Omit<
 function mapAttachmentToWsPayload(
   attachment: IAppointmentChatMessageAttachmentPublicEntity,
 ): IAppointmentChatMessageAttachmentWsPayload {
+  const variants = attachment.file
+    ? parseImageVariantsFromMetadata(attachment.file.metadata)
+    : null;
+
   return {
     id: attachment.id,
     messageId: attachment.messageId,
@@ -73,6 +98,7 @@ function mapAttachmentToWsPayload(
             fileSize: Number(attachment.file.fileSize),
             createdAt: attachment.file.createdAt.toISOString(),
             updatedAt: attachment.file.updatedAt.toISOString(),
+            ...(variants ? { variants } : {}),
           },
         }
       : {}),

@@ -1,10 +1,13 @@
 import type { IAppointmentChatMessageAttachmentPublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message-attachment';
 import type { IAppointmentChatMessagePublicEntity } from 'src/modules/appointments/domain/entities/appointment-chat-message';
 import type { IAppointmentChatMessageReplyToPreview } from 'src/modules/appointments/application/helpers/enrich-appointment-chat-message-reply-to.helper';
+import { parseImageVariantsFromMetadata } from 'src/modules/files/domain/entities/file';
 
 function mapAttachmentFileToHttp(
   file: NonNullable<IAppointmentChatMessageAttachmentPublicEntity['file']>,
 ) {
+  const variants = parseImageVariantsFromMetadata(file.metadata);
+
   return {
     id: file.id,
     fileUrl: file.fileUrl,
@@ -17,6 +20,7 @@ function mapAttachmentFileToHttp(
     fileSize: Number(file.fileSize),
     createdAt: file.createdAt,
     updatedAt: file.updatedAt,
+    ...(variants ? { variants } : {}),
   };
 }
 

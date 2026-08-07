@@ -104,6 +104,22 @@ export class S3Service implements OnModuleInit {
     );
   }
 
+  async putObject(input: {
+    key: string;
+    bucket: string;
+    body: Buffer;
+    contentType: string;
+  }): Promise<void> {
+    await this.s3Client.send(
+      new PutObjectCommand({
+        Bucket: input.bucket,
+        Key: input.key,
+        Body: input.body,
+        ContentType: input.contentType,
+      }),
+    );
+  }
+
   async deleteFile(key: string, bucket?: string): Promise<void> {
     await this.s3Client.send(
       new DeleteObjectCommand({
