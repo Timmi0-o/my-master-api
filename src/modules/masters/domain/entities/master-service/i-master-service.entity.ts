@@ -1,4 +1,5 @@
 import type { EMasterServiceCategory } from './master-service-category.enum';
+import type { EMasterServiceStatus } from './master-service-status.enum';
 
 export interface IMasterServiceEntity {
   id: string;
@@ -9,6 +10,7 @@ export interface IMasterServiceEntity {
   durationMinutes: number;
   category: EMasterServiceCategory;
   tags: string[];
+  status: EMasterServiceStatus;
   masterProfileId: string;
   createdAt: Date;
   updatedAt: Date;

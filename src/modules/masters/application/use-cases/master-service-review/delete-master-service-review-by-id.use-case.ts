@@ -1,4 +1,5 @@
 import {
+  EMasterServiceReviewStatus,
   ensureMasterServiceReviewExists,
   ensureMasterServiceReviewModifiable,
 } from 'src/modules/masters/domain/entities/master-service-review';
@@ -32,17 +33,21 @@ export class DeleteMasterServiceReviewByIdUseCase {
     );
     ensureMasterServiceExists(service, existing.masterServiceId);
 
+    const wasActive = existing.status === EMasterServiceReviewStatus.ACTIVE;
+
     return this.transactionManager.runInTransaction(async (scope) => {
       const review = await this.masterServiceReviewRepository.softDelete(
         input.id,
         scope,
       );
 
-      await this.recalculateMasterRatingsUseCase.execute({
-        masterServiceId: existing.masterServiceId,
-        masterProfileId: service.masterProfileId,
-        scope,
-      });
+      if (wasActive) {
+        await this.recalculateMasterRatingsUseCase.execute({
+          masterServiceId: existing.masterServiceId,
+          masterProfileId: service.masterProfileId,
+          scope,
+        });
+      }
 
       return review;
     });

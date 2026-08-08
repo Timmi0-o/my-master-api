@@ -6,6 +6,8 @@ model MasterServiceReview {
 
   text String
 
+  status MasterServiceReviewStatus @default(ACTIVE) @map("status")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -20,7 +22,16 @@ model MasterServiceReview {
   reactions     MasterServiceReviewReaction[]
 
   @@index([masterServiceId, createdAt])
+  @@index([masterServiceId, status, createdAt])
   @@index([clientUserId])
   @@index([deletedAt])
+  @@index([status])
   @@map("MasterServiceReviews")
+}
+
+enum MasterServiceReviewStatus {
+  ACTIVE
+  PAUSED
+  BLOCKED
+  REVIEWING
 }

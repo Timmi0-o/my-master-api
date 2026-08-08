@@ -1,6 +1,9 @@
 import type { IDeleteMasterServiceApplicationInput } from '../../dtos/master-service/delete-master-service.input';
 import type { IDeleteMasterServiceApplicationOutput } from '../../dtos/master-service/delete-master-service.output';
-import { ensureMasterServiceExists } from 'src/modules/masters/domain/entities/master-service';
+import {
+  ensureMasterServiceExists,
+  ensureMasterServiceModifiable,
+} from 'src/modules/masters/domain/entities/master-service';
 import {
   ensureMasterProfileAccessible,
   ensureMasterProfileExists,
@@ -21,6 +24,7 @@ export class DeleteMasterServiceByIdUseCase {
   ): Promise<IDeleteMasterServiceApplicationOutput> {
     const existing = await this.masterServiceRepository.findEntityById(input.id);
     ensureMasterServiceExists(existing, input.id);
+    ensureMasterServiceModifiable(existing, input.actor);
 
     const profile = await this.masterProfileRepository.findEntityById(
       existing.masterProfileId,

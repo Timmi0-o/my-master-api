@@ -10,6 +10,7 @@ export const MASTER_SERVICE_SELECT_FIELDS = [
   'durationMinutes',
   'category',
   'tags',
+  'status',
   'createdAt',
   'updatedAt',
   'deletedAt',

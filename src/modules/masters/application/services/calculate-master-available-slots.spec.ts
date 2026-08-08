@@ -10,6 +10,7 @@ import type { IMasterScheduleExceptionEntity } from 'src/modules/masters/domain/
 import { EMasterScheduleExceptionKind } from 'src/modules/masters/domain/entities/master-schedule-exception/master-schedule-exception.enum';
 import type { IMasterServiceEntity } from 'src/modules/masters/domain/entities/master-service';
 import { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service/master-service-category.enum';
+import { EMasterServiceStatus } from 'src/modules/masters/domain/entities/master-service/master-service-status.enum';
 import type { IMasterWeeklyScheduleEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
 import { EDayOfWeek } from 'src/modules/masters/domain/entities/master-weekly-schedule/master-weekly-schedule.enum';
 import { fromZonedTime } from 'date-fns-tz';
@@ -54,6 +55,7 @@ function createService(
     durationMinutes: 60,
     category: EMasterServiceCategory.BEAUTY,
     tags: [],
+    status: EMasterServiceStatus.ACTIVE,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

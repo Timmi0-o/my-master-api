@@ -4,11 +4,14 @@ import type { IAppointmentPublicEntity } from 'src/modules/appointments/domain/e
 import { EAppointmentStatus } from 'src/modules/appointments/domain/entities/appointment/appointment.enum';
 import type { IAppointmentRepository } from 'src/modules/appointments/domain/repositories/appointment/i-appointment.repository';
 import {
+  ensureMasterServiceBookable,
+  MasterServiceNotFoundError,
+} from 'src/modules/masters/domain/entities/master-service';
+import {
   ensureMasterOwnerEmailVerified,
   MasterProfileNotFoundError,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
-import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
@@ -41,6 +44,8 @@ export class GetMasterServiceAvailableSlotsUseCase {
     if (!service) {
       throw new MasterServiceNotFoundError(input.masterServiceId);
     }
+
+    ensureMasterServiceBookable(service);
 
     const profile = await this.masterProfileRepository.findEntityById(
       service.masterProfileId,

@@ -17,6 +17,7 @@ export function mapMasterServiceRow(
     durationMinutes: row.durationMinutes,
     category: row.category,
     tags: row.tags ?? [],
+    status: row.status,
     masterProfileId: row.masterProfileId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

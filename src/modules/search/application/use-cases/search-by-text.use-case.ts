@@ -10,6 +10,7 @@ import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
+import { EMasterServiceStatus } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service';
 import { presetToSelectOptions as masterProfilePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-profile/preset-to-select-options.mapper';
@@ -79,6 +80,7 @@ function buildServiceDiscoverabilityWhere(
   const price = buildPriceWhere(minPrice, maxPrice);
   return {
     deletedAt: { isNull: true },
+    status: EMasterServiceStatus.ACTIVE,
     ...(category != null ? { category } : {}),
     ...(price ? { price } : {}),
   };
@@ -144,6 +146,7 @@ function buildMasterWhere(
           services: {
             some: {
               deletedAt: { isNull: true },
+              status: EMasterServiceStatus.ACTIVE,
               or: serviceTextOr,
             },
           },
@@ -196,6 +199,7 @@ function buildServiceWhere(
 
   return {
     deletedAt: { isNull: true },
+    status: EMasterServiceStatus.ACTIVE,
     masterProfile: {
       bookingStatus: EMasterBookingStatus.ACCEPTING,
       user: {

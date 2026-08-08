@@ -5,6 +5,7 @@ export const MASTER_SERVICE_REVIEW_SELECT_FIELDS = [
   'appointmentId',
   'rating',
   'text',
+  'status',
   'createdAt',
   'updatedAt',
   'deletedAt',

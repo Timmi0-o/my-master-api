@@ -1,13 +1,23 @@
 import { enrichReactionStatsWithReviews } from 'src/modules/masters/application/helpers/enrich-reaction-stats-with-reviews';
-import type {
-  IMasterServiceReviewPublicEntity,
-  IMasterServiceReviewRelations,
+import {
+  buildMasterServiceReviewViewerVisibilityWhere,
+  type IMasterServiceReviewPublicEntity,
+  type IMasterServiceReviewRelations,
 } from 'src/modules/masters/domain/entities/master-service-review';
 import type { IMasterServiceReviewReactionRepository } from 'src/modules/masters/domain/repositories/master-service-review-reaction/i-master-service-review-reaction.repository';
 import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/repositories/master-service-review/i-master-service-review.repository';
 import { applyReadEnrichments } from 'src/modules/shared/application/enrichment/apply-read-enrichments';
+import { mergeWhereFilters } from 'src/modules/shared/application/presets/common/query-filter.helper';
 import type { FindManyParams } from 'src/modules/shared/domain/query';
 import type { GetMasterServiceReviewsOutput } from '../../dtos/master-service-review/get-master-service-reviews.output';
+
+export type IGetMasterServiceReviewsApplicationInput = FindManyParams<
+  IMasterServiceReviewPublicEntity,
+  IMasterServiceReviewRelations
+> & {
+  isStaffUser: boolean;
+  viewerUserId?: string;
+};
 
 export class GetMasterServiceReviewsUseCase {
   constructor(
@@ -16,14 +26,20 @@ export class GetMasterServiceReviewsUseCase {
   ) {}
 
   async execute(
-    params: FindManyParams<
-      IMasterServiceReviewPublicEntity,
-      IMasterServiceReviewRelations
-    >,
+    params: IGetMasterServiceReviewsApplicationInput,
   ): Promise<GetMasterServiceReviewsOutput> {
+    const where = params.isStaffUser
+      ? params.where
+      : mergeWhereFilters(
+          params.where,
+          buildMasterServiceReviewViewerVisibilityWhere(params.viewerUserId),
+        );
+
+    const filteredParams = { ...params, where };
+
     const [items, total] = await Promise.all([
-      this.masterServiceReviewRepository.findMany(params),
-      this.masterServiceReviewRepository.count({ where: params.where }),
+      this.masterServiceReviewRepository.findMany(filteredParams),
+      this.masterServiceReviewRepository.count({ where }),
     ]);
 
     const enriched = await applyReadEnrichments(items, {}, [

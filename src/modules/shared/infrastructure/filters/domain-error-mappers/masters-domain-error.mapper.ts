@@ -7,8 +7,11 @@ import {
   MasterProfileOnboardingIncompleteError,
 } from 'src/modules/masters/domain/entities/master-profile';
 import {
+  MasterServiceBlockedError,
   MasterServiceForbiddenError,
+  MasterServiceInvalidStatusTransitionError,
   MasterServiceInvalidTagsError,
+  MasterServiceNotBookableError,
   MasterServiceNotFoundError,
 } from 'src/modules/masters/domain/entities/master-service';
 import {
@@ -27,6 +30,7 @@ import {
 import {
   MasterServiceReviewAlreadyExistsError,
   MasterServiceReviewAppointmentNotCompletedError,
+  MasterServiceReviewBlockedError,
   MasterServiceReviewForbiddenError,
   MasterServiceReviewInvalidRatingError,
   MasterServiceReviewNotFoundError,
@@ -67,6 +71,8 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
     error instanceof ImageMaxCountError ||
     error instanceof UnsupportedImageEntityTypeError ||
     error instanceof MasterServiceInvalidTagsError ||
+    error instanceof MasterServiceNotBookableError ||
+    error instanceof MasterServiceInvalidStatusTransitionError ||
     error instanceof MasterServiceReviewAlreadyExistsError ||
     error instanceof MasterServiceReviewAppointmentNotCompletedError ||
     error instanceof MasterServiceReviewInvalidRatingError ||
@@ -80,9 +86,11 @@ export const mapMastersDomainError: DomainErrorMapper = (error) => {
   if (
     error instanceof MasterProfileForbiddenError ||
     error instanceof MasterServiceForbiddenError ||
+    error instanceof MasterServiceBlockedError ||
     error instanceof MasterWeeklyScheduleForbiddenError ||
     error instanceof MasterScheduleExceptionForbiddenError ||
     error instanceof MasterServiceReviewForbiddenError ||
+    error instanceof MasterServiceReviewBlockedError ||
     error instanceof MasterServiceReviewReactionForbiddenError ||
     error instanceof MasterSubscriptionForbiddenError ||
     error instanceof MasterSubscriptionCannotSubscribeToSelfError ||

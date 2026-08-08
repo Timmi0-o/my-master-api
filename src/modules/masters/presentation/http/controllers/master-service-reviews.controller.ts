@@ -1,7 +1,11 @@
 import { AuthenticatedUser } from '@modules/auth/presentation/decorators/authenticated-user.decorator';
+import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '@modules/auth/presentation/guards/optional-jwt-auth.guard';
 import { Authorize } from '@modules/authorization/presentation/decorators/authorize.decorator';
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
+import { ApproveMasterServiceReviewByIdUseCase } from '@modules/masters/application/use-cases/master-service-review/approve-master-service-review-by-id.use-case';
+import { BlockMasterServiceReviewByIdUseCase } from '@modules/masters/application/use-cases/master-service-review/block-master-service-review-by-id.use-case';
 import { CreateMasterServiceReviewUseCase } from '@modules/masters/application/use-cases/master-service-review/create-master-service-review.use-case';
 import { DeleteMasterServiceReviewByIdUseCase } from '@modules/masters/application/use-cases/master-service-review/delete-master-service-review-by-id.use-case';
 import { GetMasterServiceReviewByIdUseCase } from '@modules/masters/application/use-cases/master-service-review/get-master-service-review-by-id.use-case';
@@ -41,10 +45,12 @@ import { mapCreateMasterServiceReviewHttpResponse } from '../http-responses/map-
 import { mapDeleteMasterServiceReviewHttpResponse } from '../http-responses/map-delete-master-service-review-response';
 import { mapGetMasterServiceReviewByIdHttpResponse } from '../http-responses/map-get-master-service-review-by-id-response';
 import { mapGetMasterServiceReviewsHttpResponse } from '../http-responses/map-get-master-service-reviews-response';
+import { mapMasterServiceReviewStatusActionHttpResponse } from '../http-responses/map-master-service-review-status-action-response';
 import { mapUpdateMasterServiceReviewHttpResponse } from '../http-responses/map-update-master-service-review-response';
 import { requestBodyToCreateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-create-master-service-review-use-case-input';
 import { requestBodyToUpdateMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-body-to-update-master-service-review-use-case-input';
 import { requestParamsToDeleteMasterServiceReviewUseCaseInput } from '../request-mappers/master-service-review/request-params-to-delete-master-service-review-use-case-input';
+import { requestParamsToMasterServiceReviewStatusActionUseCaseInput } from '../request-mappers/master-service-review/request-params-to-master-service-review-status-action-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service-review/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput } from '../request-mappers/master-service-review/request-query-params-to-get-master-service-review-by-id-use-case-input';
 
@@ -57,10 +63,13 @@ export class MasterServiceReviewsController {
     private readonly createMasterServiceReviewUseCase: CreateMasterServiceReviewUseCase,
     private readonly updateMasterServiceReviewByIdUseCase: UpdateMasterServiceReviewByIdUseCase,
     private readonly deleteMasterServiceReviewByIdUseCase: DeleteMasterServiceReviewByIdUseCase,
+    private readonly approveMasterServiceReviewByIdUseCase: ApproveMasterServiceReviewByIdUseCase,
+    private readonly blockMasterServiceReviewByIdUseCase: BlockMasterServiceReviewByIdUseCase,
   ) {}
 
   @Get()
   @PublicEndpoint()
+  @UseGuards(OptionalJwtAuthGuard)
   async getMasterServiceReviews(
     @HttpQuery(getMasterServiceReviewsQuerySchema, {
       preprocess: normalizeListQueryRaw,
@@ -69,14 +78,20 @@ export class MasterServiceReviewsController {
     })
     queryParams: IGetMasterServiceReviewsQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
+    @CurrentUser() user: ISessionUser | null,
   ) {
     const params = requestQueryParamsToFindManyParams(queryParams, metadata);
-    const output = await this.getMasterServiceReviewsUseCase.execute(params);
+    const output = await this.getMasterServiceReviewsUseCase.execute({
+      ...params,
+      isStaffUser: metadata.isStaffUser,
+      viewerUserId: user?.id,
+    });
     return mapGetMasterServiceReviewsHttpResponse(output, queryParams);
   }
 
   @Get(':id')
   @PublicEndpoint()
+  @UseGuards(OptionalJwtAuthGuard)
   async getMasterServiceReviewById(
     @HttpParams(idParamSchema, {
       preprocess: normalizeIdParam,
@@ -88,11 +103,13 @@ export class MasterServiceReviewsController {
     })
     queryPayload: IGetByIdQueryPayload,
     @GetMetadata() metadata: IGetMetadata,
+    @CurrentUser() user: ISessionUser | null,
   ) {
     const input = requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput(
       params.id,
       queryPayload,
       metadata.isStaffUser,
+      user?.id,
     );
     const item = await this.getMasterServiceReviewByIdUseCase.execute(input);
     return mapGetMasterServiceReviewByIdHttpResponse(item);
@@ -164,5 +181,49 @@ export class MasterServiceReviewsController {
     );
     await this.deleteMasterServiceReviewByIdUseCase.execute(input);
     return mapDeleteMasterServiceReviewHttpResponse();
+  }
+
+  @Post(':id/approve')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'staff-only' })
+  async approveMasterServiceReview(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToMasterServiceReviewStatusActionUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output =
+      await this.approveMasterServiceReviewByIdUseCase.execute(input);
+    return mapMasterServiceReviewStatusActionHttpResponse(output);
+  }
+
+  @Post(':id/block')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'staff-only' })
+  async blockMasterServiceReview(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToMasterServiceReviewStatusActionUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output =
+      await this.blockMasterServiceReviewByIdUseCase.execute(input);
+    return mapMasterServiceReviewStatusActionHttpResponse(output);
   }
 }

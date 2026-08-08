@@ -5,6 +5,7 @@ import type {
   IMasterServicePublicEntity,
   IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
+import { EMasterServiceStatus } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service';
 import { presetToSelectOptions as masterServicePresetToSelectOptions } from 'src/modules/masters/presentation/http/request-mappers/master-service/preset-to-select-options.mapper';
@@ -48,6 +49,7 @@ function buildDiscoverabilityWhere(
 
   return {
     deletedAt: { isNull: true },
+    status: EMasterServiceStatus.ACTIVE,
     masterProfile: masterProfileFilter,
     ...(masterProfileIds ? { masterProfileId: { in: masterProfileIds } } : {}),
   };

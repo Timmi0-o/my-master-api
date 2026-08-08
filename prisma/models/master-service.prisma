@@ -7,6 +7,7 @@ model MasterService {
   durationMinutes Int                   @default(60) @map("duration_minutes")
   category        MasterServiceCategory @default(SERVICES) @map("category")
   tags            String[]              @default([]) @map("tags")
+  status          MasterServiceStatus   @default(ACTIVE) @map("status")
 
   masterProfileId String @map("master_profile_id")
 
@@ -22,10 +23,18 @@ model MasterService {
 
   @@index([category])
   @@index([rating])
+  @@index([status])
   @@index([masterProfileId, deletedAt])
-  @@index([deletedAt, category, rating])
-  @@index([deletedAt, category, price])
+  @@index([deletedAt, status, category, rating])
+  @@index([deletedAt, status, category, price])
   @@map("MasterServices")
+}
+
+enum MasterServiceStatus {
+  ACTIVE
+  PAUSED
+  BLOCKED
+  REVIEWING
 }
 
 enum MasterServiceCategory {

@@ -4,7 +4,10 @@ import type { IMasterServiceRepository } from 'src/modules/masters/domain/reposi
 import type { IAddressRepository } from 'src/modules/geo/domain/repositories/address';
 import { EMasterBookingStatus } from 'src/modules/masters/domain/entities/master-profile';
 import { MASTER_OWNER_EMAIL_VERIFIED_WHERE } from 'src/modules/masters/domain/entities/master-profile/filters/master-owner-email-verified.where';
-import { EMasterServiceCategory } from 'src/modules/masters/domain/entities/master-service';
+import {
+  EMasterServiceCategory,
+  EMasterServiceStatus,
+} from 'src/modules/masters/domain/entities/master-service';
 import type { ISearchTaxonomyReader } from 'src/modules/search/domain/repositories/search-taxonomy';
 
 describe('SearchByTextUseCase discovery filters', () => {
@@ -65,6 +68,7 @@ describe('SearchByTextUseCase discovery filters', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           deletedAt: { isNull: true },
+          status: EMasterServiceStatus.ACTIVE,
           masterProfile: expect.objectContaining({
             bookingStatus: EMasterBookingStatus.ACCEPTING,
           }),
@@ -87,6 +91,7 @@ describe('SearchByTextUseCase discovery filters', () => {
     expect(masterServiceRepository.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
+          status: EMasterServiceStatus.ACTIVE,
           category: EMasterServiceCategory.BEAUTY,
           price: { gte: 100, lte: 500 },
           rating: { gte: 4 },

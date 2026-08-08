@@ -1,7 +1,9 @@
 import {
+  EMasterServiceReviewStatus,
   ensureMasterServiceReviewExists,
   ensureMasterServiceReviewModifiable,
   ensureValidReviewRating,
+  resolveMasterServiceReviewStatusOnUpdate,
 } from 'src/modules/masters/domain/entities/master-service-review';
 import { ensureMasterServiceExists } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
@@ -37,14 +39,26 @@ export class UpdateMasterServiceReviewByIdUseCase {
     );
     ensureMasterServiceExists(service, existing.masterServiceId);
 
+    const nextStatus = resolveMasterServiceReviewStatusOnUpdate(
+      existing.status,
+      input.patch,
+    );
+    const leftActive =
+      existing.status === EMasterServiceReviewStatus.ACTIVE &&
+      nextStatus !== EMasterServiceReviewStatus.ACTIVE;
+    const shouldRecalculate =
+      leftActive ||
+      (input.patch.rating !== undefined &&
+        nextStatus === EMasterServiceReviewStatus.ACTIVE);
+
     return this.transactionManager.runInTransaction(async (scope) => {
       const review = await this.masterServiceReviewRepository.update(
         input.id,
-        input.patch,
+        { ...input.patch, status: nextStatus },
         scope,
       );
 
-      if (input.patch.rating !== undefined) {
+      if (shouldRecalculate) {
         await this.recalculateMasterRatingsUseCase.execute({
           masterServiceId: existing.masterServiceId,
           masterProfileId: service.masterProfileId,

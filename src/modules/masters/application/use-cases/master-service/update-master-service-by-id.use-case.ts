@@ -2,7 +2,9 @@ import type { IUpdateMasterServiceApplicationInput } from '../../dtos/master-ser
 import type { IUpdateMasterServiceApplicationOutput } from '../../dtos/master-service/update-master-service.output';
 import {
   ensureMasterServiceExists,
+  ensureMasterServiceModifiable,
   ensureMasterServiceTagsValid,
+  resolveMasterServiceStatusOnUpdate,
 } from 'src/modules/masters/domain/entities/master-service';
 import {
   ensureMasterProfileAccessible,
@@ -24,6 +26,7 @@ export class UpdateMasterServiceByIdUseCase {
   ): Promise<IUpdateMasterServiceApplicationOutput> {
     const existing = await this.masterServiceRepository.findEntityById(input.id);
     ensureMasterServiceExists(existing, input.id);
+    ensureMasterServiceModifiable(existing, input.actor);
 
     const profile = await this.masterProfileRepository.findEntityById(
       existing.masterProfileId,
@@ -39,8 +42,14 @@ export class UpdateMasterServiceByIdUseCase {
           }
         : input.patch;
 
+    const status = resolveMasterServiceStatusOnUpdate(existing.status, patch);
+
     return this.transactionManager.runInTransaction((scope) =>
-      this.masterServiceRepository.update(input.id, patch, scope),
+      this.masterServiceRepository.update(
+        input.id,
+        { ...patch, status },
+        scope,
+      ),
     );
   }
 }

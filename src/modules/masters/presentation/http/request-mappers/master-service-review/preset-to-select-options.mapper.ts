@@ -20,7 +20,14 @@ const MASTER_SERVICE_REVIEW_PRESETS: Record<
   MasterServiceReviewSelectOptions
 > = {
   MINIMAL: {
-    select: ['id', 'masterServiceId', 'appointmentId', 'rating', 'text'],
+    select: [
+      'id',
+      'masterServiceId',
+      'appointmentId',
+      'rating',
+      'text',
+      'status',
+    ],
   },
   SHORT: {
     select: [
@@ -30,6 +37,7 @@ const MASTER_SERVICE_REVIEW_PRESETS: Record<
       'appointmentId',
       'rating',
       'text',
+      'status',
       'createdAt',
     ],
   },
@@ -46,6 +54,7 @@ const MASTER_SERVICE_REVIEW_PRESETS: Record<
           'description',
           'price',
           'durationMinutes',
+          'status',
           'masterProfileId',
           'createdAt',
           'updatedAt',

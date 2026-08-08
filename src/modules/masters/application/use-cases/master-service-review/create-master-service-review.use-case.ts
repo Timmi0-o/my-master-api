@@ -7,6 +7,7 @@ import type { ICreateMasterServiceReviewInput } from 'src/modules/masters/domain
 import {
   ensureAppointmentReviewable,
   ensureValidReviewRating,
+  resolveMasterServiceReviewStatusOnCreate,
 } from 'src/modules/masters/domain/entities/master-service-review';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/repositories/master-service-review/i-master-service-review.repository';
@@ -21,7 +22,6 @@ import { EUserLanguage } from 'src/modules/users/domain/entities/user';
 import type { IUserRepository } from 'src/modules/users/domain/repositories/user/i-user.repository';
 import type { ICreateMasterServiceReviewApplicationInput } from '../../dtos/master-service-review/create-master-service-review.input';
 import type { ICreateMasterServiceReviewApplicationOutput } from '../../dtos/master-service-review/create-master-service-review.output';
-import type { RecalculateMasterRatingsUseCase } from './recalculate-master-ratings.use-case';
 
 export class CreateMasterServiceReviewUseCase {
   constructor(
@@ -30,7 +30,6 @@ export class CreateMasterServiceReviewUseCase {
     private readonly appointmentRepository: IAppointmentRepository,
     private readonly masterProfileRepository: IMasterProfileRepository,
     private readonly userRepository: IUserRepository,
-    private readonly recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly sendWebPushToUserUseCase: SendWebPushToUserUseCase,
     private readonly notificationMessageCatalog: NotificationMessageCatalog,
@@ -63,23 +62,11 @@ export class CreateMasterServiceReviewUseCase {
       appointmentId: appointment.id,
       rating: input.rating,
       text: input.text,
+      status: resolveMasterServiceReviewStatusOnCreate(),
     };
 
-    const review = await this.transactionManager.runInTransaction(
-      async (scope) => {
-        const created = await this.masterServiceReviewRepository.create(
-          createInput,
-          scope,
-        );
-
-        await this.recalculateMasterRatingsUseCase.execute({
-          masterServiceId: appointment.masterServiceId,
-          masterProfileId: appointment.masterProfileId,
-          scope,
-        });
-
-        return created;
-      },
+    const review = await this.transactionManager.runInTransaction((scope) =>
+      this.masterServiceReviewRepository.create(createInput, scope),
     );
 
     const recipient = await this.userRepository.findEntityById(profile.userId);

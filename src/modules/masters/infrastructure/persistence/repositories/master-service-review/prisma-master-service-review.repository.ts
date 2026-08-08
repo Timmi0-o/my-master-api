@@ -173,6 +173,7 @@ export class PrismaMasterServiceReviewRepository
       where: {
         masterServiceId,
         deletedAt: null,
+        status: 'ACTIVE',
       },
       _avg: { rating: true },
     });
@@ -187,6 +188,7 @@ export class PrismaMasterServiceReviewRepository
     const result = await this.getDelegate(scope).aggregate({
       where: {
         deletedAt: null,
+        status: 'ACTIVE',
         masterService: {
           masterProfileId,
           deletedAt: null,

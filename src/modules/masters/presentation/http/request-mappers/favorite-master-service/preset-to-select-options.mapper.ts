@@ -35,6 +35,7 @@ const FAVORITE_MASTER_SERVICE_PRESETS: Record<
           'description',
           'price',
           'durationMinutes',
+          'status',
           'masterProfileId',
           'createdAt',
           'updatedAt',

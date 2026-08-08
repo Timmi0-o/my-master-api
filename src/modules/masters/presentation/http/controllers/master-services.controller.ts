@@ -4,12 +4,16 @@ import { Authorize } from '@modules/authorization/presentation/decorators/author
 import { AuthorizeGuard } from '@modules/authorization/presentation/guards/authorize.guard';
 import { DeleteImagesUseCase } from '@modules/masters/application/use-cases/image/delete-images.use-case';
 import { PresignImagesUseCase } from '@modules/masters/application/use-cases/image/presign-images.use-case';
+import { ApproveMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/approve-master-service-by-id.use-case';
+import { BlockMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/block-master-service-by-id.use-case';
 import { CreateMasterServiceUseCase } from '@modules/masters/application/use-cases/master-service/create-master-service.use-case';
 import { DeleteMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/delete-master-service-by-id.use-case';
 import { GetMasterServiceAvailableSlotsUseCase } from '@modules/masters/application/use-cases/master-service/get-master-service-available-slots.use-case';
 import { GetMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/get-master-service-by-id.use-case';
 import { GetMasterServicesUseCase } from '@modules/masters/application/use-cases/master-service/get-master-services.use-case';
 import { GetMyServicesUseCase } from '@modules/masters/application/use-cases/master-service/get-my-services.use-case';
+import { PauseMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/pause-master-service-by-id.use-case';
+import { UnpauseMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/unpause-master-service-by-id.use-case';
 import { UpdateMasterServiceByIdUseCase } from '@modules/masters/application/use-cases/master-service/update-master-service-by-id.use-case';
 import { createMasterServicePayloadSchema } from '@modules/masters/presentation/http/validation/schemas/create-master-service-payload.schema';
 import type { ICreateMasterServicePayload } from '@modules/masters/presentation/http/validation/schemas/create-master-service-payload.types';
@@ -56,6 +60,7 @@ import { mapGetMasterServiceAvailableSlotsHttpResponse } from '../http-responses
 import { mapGetMasterServiceByIdHttpResponse } from '../http-responses/map-get-master-service-by-id-response';
 import { mapGetMasterServicesHttpResponse } from '../http-responses/map-get-master-services-response';
 import { mapGetMyServicesHttpResponse } from '../http-responses/map-get-my-services-response';
+import { mapMasterServiceStatusActionHttpResponse } from '../http-responses/map-master-service-status-action-response';
 import { mapPresignMasterServiceImagesHttpResponse } from '../http-responses/map-presign-master-service-images-response';
 import { mapUpdateMasterServiceHttpResponse } from '../http-responses/map-update-master-service-response';
 import { findManyParamsToGetMyServicesUseCaseInput } from '../request-mappers/master-service/find-many-params-to-get-my-services-use-case-input';
@@ -64,6 +69,7 @@ import { requestBodyToDeleteMasterServiceImagesUseCaseInput } from '../request-m
 import { requestBodyToPresignMasterServiceImagesUseCaseInput } from '../request-mappers/master-service/request-body-to-presign-master-service-images-use-case-input';
 import { requestBodyToUpdateMasterServiceUseCaseInput } from '../request-mappers/master-service/request-body-to-update-master-service-use-case-input';
 import { requestParamsToDeleteMasterServiceUseCaseInput } from '../request-mappers/master-service/request-params-to-delete-master-service-use-case-input';
+import { requestParamsToMasterServiceStatusActionUseCaseInput } from '../request-mappers/master-service/request-params-to-master-service-status-action-use-case-input';
 import { requestQueryParamsToFindManyParams } from '../request-mappers/master-service/request-query-params-to-find-many-params.mapper';
 import { requestQueryParamsToFindMyServicesParams } from '../request-mappers/master-service/request-query-params-to-find-my-services-params.mapper';
 import { requestQueryParamsToGetMasterServiceByIdUseCaseInput } from '../request-mappers/master-service/request-query-params-to-get-master-service-by-id-use-case-input';
@@ -77,6 +83,10 @@ export class MasterServicesController {
     private readonly createMasterServiceUseCase: CreateMasterServiceUseCase,
     private readonly updateMasterServiceByIdUseCase: UpdateMasterServiceByIdUseCase,
     private readonly deleteMasterServiceByIdUseCase: DeleteMasterServiceByIdUseCase,
+    private readonly approveMasterServiceByIdUseCase: ApproveMasterServiceByIdUseCase,
+    private readonly blockMasterServiceByIdUseCase: BlockMasterServiceByIdUseCase,
+    private readonly pauseMasterServiceByIdUseCase: PauseMasterServiceByIdUseCase,
+    private readonly unpauseMasterServiceByIdUseCase: UnpauseMasterServiceByIdUseCase,
     private readonly getMasterServiceAvailableSlotsUseCase: GetMasterServiceAvailableSlotsUseCase,
     private readonly getMyServicesUseCase: GetMyServicesUseCase,
     private readonly presignImagesUseCase: PresignImagesUseCase,
@@ -289,5 +299,89 @@ export class MasterServicesController {
     );
     await this.deleteMasterServiceByIdUseCase.execute(input);
     return mapDeleteMasterServiceHttpResponse();
+  }
+
+  @Post(':id/approve')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'staff-only' })
+  async approveMasterService(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToMasterServiceStatusActionUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.approveMasterServiceByIdUseCase.execute(input);
+    return mapMasterServiceStatusActionHttpResponse(output);
+  }
+
+  @Post(':id/block')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'staff-only' })
+  async blockMasterService(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToMasterServiceStatusActionUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.blockMasterServiceByIdUseCase.execute(input);
+    return mapMasterServiceStatusActionHttpResponse(output);
+  }
+
+  @Post(':id/pause')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
+  async pauseMasterService(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToMasterServiceStatusActionUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.pauseMasterServiceByIdUseCase.execute(input);
+    return mapMasterServiceStatusActionHttpResponse(output);
+  }
+
+  @Post(':id/unpause')
+  @UseGuards(JwtAuthGuard, AuthorizeGuard)
+  @Authorize({ kind: 'authenticated' })
+  async unpauseMasterService(
+    @HttpParams(idParamSchema, {
+      preprocess: normalizeIdParam,
+      errorMessage: 'Некорректный идентификатор',
+    })
+    params: IIdParamPayload,
+    @AuthenticatedUser() user: ISessionUser,
+    @GetMetadata() metadata: IGetMetadata,
+  ) {
+    const input = requestParamsToMasterServiceStatusActionUseCaseInput(
+      params.id,
+      user,
+      metadata.isStaffUser,
+    );
+    const output = await this.unpauseMasterServiceByIdUseCase.execute(input);
+    return mapMasterServiceStatusActionHttpResponse(output);
   }
 }

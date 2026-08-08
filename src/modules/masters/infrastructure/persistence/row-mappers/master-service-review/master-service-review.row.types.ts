@@ -2,6 +2,7 @@ import type {
   EAppointmentCancelledBy,
   EAppointmentStatus,
 } from 'src/modules/appointments/domain/entities/appointment';
+import type { EMasterServiceReviewStatus } from 'src/modules/masters/domain/entities/master-service-review/master-service-review-status.enum';
 import type { MasterProfileRelationRow } from '../master-service/master-service.row.types';
 import type { MasterServiceRow } from '../master-service/master-service.row.types';
 
@@ -40,6 +41,7 @@ export type MasterServiceReviewRow = {
   appointmentId: string;
   rating: number;
   text: string;
+  status: EMasterServiceReviewStatus;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

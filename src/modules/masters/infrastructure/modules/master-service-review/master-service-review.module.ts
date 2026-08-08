@@ -12,6 +12,8 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { AppointmentsModule } from '../../../../appointments/appointments.module';
 import { APPOINTMENT_REPOSITORY_TOKEN } from '../../../../appointments/domain/repositories/appointment/appointment.repository.tokens';
 import type { IAppointmentRepository } from '../../../../appointments/domain/repositories/appointment/i-appointment.repository';
+import { ApproveMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/approve-master-service-review-by-id.use-case';
+import { BlockMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/block-master-service-review-by-id.use-case';
 import { CreateMasterServiceReviewUseCase } from '../../../application/use-cases/master-service-review/create-master-service-review.use-case';
 import { DeleteMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/delete-master-service-review-by-id.use-case';
 import { GetMasterServiceReviewByIdUseCase } from '../../../application/use-cases/master-service-review/get-master-service-review-by-id.use-case';
@@ -94,7 +96,6 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
         appointmentRepo: IAppointmentRepository,
         profileRepo: IMasterProfileRepository,
         userRepo: IUserRepository,
-        recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
         createNotificationUseCase: CreateNotificationUseCase,
         sendWebPushToUserUseCase: SendWebPushToUserUseCase,
         notificationMessageCatalog: NotificationMessageCatalog,
@@ -105,7 +106,6 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
           appointmentRepo,
           profileRepo,
           userRepo,
-          recalculateMasterRatingsUseCase,
           createNotificationUseCase,
           sendWebPushToUserUseCase,
           notificationMessageCatalog,
@@ -116,7 +116,6 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
         APPOINTMENT_REPOSITORY_TOKEN,
         MASTER_PROFILE_REPOSITORY_TOKEN,
         USER_REPOSITORY_TOKEN,
-        RecalculateMasterRatingsUseCase,
         CreateNotificationUseCase,
         SendWebPushToUserUseCase,
         NotificationMessageCatalog,
@@ -164,6 +163,48 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
         RecalculateMasterRatingsUseCase,
       ],
     },
+    {
+      provide: ApproveMasterServiceReviewByIdUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        reviewRepo: IMasterServiceReviewRepository,
+        serviceRepo: IMasterServiceRepository,
+        recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
+      ) =>
+        new ApproveMasterServiceReviewByIdUseCase(
+          transactionManager,
+          reviewRepo,
+          serviceRepo,
+          recalculateMasterRatingsUseCase,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        RecalculateMasterRatingsUseCase,
+      ],
+    },
+    {
+      provide: BlockMasterServiceReviewByIdUseCase,
+      useFactory: (
+        transactionManager: ITransactionManager,
+        reviewRepo: IMasterServiceReviewRepository,
+        serviceRepo: IMasterServiceRepository,
+        recalculateMasterRatingsUseCase: RecalculateMasterRatingsUseCase,
+      ) =>
+        new BlockMasterServiceReviewByIdUseCase(
+          transactionManager,
+          reviewRepo,
+          serviceRepo,
+          recalculateMasterRatingsUseCase,
+        ),
+      inject: [
+        TRANSACTION_MANAGER_TOKEN,
+        MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
+        MASTER_SERVICE_REPOSITORY_TOKEN,
+        RecalculateMasterRatingsUseCase,
+      ],
+    },
   ],
   exports: [
     MASTER_SERVICE_REVIEW_REPOSITORY_TOKEN,
@@ -172,6 +213,8 @@ import { MasterServiceReviewReactionModule } from '../master-service-review-reac
     CreateMasterServiceReviewUseCase,
     UpdateMasterServiceReviewByIdUseCase,
     DeleteMasterServiceReviewByIdUseCase,
+    ApproveMasterServiceReviewByIdUseCase,
+    BlockMasterServiceReviewByIdUseCase,
   ],
 })
 export class MasterServiceReviewModule {}

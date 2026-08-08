@@ -1,5 +1,8 @@
 import { enrichReactionStatsWithReviews } from 'src/modules/masters/application/helpers/enrich-reaction-stats-with-reviews';
-import { MasterServiceReviewNotFoundError } from 'src/modules/masters/domain/entities/master-service-review';
+import {
+  isMasterServiceReviewVisibleToViewer,
+  MasterServiceReviewNotFoundError,
+} from 'src/modules/masters/domain/entities/master-service-review';
 import type { IMasterServiceReviewReactionRepository } from 'src/modules/masters/domain/repositories/master-service-review-reaction/i-master-service-review-reaction.repository';
 import type { IMasterServiceReviewRepository } from 'src/modules/masters/domain/repositories/master-service-review/i-master-service-review.repository';
 import { applyReadEnrichments } from 'src/modules/shared/application/enrichment/apply-read-enrichments';
@@ -18,7 +21,13 @@ export class GetMasterServiceReviewByIdUseCase {
     const entity = await this.masterServiceReviewRepository.findEntityById(
       input.id,
     );
-    if (!entity || (!input.isStaffUser && entity.deletedAt != null)) {
+    if (
+      !entity ||
+      !isMasterServiceReviewVisibleToViewer(entity, {
+        userId: input.viewerUserId,
+        isStaffUser: input.isStaffUser,
+      })
+    ) {
       throw new MasterServiceReviewNotFoundError(input.id);
     }
 

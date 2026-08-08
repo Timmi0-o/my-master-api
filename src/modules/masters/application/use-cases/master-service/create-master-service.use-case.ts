@@ -8,6 +8,7 @@ import {
   DEFAULT_MASTER_SERVICE_DURATION_MINUTES,
   EMasterServiceCategory,
   ensureMasterServiceTagsValid,
+  resolveMasterServiceStatusOnCreate,
 } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
@@ -41,6 +42,7 @@ export class CreateMasterServiceUseCase {
         input.durationMinutes ?? DEFAULT_MASTER_SERVICE_DURATION_MINUTES,
       category: input.category ?? EMasterServiceCategory.SERVICES,
       tags,
+      status: resolveMasterServiceStatusOnCreate(),
     };
 
     return this.transactionManager.runInTransaction((scope) =>

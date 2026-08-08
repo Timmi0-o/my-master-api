@@ -38,6 +38,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
         'durationMinutes',
         'category',
         'tags',
+        'status',
       ],
     },
     SHORT: {
@@ -51,6 +52,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
         'durationMinutes',
         'category',
         'tags',
+        'status',
         'createdAt',
         'updatedAt',
       ],
@@ -66,6 +68,7 @@ const MASTER_SERVICE_PRESETS: Record<TPresetType, MasterServiceSelectOptions> =
         'durationMinutes',
         'category',
         'tags',
+        'status',
         'createdAt',
         'updatedAt',
         'deletedAt',

@@ -1,3 +1,5 @@
+import type { EMasterServiceReviewStatus } from './master-service-review-status.enum';
+
 export interface IMasterServiceReviewEntity {
   id: string;
   clientUserId: string;
@@ -5,6 +7,7 @@ export interface IMasterServiceReviewEntity {
   appointmentId: string;
   rating: number;
   text: string;
+  status: EMasterServiceReviewStatus;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

@@ -108,6 +108,7 @@ export const masterServiceReviewsSeed: SeedRunner = async (
       appointmentId: appointment.id,
       rating,
       text: `${text} (услуга: ${appointment.serviceName})`,
+      status: 'ACTIVE' as const,
     };
   });
 

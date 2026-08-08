@@ -54,6 +54,7 @@ export function mapMasterServiceReviewRow(
     appointmentId: row.appointmentId,
     rating: row.rating,
     text: row.text,
+    status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt ?? null,

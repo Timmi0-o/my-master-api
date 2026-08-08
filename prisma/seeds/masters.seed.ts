@@ -89,6 +89,7 @@ export const mastersSeed: SeedRunner = async (
             durationMinutes: service.durationMinutes,
             category: service.category,
             tags: service.tags,
+            status: 'ACTIVE',
             deletedAt: serviceDeletedAt,
           },
         });
@@ -104,6 +105,7 @@ export const mastersSeed: SeedRunner = async (
           durationMinutes: service.durationMinutes,
           category: service.category,
           tags: service.tags,
+          status: 'ACTIVE',
           deletedAt: serviceDeletedAt,
         },
       });

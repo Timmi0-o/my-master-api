@@ -7,6 +7,7 @@ import type {
 export interface IGetMasterServiceReviewByIdApplicationInput {
   id: string;
   isStaffUser: boolean;
+  viewerUserId?: string;
   params: FindOneParams<
     IMasterServiceReviewPublicEntity,
     IMasterServiceReviewRelations

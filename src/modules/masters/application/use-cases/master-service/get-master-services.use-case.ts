@@ -1,8 +1,9 @@
 import type { FindManyParams } from 'src/modules/shared/domain/query';
 import { MASTER_SERVICE_OWNER_EMAIL_VERIFIED_WHERE } from 'src/modules/masters/domain/entities/master-profile/filters/master-owner-email-verified.where';
-import type {
-  IMasterServicePublicEntity,
-  IMasterServiceRelations,
+import {
+  MASTER_SERVICE_ACTIVE_STATUS_WHERE,
+  type IMasterServicePublicEntity,
+  type IMasterServiceRelations,
 } from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterServiceRepository } from 'src/modules/masters/domain/repositories/master-service/i-master-service.repository';
 import { mergeWhereFilters } from 'src/modules/shared/application/presets/common/query-filter.helper';
@@ -17,8 +18,11 @@ export class GetMasterServicesUseCase {
     params: FindManyParams<IMasterServicePublicEntity, IMasterServiceRelations>,
   ): Promise<GetMasterServicesOutput> {
     const where = mergeWhereFilters(
-      params.where,
-      MASTER_SERVICE_OWNER_EMAIL_VERIFIED_WHERE,
+      mergeWhereFilters(
+        params.where,
+        MASTER_SERVICE_OWNER_EMAIL_VERIFIED_WHERE,
+      ),
+      MASTER_SERVICE_ACTIVE_STATUS_WHERE,
     );
     const filteredParams = { ...params, where };
 

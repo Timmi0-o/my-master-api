@@ -27,7 +27,10 @@ import {
   ensureMasterProfileExists,
 } from 'src/modules/masters/domain/entities/master-profile';
 import type { IMasterScheduleExceptionPublicEntity } from 'src/modules/masters/domain/entities/master-schedule-exception';
-import { MasterServiceNotFoundError } from 'src/modules/masters/domain/entities/master-service';
+import {
+  ensureMasterServiceBookable,
+  MasterServiceNotFoundError,
+} from 'src/modules/masters/domain/entities/master-service';
 import type { IMasterWeeklySchedulePublicEntity } from 'src/modules/masters/domain/entities/master-weekly-schedule';
 import type { IMasterProfileRepository } from 'src/modules/masters/domain/repositories/master-profile/i-master-profile.repository';
 import type { IMasterScheduleExceptionRepository } from 'src/modules/masters/domain/repositories/master-schedule-exception/i-master-schedule-exception.repository';
@@ -100,6 +103,8 @@ export class CreateAppointmentUseCase {
     if (!service || service.masterProfileId !== input.masterProfileId) {
       throw new MasterServiceNotFoundError(input.masterServiceId);
     }
+
+    ensureMasterServiceBookable(service);
 
     const result = await this.transactionManager.runInTransaction(
       async (scope) => {

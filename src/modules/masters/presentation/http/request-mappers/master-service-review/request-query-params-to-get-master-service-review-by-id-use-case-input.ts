@@ -7,10 +7,12 @@ export function requestQueryParamsToGetMasterServiceReviewByIdUseCaseInput(
   id: string,
   queryPayload: IGetByIdQueryPayload,
   isStaffUser: boolean,
+  viewerUserId?: string,
 ): IGetMasterServiceReviewByIdApplicationInput {
   return {
     id,
     isStaffUser,
+    viewerUserId,
     params: {
       ...splitPresetReadOptions(
         presetToSelectOptions(queryPayload.preset, isStaffUser),
